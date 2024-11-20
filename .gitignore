@@ -3,3 +3,4 @@ Hew/
 venv/
 # Ignore the ErrorManager folder
 ErrorManager/
+tree_structure.txt
