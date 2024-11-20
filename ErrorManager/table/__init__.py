@@ -1,1 +1,0 @@
-from ErrorManager.table.table_connector import TableConnector
