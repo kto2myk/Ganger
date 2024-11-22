@@ -1,11 +1,15 @@
 from flask import Flask, request, session, render_template,redirect, url_for
 import os
-app = Flask(__name__, template_folder=os.path.join(os.getcwd(), "app/templates"))
+app = Flask(__name__, template_folder=os.path.abspath("Ganger/app/templates"))
 
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
 
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 # ログインページの処理
 @app.route("/login", methods=["GET", "POST"])
@@ -77,3 +81,4 @@ def home():
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 80, True)
+print(f"Template folder: {os.path.abspath(app.template_folder)}")

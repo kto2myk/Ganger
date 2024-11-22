@@ -124,7 +124,7 @@
 
 <body>
     <div class="wrapper">
-        <form action="/Ganger/app/view/app.py" method="post">
+        <form action="{{ url_for('login') }}" method="post">
             <div class="loginBox">
                 <div class="loginBoxCenter">
                     <p><input type="text" id="text" name="identifier" class="loginInput" required placeholder="ユーザー名/メールアドレスを入力してください" /></p>
@@ -133,7 +133,7 @@
                 </div>
                 <div class="loginBoxButtons">
                     <button class="loginBtn">ログイン</button>
-                    <a href="#"><div>新規会員登録</div></a>
+                    <a href={{url_for("signup")}}><div>新規会員登録</div></a>
                 </div>
             </div>
         </form>
