@@ -28,8 +28,41 @@ class Validator:
             error_message = "無効なメールアドレス形式"
             raise ValueError (error_message)
 
+
     @staticmethod
-    def validate_age(age: int):
-        if age < 0:
-            error_message = "無効なメールアドレス形式"
-            raise ValueError(error_message)
+    def validate_date(year: int, month: int, day: int) -> tuple:
+        from datetime import date, datetime
+
+        """
+        生年月日を検証し、日付型で返します。
+        無効な場合はエラーメッセージを返します。
+        
+        :return: 成功時は (True, date) を返し、失敗時は (False, エラーメッセージ) を返す。
+        """
+        
+        # 現在の日付を基準に120年前を計算
+        current_year = datetime.today().year
+        earliest_year = current_year - 120  # 現在から120年前
+
+        # 年月日の型チェック
+        if not all(isinstance(i, int) for i in [year, month, day]):
+            raise ValueError("年、月、日はすべて整数でなければなりません。")
+        
+        # 範囲チェック
+        if year < earliest_year or year > current_year + 1:
+            raise ValueError(f"年は{earliest_year}年から{current_year + 1}年の範囲内で指定してください。")
+        if month < 1 or month > 12:
+            raise ValueError("月は1〜12の範囲内で指定してください。")
+        if day < 1 or day > 31:
+            raise ValueError("日は1〜31の範囲内で指定してください。")
+        
+        # 日付の作成
+        birthday = date(year, month, day)
+
+        # 未来の日付のチェック
+        if birthday > datetime.today().date():
+            raise ValueError("生年月日は未来の日付を指定できません。")
+
+        # 成功時は日付を返す
+        return birthday
+
