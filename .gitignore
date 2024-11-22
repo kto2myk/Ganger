@@ -1,1 +1,6 @@
 Hew/
+# Ignore the virtual environment
+venv/
+# Ignore the ErrorManager folder
+ErrorManager/
+tree_structure.txt
