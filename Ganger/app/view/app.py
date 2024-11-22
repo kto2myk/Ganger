@@ -10,19 +10,21 @@ app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な
 # ログインページの処理
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    from Ganger.app.model.user.model import User
+    
     if request.method == "GET":
         # GETリクエスト：ログインフォームを表示
         return render_template("login.html", error=None)
 
     elif request.method == "POST":
         # POSTリクエスト：フォームからデータを取得
-        username = request.form.get("username")
+        username = request.form.get("identifier")
         password = request.form.get("password")
 
         # ユーザー認証
-        if username in USERS and USERS[username] == password:
+        if username in User and User[username] == password:
             # 認証成功
-            session["username"] = username  # セッションに保存
+            session["user_id"] = User[id]  # セッションに保存
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
             # 認証失敗
