@@ -10,26 +10,58 @@ app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な
 # ログインページの処理
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    from Ganger.app.model.user.model import User
-    
+    from Ganger.app.model.user.user_table import UserManager
+
     if request.method == "GET":
         # GETリクエスト：ログインフォームを表示
         return render_template("login.html", error=None)
-
+    
     elif request.method == "POST":
         # POSTリクエスト：フォームからデータを取得
-        username = request.form.get("identifier")
+        identifier = request.form.get("identifier")
         password = request.form.get("password")
 
-        # ユーザー認証
-        if username in User and User[username] == password:
-            # 認証成功
-            session["user_id"] = User[id]  # セッションに保存
+        #ユーザー認証
+        user = UserManager.login(identifier=identifier, 
+                        password=password)
+        if user:
+            session["user_id"] = user.id  # セッションに保存
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
             # 認証失敗
             error_message = "ログインに失敗しました。ユーザー名またはパスワードが間違っています。"
             return render_template("login.html", error=error_message)  # 再度ログインページを表示
+
+#サインアップ処理（新規会員登録）
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    from Ganger.app.model.user.user_table import UserManager
+    user_manager = UserManager()
+    if request.method == "GET":
+        return render_template("signup.html",error = None)
+    
+    elif request.method == "POST":
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        year = int(request.form.get("year"))
+        month = int(request.form.get("month"))
+        day = int(request.form.get("day"))
+
+        success, result = user_manager.create_user(username=username,
+                                    email=email,
+                                    password=password,
+                                    year=year,
+                                    month=month,
+                                    day=day
+            )
+        if success:
+            session["user_id"] = result.id  # セッションに保存
+            return redirect(url_for("home"))  # HOMEにリダイレクト
+        else:
+            return render_template("signup.html",error = result)
+
+    
 
 
 # ホームページの処理

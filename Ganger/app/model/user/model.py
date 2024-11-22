@@ -1,4 +1,4 @@
-from Ganger.app.model.database_manager import Base, Column, Integer, String, DateTime, ForeignKey, func, relationship
+from Ganger.app.model.database_manager import Base, Column, Integer, String, DateTime, ForeignKey, Date,func, relationship
 
 class User(Base):
     """
@@ -12,9 +12,9 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(20), nullable=False)
     create_time = Column(DateTime, default=func.now())
-    real_name = Column(String(45), nullable=False)
+    real_name = Column(String(45))
     address = Column(String(60))
-    age = Column(Integer, nullable=False)
+    birthday = Column(Date, nullable=False)  # 新しい誕生日カラムを追加
 
     # リレーション
     posts = relationship("Posts", back_populates="author")
@@ -32,8 +32,8 @@ class User(Base):
 
     def __repr__(self):
         return (f"<User(id={self.id}, user_id={self.user_id}, username={self.username}, "
-                f"email={self.email}, create_time={self.create_time})>")
-
+                f"email={self.email}, create_time={self.create_time}, birthday={self.birthday})>")
+    
 class Follow(Base):
     """
     フォローテーブル

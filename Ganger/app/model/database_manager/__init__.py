@@ -1,5 +1,5 @@
 # SQLAlchemyの必要なクラスだけをインポート
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey,  Text, DECIMAL, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey,  Text, DECIMAL, Date,func
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship
 from sqlalchemy.exc import IntegrityError
 
