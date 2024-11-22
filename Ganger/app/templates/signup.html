@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サインイン</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .signupBox {
+            background-color: #F0F4F6;
+            border: 1px solid #BfD6E1;
+            border-radius: 5px;
+            color: #444;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .signupBoxCenter {
+            margin-bottom: 20px;
+        }
+
+        .signupBoxCenter p {
+            margin-bottom: 10px;
+        }
+
+        .signupInput {
+            border: 1px solid #D2D9DC;
+            border-radius: 2px;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .signupInput:focus {
+            border-color: #B7D4EA;
+            box-shadow: 0 0 8px #B7D4EA;
+            outline: none;
+        }
+
+        .signupBoxButtons {
+            text-align: center;
+        }
+
+        .signupBtn {
+            background: linear-gradient(to bottom, #007BFF, #85CFEE);
+            border: 1px solid #98CCE7;
+            border-radius: 20px;
+            color: #fff;
+            padding: 10px 50px;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.3s;
+        }
+
+        .signupBtn:hover {
+            background: linear-gradient(to top, #007BFF, #85CFEE);
+        }
+
+        .forgetLink {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #ABABAB;
+            text-decoration: none;
+        }
+
+        .forgetLink:hover {
+            color: #000;
+        }
+
+        .birthday-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+}
+
+        .birthday-container select {
+            flex: 1;
+        }
+
+
+        @media (max-width: 480px) {
+            body {
+                height: 100vh;
+            }
+
+            .wrapper {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+            }
+
+            .signupBox {
+                width: 100%;
+                height: 100%;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+
+            .signupBoxCenter {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .signupBtn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <form action="{{ url_for('view', filename='app.py') }}" method="post">
+            <div class="signupBox">
+                <div class="signupBoxCenter">
+                    <p><label for="username">ユーザー名：</label></p>
+                    <p><input type="text" id="username" name="username" class="signupInput" required placeholder="ユーザー名" /></p>
+
+                    <p><label for="real_name"></label></p>
+                    <p><label for="email">メールアドレス</label></p>
+                    <p><input type="email" id="email" name="email" class="signupInput" required placeholder="メールアドレス" /></p>
+
+                    <p><label for="password">パスワード：</label></p>
+                    <p><input type="password" id="password" name="password" class="signupInput" required placeholder="パスワードを入力してください" /></p>
+                    
+                    <p><label for="birthday">誕生日：</label></p>
+                    <div class="birthday-container">
+                        <p>
+                            <select id="year" name="year" class="signupInput" required>
+                                <option value="">年</option>
+                                <script>
+                                    const startYear = 1900;
+                                    const endYear = new Date().getFullYear();
+                                    for (let year = endYear; year >= startYear; year--) {
+                                        document.write(`<option value="${year}">${year}</option>`);
+                                    }       
+                                </script>
+                            </select>
+                        </p>
+                        <p>
+                            <select id="month" name="month" class="signupInput" required>
+                                <option value="">月</option>
+                                <script>
+                                    for (let month = 1; month <= 12; month++) {
+                                        document.write(`<option value="${month}">${month}</option>`);
+                                    }
+                                </script>
+                            </select>
+                        </p>
+                        <p>
+                            <select id="day" name="day" class="signupInput" required>
+                                <option value="">日</option>
+                                <script>
+                                    for (let day = 1; day <= 31; day++) {
+                                        document.write(`<option value="${day}">${day}</option>`);
+                                    }
+                                </script>
+                            </select>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="error"> {{error}}</div>
+                <div class="signupBoxButtons">
+                   
+                    <button type="submit" class="signupBtn">登録する</button>
+                
+                </div>
+                
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>
