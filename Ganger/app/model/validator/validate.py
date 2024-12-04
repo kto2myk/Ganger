@@ -9,17 +9,38 @@ class Validator:
         """
         任意のモデルと条件に基づいてデータを検索し、結果を返すメソッド。
         データが存在しない場合は None を返す。
-        :param session: SQLAlchemy セッション
-        :param model: SQLAlchemy モデルクラス（例: User）
-        :param conditions: 辞書形式で指定する条件（例: {"user_id": "example", "email": "test@example.com"}）
-        :return: 一致するデータオブジェクト、存在しない場合は None
         """
-        query = session.query(model)
+        query = session.query(model)  # クエリ作成
+        print(f"[DEBUG] Initial Query: {query}")
+        print(f"[DEBUG] Model Columns: {[col.key for col in model.__table__.columns]}")
+
+        # 条件の確認
+        print(f"[DEBUG] Conditions: {conditions} (Type: {type(conditions)})")
+        if not isinstance(conditions, dict):
+            print(f"[ERROR] Invalid conditions type: {type(conditions)}. Expected dict.")
+            raise TypeError("Conditions must be a dictionary.")
+        if not conditions:
+            print("[ERROR] No conditions provided.")
+            raise ValueError("Conditions must not be empty.")
+
+        # フィルタリング処理
         for field, value in conditions.items():
-            query = query.filter(getattr(model, field) == value)
-        
-        # 最初の一致するオブジェクトを返す
-        return query.first()
+            print(f"[DEBUG] Adding Filter: {field} == {value}")
+            print(f"[DEBUG] Does Model Have Field '{field}'? {hasattr(model, field)}")
+            if hasattr(model, field):
+                query = query.filter(getattr(model, field) == value)
+                print(f"[DEBUG] Query after Filter: {query}")
+            else:
+                raise AttributeError(f"Model '{model.__name__}' does not have attribute '{field}'")
+
+        # クエリ結果を取得
+        try:
+            result = query.first()  # 最初の一致データを取得
+            print(f"[DEBUG] Query Result: {result}")
+        except Exception as e:
+            print(f"[ERROR] Query Execution Failed: {e}")
+            raise
+        return result
 
     @staticmethod
     def validate_email_format(email: str):

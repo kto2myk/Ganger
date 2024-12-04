@@ -1,1 +1,1 @@
-# notifications,notifications_tipe,notification_status
+# notifications,notifications_type,notification_status

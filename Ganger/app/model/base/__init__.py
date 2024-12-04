@@ -1,1 +1,0 @@
-from Ganger.app.model.base.model import Base

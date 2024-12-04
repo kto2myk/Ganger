@@ -183,9 +183,8 @@
                     </div>
                 </div>
 
-                <div class="error"> {{error}}</div>
+                <div class="error">{% if error: %} {{error}} {% endif %}</div>
                 <div class="signupBoxButtons">
-                
                     <button type="submit" class="signupBtn">登録する</button>
                 </div>
                 

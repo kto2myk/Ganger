@@ -26,7 +26,8 @@ def login():
         password = request.form.get("password")
 
         #ユーザー認証
-        user = UserManager.login(identifier=identifier, 
+        user_manager = UserManager()
+        user = user_manager.login(identifier=identifier, 
                         password=password)
         if user:
             session["user_id"] = user.id  # セッションに保存
