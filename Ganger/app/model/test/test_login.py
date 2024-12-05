@@ -4,8 +4,8 @@ from Ganger.app.model.user.user_table import UserManager
 user_manager = UserManager()
 
 # テスト用ログイン情報
-identifier = "user1"
-password = "password1"
+identifier = "newuser_79d4fd7c"
+password = "securepassword"
 
 # ログイン試行
 print("[TEST] ログイン処理をテスト中...")

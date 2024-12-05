@@ -38,8 +38,18 @@ class UserManager(DatabaseConnector):
                     raise ValueError("このメールアドレスは既に使用されています。")
                 session.add(new_user)
                 session.commit()
+
+                # セッション外でも安全に利用できるデータを辞書で返す
+                user_data = {
+                    "id": new_user.id,
+                    "user_id": new_user.user_id,
+                    "username": new_user.username,
+                    "email": new_user.email,
+                    "create_time": new_user.create_time,
+                    "birthday": new_user.birthday,
+                }
                 print(f"[INFO] ユーザー {username} が正常に作成されました。")
-                return True, new_user
+                return True, user_data
 
         except ValueError as ve:
             self.__log_and_rollback_error(user_id=None, error_message=str(ve))

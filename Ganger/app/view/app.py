@@ -40,12 +40,13 @@ def login():
 #サインアップ処理（新規会員登録）
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    from Ganger.app.model.user.user_table import UserManager
-    user_manager = UserManager()
     if request.method == "GET":
-        return render_template("signup.html",error = None)
+        return render_template("signup.html", error=None)
     
     elif request.method == "POST":
+        from Ganger.app.model.user.user_table import UserManager
+        user_manager = UserManager()
+
         username = request.form.get("username")
         email = request.form.get("email")
         password = request.form.get("password")
@@ -53,18 +54,20 @@ def signup():
         month = int(request.form.get("month"))
         day = int(request.form.get("day"))
 
-        success, result = user_manager.create_user(username=username,
-                                    email=email,
-                                    password=password,
-                                    year=year,
-                                    month=month,
-                                    day=day
-            )
+        success, result = user_manager.create_user(
+            username=username,
+            email=email,
+            password=password,
+            year=year,
+            month=month,
+            day=day
+        )
         if success:
-            session["user_id"] = result.id  # セッションに保存
+            session["user_id"] = result["id"]  # セッションに保存
+            session["username"] = result["username"]  # 名前もセッションに保存
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
-            return render_template("signup.html",error = result)
+            return render_template("signup.html", error=result)
 
     
 
