@@ -25,19 +25,20 @@ def login():
         identifier = request.form.get("identifier")
         password = request.form.get("password")
 
-        #ユーザー認証
+        # ユーザー認証
         user_manager = UserManager()
-        user = user_manager.login(identifier=identifier, 
-                        password=password)
+        user = user_manager.login(identifier=identifier, password=password)
         if user:
-            session["user_id"] = user.id  # セッションに保存
+            session["user_id"] = user.user_id  # user_idをセッションに保存
+            session["username"] = user.username  # usernameをセッションに保存
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
             # 認証失敗
             error_message = "ログインに失敗しました。ユーザー名またはパスワードが間違っています。"
             return render_template("login.html", error=error_message)  # 再度ログインページを表示
-
+        
 #サインアップ処理（新規会員登録）
+@app.route("/signup", methods=["GET", "POST"])
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "GET":
@@ -63,8 +64,8 @@ def signup():
             day=day
         )
         if success:
-            session["user_id"] = result["id"]  # セッションに保存
-            session["username"] = result["username"]  # 名前もセッションに保存
+            session["user_id"] = result["user_id"]  # セッションに保存
+            session["username"] = result["username"]  # セッションに保存
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
             return render_template("signup.html", error=result)
