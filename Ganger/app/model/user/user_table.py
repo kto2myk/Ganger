@@ -47,6 +47,7 @@ class UserManager(DatabaseConnector):
                     "email": new_user.email,
                     "create_time": new_user.create_time,
                     "birthday": new_user.birthday,
+                    "profile_image":new_user.profile_image
                 }
                 print(f"[INFO] ユーザー {username} が正常に作成されました。")
                 return True, user_data
