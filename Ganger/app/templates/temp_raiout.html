@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ganger</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../../../node_modules/@splidejs/splide/dist/css/splide.min.css">
+    <script type="text/javascript" href="../static/js/main.js"></script>
+    <script src="../../../node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
+    <script>
+      document.addEventListener( 'DOMContentLoaded', function () {
+        new Splide( '#image-carousel' ).mount();
+      } );
+    </script>
+    
+</head>
+<body>
+  <header>
+    <button id="ajaxtest">AjaxTest</button>
+  </header>
+  <div class="main_container">
+    <div class="side_bar">
+      <ul>
+        <li>a</li>
+        <li>b</li>
+      </ul>
+    </div>
+
+    <div class="contents">
+      <div class="post_container">
+        <div class="account_info">
+          <img src="{{ xxxxx }}">
+          <p>{{ accountName }}</p>
+        </div>
+        <div class="image_area">
+          <section id="image-carousel" class="splide">
+            <div class="splide__track">
+              <ul class="splide__list">
+                <li class="splide__slide">
+                  <img src="../static/img/fuwa.png" alt="">
+                </li>
+                <li class="splide__slide">
+                  <img src="../static/img/gl.png" alt="">
+                </li>
+                <li class="splide__slide">
+                  <img src="../static/img/hi.png" alt="">
+                </li>
+              </ul>
+            </div>
+          </section>
+        </div>
+        <div class="sentence">{{ xxxxx }}</div>
+      </div>
+    </div>
+
+    <div class="right_bar">
+      <ul>
+        <li>a</li>
+        <li>b</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
