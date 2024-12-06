@@ -3,8 +3,7 @@ Hew/
 venv/
 # Ignore the ErrorManager folder
 ErrorManager/
-tree_structure.txt
+structure.txt
 
 # Unignore venv and ErrorManager
-!venv/
 !ErrorManager/
