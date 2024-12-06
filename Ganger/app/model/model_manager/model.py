@@ -18,6 +18,7 @@ class User(Base):
     real_name = Column(String(45))
     address = Column(String(60))
     birthday = Column(Date, nullable=False)
+    profile_image = Column(String(255), nullable=False, default="default-profile.png")
 
     # リレーション
     posts = relationship("Post", back_populates="author")
@@ -35,12 +36,12 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user")
     notification_statuses = relationship("NotificationStatus", back_populates="user", cascade="all, delete-orphan") 
     reposts = relationship("Repost", back_populates="user")
-    rooms = relationship("RoomMember", back_populates="user")  # RoomMemberとのリレーション
-
+    rooms = relationship("RoomMember", back_populates="user")  
     def __repr__(self):
-        return (f"<User(id={self.id}, user_id={self.user_id}, username={self.username}, "
-                f"email={self.email}, create_time={self.create_time}, birthday={self.birthday})>")
-        
+            return (f"<User(id={self.id}, user_id={self.user_id}, username={self.username}, "
+                    f"email={self.email}, create_time={self.create_time}, birthday={self.birthday}, "
+                    f"profile_image={self.profile_image})>")   
+
 class Post(Base):
     __tablename__ = 'posts'
 
