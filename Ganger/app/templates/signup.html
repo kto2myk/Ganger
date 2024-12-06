@@ -98,6 +98,21 @@
             flex: 1;
         }
 
+        .social-icons {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            margin: 0 10px;
+            font-size: 20px;
+            color: #444;
+            transition: color 0.3s;
+        }
+
+        .social-icons a:hover {
+            color: #007BFF;
+        }
 
         @media (max-width: 480px) {
             body {
@@ -187,7 +202,13 @@
                 <div class="signupBoxButtons">
                     <button type="submit" class="signupBtn">登録する</button>
                 </div>
-                
+                {{# あとでfont awesome #}}
+                <div class="social-icons"> 
+                    <a href="#"><i class="fab fa-line"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-google"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                </div>
             </div>
         </form>
     </div>
