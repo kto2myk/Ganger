@@ -15,10 +15,6 @@ header {
     background-color: violet;   /* 一時 */
 }
 
-/* #ajaxtest {
-
-} */
-
 .main_container {
     display: flex;
     justify-content: space-between;
