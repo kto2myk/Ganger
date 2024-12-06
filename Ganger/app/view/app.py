@@ -1,6 +1,8 @@
 from flask import Flask, request, session, render_template,redirect, url_for
 import os
-app = Flask(__name__, template_folder=os.path.abspath("Ganger/app/templates"))
+app = Flask(__name__, 
+            template_folder=os.path.abspath("Ganger/app/templates"),
+            static_folder=os.path.abspath('Ganger/app/static'))
 
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -18,6 +20,7 @@ def login():
 
     if request.method == "GET":
         # GETリクエスト：ログインフォームを表示
+
         return render_template("login.html", error=None)
     
     elif request.method == "POST":
