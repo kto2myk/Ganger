@@ -9,12 +9,8 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
 
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
 # ログインページの処理
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
     from Ganger.app.model.user.user_table import UserManager
 
@@ -41,7 +37,6 @@ def login():
             return render_template("login.html", error=error_message)  # 再度ログインページを表示
         
 #サインアップ処理（新規会員登録）
-@app.route("/signup", methods=["GET", "POST"])
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "GET":
