@@ -2,8 +2,4 @@ Hew/
 # Ignore the virtual environment
 venv/
 # Ignore the ErrorManager folder
-ErrorManager/
 structure.txt
-
-# Unignore venv and ErrorManager
-!ErrorManager/
