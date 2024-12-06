@@ -12,7 +12,7 @@ header {
     background-color: violet;   /* 一時 */
 }
 
-.main_conteiner {
+.main_container {
     display: flex;
 }
 
