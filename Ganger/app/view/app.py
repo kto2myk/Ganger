@@ -39,7 +39,8 @@ def login():
             session["id"] = user.id
             session["user_id"] = user.user_id  # user_idをセッションに保存
             session["username"] = user.username  # usernameをセッションに保存
-            session["profile_image"] = user.profile_image
+            session["profile_image"] = url_for("static",
+            filename= f"profile_images/{user.profile_image}")            
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
             # 認証失敗
@@ -72,22 +73,23 @@ def signup():
             session["id"] = result["id"]
             session["user_id"] = result["user_id"]  # セッションに保存
             session["username"] = result["username"]  # セッションに保存
-            session["profile_image"] = result["profile_image"]
+            session["profile_image"] = url_for("static",
+            filename= f"profile_images/{result["profile_image"]}")
+            
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
             return render_template("signup.html", error=result)
 
 
 # ホームページの処理
-@app.route("/home")
+@app.route("/home", methods = ["GET","POST"])
 def home():
-    if "username" not in session:
+    if request.method == "GET":
+        if "id" not in session:
         # 未ログインの場合、ログインページへリダイレクト
-        return redirect(url_for("login"))
-
-    # ログイン済みの場合、ホームページを表示
-    return f"ようこそ、{session["id"],session["user_id"],session['username'],session["profile_image"]}さん！"
-
+            return redirect(url_for("login"))    
+        # ログイン済みの場合、ホームページを表示
+        return render_template("temp_layout.html")
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 80, True)

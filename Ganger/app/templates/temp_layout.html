@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ganger</title>
     <link rel="stylesheet" href="../static/css/style.css">
-    <link rel="stylesheet" href="../../../node_modules/@splidejs/splide/dist/css/splide.min.css">
+    <link rel="stylesheet" href="../static/css/splide.min.css">
     <script type="text/javascript" href="../static/js/main.js"></script>
-    <script src="../../../node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
+    <script src="..\static\js\node_modules\@splidejs\splide\dist\js\splide.min.js"></script>
     <script>
       document.addEventListener( 'DOMContentLoaded', function () {
         new Splide( '#image-carousel' ).mount();
@@ -30,8 +30,9 @@
     <div class="contents">
       <div class="post_container">
         <div class="account_info">
-          <img src="{{ xxxxx }}">
-          <p>{{ accountName }}</p>
+          <img src="{{ session['profile_image'] }}">
+          <p>{{ session["username"] }}</p>
+          <p>{{text}}</p>
         </div>
         <div class="image_area">
           <section id="image-carousel" class="splide">
@@ -50,7 +51,7 @@
             </div>
           </section>
         </div>
-        <div class="sentence">{{ xxxxx }}</div>
+        <div class="sentence">{{ session["user_id"] }}</div>
       </div>
     </div>
 
