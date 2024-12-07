@@ -75,6 +75,8 @@ def signup():
             session["username"] = result["username"]  # セッションに保存
             session["profile_image"] = url_for("static",
             filename= f"profile_images/{result["profile_image"]}")
+            #77行目で""の競合が起きているから片方''に変えた方がいい
+            #あとpycacheもignoreしたほうがいいかも
             
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
