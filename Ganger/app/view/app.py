@@ -74,7 +74,7 @@ def signup():
             session["user_id"] = result["user_id"]  # セッションに保存
             session["username"] = result["username"]  # セッションに保存
             session["profile_image"] = url_for("static",
-            filename= f"profile_images/{result["profile_image"]}")
+            filename= f"profile_images/{result['profile_image']}")
             
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
