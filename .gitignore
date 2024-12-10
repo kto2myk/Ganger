@@ -6,3 +6,8 @@ structure.txt
 
 __pycache__/
 node_modules/
+.vscode/
+
+# Datebase
+Ganger.db
+error_logs.db
