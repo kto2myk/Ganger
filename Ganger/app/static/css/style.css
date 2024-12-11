@@ -3,6 +3,38 @@ body {
     width: 100%;
 }
 
+#loading {
+    width: 100vw;
+    height: 100vh;
+    transition: all 1s;
+    background-color: rgb(16, 16, 16);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10000;
+  }
+  .spinner {
+    width: auto;
+    height: auto;
+    margin-top: 300px;
+    margin-left: 800px;
+  }
+  /* ローディングアニメーション */
+  @keyframes sk-scaleout {
+    0% {
+      transform: scale(0);
+    } 100% {
+      transform: scale(1.0);
+      opacity: 0;
+    }
+  }
+   
+  .loaded {
+    opacity: 0;
+    visibility: hidden;
+  }
+  
+
 header {
     position: fixed;
     display: flex;
