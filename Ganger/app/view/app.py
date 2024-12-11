@@ -9,7 +9,7 @@ app = Flask(__name__,
 
 # Flask の基本設定
 app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=5)  # 有効期限を30分に設定
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=5) 
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
@@ -74,7 +74,7 @@ def signup():
             session["user_id"] = result["user_id"]  # セッションに保存
             session["username"] = result["username"]  # セッションに保存
             session["profile_image"] = url_for("static",
-            filename= f"profile_images/{result["profile_image"]}")
+            filename= f"profile_images/{result['profile_image']}")
             
             return redirect(url_for("home"))  # HOMEにリダイレクト
         else:
