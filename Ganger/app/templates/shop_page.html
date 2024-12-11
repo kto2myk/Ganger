@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZOZOTOWN Clone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        nav {
+            background-color: #555;
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        main {
+            padding: 20px;
+            text-align: center;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .product {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            background: white;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ZOZOTOWN Clone</h1>
+    </header>
+
+    <nav>
+        <a href="#">Home</a>
+        <a href="#">Men</a>
+        <a href="#">Women</a>
+        <a href="#">Kids</a>
+        <a href="#">Sale</a>
+    </nav>
+
+    <main>
+        <h2>Featured Products</h2>
+        <div class="product-grid">
+            <div class="product">
+                <h3>Product 1</h3>
+                <p>Sample description</p>
+            </div>
+            <div class="product">
+                <h3>Product 2</h3>
+                <p>Sample description</p>
+            </div>
+            <div class="product">
+                <h3>Product 3</h3>
+                <p>Sample description</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 ZOZOTOWN Clone. All rights reserved.</p>
+    </footer>
+</body>
+</html>
