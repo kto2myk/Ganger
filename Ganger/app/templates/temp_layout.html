@@ -12,10 +12,18 @@
       document.addEventListener( 'DOMContentLoaded', function () {
         new Splide( '#image-carousel' ).mount();
       } );
+      
+      window.onload = function() {
+        const spinner = document.getElementById('loading');
+        spinner.classList.add('loaded');
+      }
     </script>
     
 </head>
 <body>
+  <div id="loading">
+    <div class="spinner"><img src="../static/img/Ganger.png"></div>
+  </div>
   <header>
     <button id="ajaxtest">AjaxTest</button>
   </header>
