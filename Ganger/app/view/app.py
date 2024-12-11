@@ -52,6 +52,8 @@ def login():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "GET":
+        if "id" in session:
+            redirect(url_for("home"))
         return render_template("signup.html", error=None)
 
     elif request.method == "POST":
