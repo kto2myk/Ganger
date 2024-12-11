@@ -3,7 +3,6 @@ Hew/
 venv/
 # Ignore the ErrorManager folder
 structure.txt
-<<<<<<< HEAD
 
 __pycache__/
 node_modules/
@@ -12,7 +11,3 @@ node_modules/
 # Datebase
 Ganger.db
 error_logs.db
-=======
-Ganger.db
-error_logs.db
->>>>>>> 8a0a81acdc596e8b04393ce2b389197d9eadc093
