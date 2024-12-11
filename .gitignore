@@ -3,5 +3,3 @@ Hew/
 venv/
 # Ignore the ErrorManager folder
 structure.txt
-Ganger.db
-error_logs.db
