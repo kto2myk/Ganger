@@ -6,6 +6,7 @@
     <title>ZOZOTOWN風ヘッダー</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 </head>
 <body>
 <style>
@@ -140,6 +141,13 @@ body {
     text-align: center;
 }
 
+.swiper-slide img {
+      width: 450px;   /* 幅 */
+      height: 300px;  /* 高さ */
+      object-fit: cover; /* 必要なら画像の切り抜き */
+      margin: 0 10px;  /* 左右に余白を追加 (合計20px) */
+    }
+
 </style>
 <header class="header">
     <img src="logo.png" alt="ロゴ" class="logo">
@@ -172,9 +180,15 @@ body {
 <main id="content">
     <div class="swiper">
         <div class="swiper-wrapper">
-          <div class="swiper-slide">Slide 1</div>
-          <div class="swiper-slide">Slide 2</div>
-          <div class="swiper-slide">Slide 3</div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
         </div>
         <div class="swiper-pagination"></div>
         <div class="swiper-button-next"></div>
@@ -183,19 +197,29 @@ body {
       
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 <script>
-    import Swiper from 'swiper';
-    import 'swiper/swiper-bundle.css';
-
     const swiper = new Swiper('.swiper', {
     loop: true,
-    autoplay: { delay: 3000 },
-    pagination: { el: '.swiper-pagination', clickable: true },
-    navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
+    autoplay: {
+      delay: 5000,
+      disableOnInteraction: false,
     },
-    });
+    direction: 'horizontal',
+
+    slidesPerView: 3,  // 3枚表示
+    centeredSlides: true,  // 中央寄せ
+    spaceBetween: 0,  // スライド間の余白
+
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+  });
 
 
     document.querySelectorAll('.category-nav button').forEach(button => {
