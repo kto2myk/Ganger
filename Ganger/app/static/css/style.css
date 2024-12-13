@@ -7,7 +7,7 @@ body {
     width: 100vw;
     height: 100vh;
     transition: all 1s;
-    background-color: rgb(16, 16, 16);
+    /* background-color: rgb(16, 16, 16); */
     position: fixed;
     top: 0;
     left: 0;
