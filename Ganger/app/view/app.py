@@ -93,6 +93,13 @@ def home():
         # ログイン済みの場合、ホームページを表示
         return render_template("temp_layout.html")
 
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
 if __name__ == "__main__":
     app.run("0.0.0.0", 80, True)
 
