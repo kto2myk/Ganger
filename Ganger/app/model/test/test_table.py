@@ -18,8 +18,8 @@ session = Session()
 # テストデータの挿入
 try:
     # ユーザーデータ
-    user1 = User(user_id="user1", username="Alice", email="alice@example.com", password="password1", birthday=date(1985, 5, 15))
-    user2 = User(user_id="user2", username="Bob", email="bob@example.com", password="password2", birthday=date(1990, 1, 1))
+    user1 = User(user_id="user1", username="Alice", email="alice@example.com", password="password1")
+    user2 = User(user_id="user2", username="Bob", email="bob@example.com", password="password2")
     session.add_all([user1, user2])
     session.commit()
 

@@ -90,15 +90,6 @@
             color: #000;
         }
 
-        .birthday-container {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-}
-
-        .birthday-container select {
-            flex: 1;
-        }
 
         .social-icons {
             text-align: center;
@@ -162,45 +153,10 @@
 
                     <p><label for="password">パスワード：</label></p>
                     <p><input type="password" id="password" name="password" class="signupInput" required placeholder="パスワードを入力してください" /></p>
-                    
-                    <p><label for="birthday">誕生日：</label></p>
-                    <div class="birthday-container">
-                        <p>
-                            <select id="year" name="year" class="signupInput" required>
-                                <option value="">年</option>
-                                <script>
-                                    const startYear = 1900;
-                                    const endYear = new Date().getFullYear();
-                                    for (let year = endYear; year >= startYear; year--) {
-                                        document.write(`<option value="${year}">${year}</option>`);
-                                    }       
-                                </script>
-                            </select>
-                        </p>
-                        <p>
-                            <select id="month" name="month" class="signupInput" required>
-                                <option value="">月</option>
-                                <script>
-                                    for (let month = 1; month <= 12; month++) {
-                                        document.write(`<option value="${month}">${month}</option>`);
-                                    }
-                                </script>
-                            </select>
-                        </p>
-                        <p>
-                            <select id="day" name="day" class="signupInput" required>
-                                <option value="">日</option>
-                                <script>
-                                    for (let day = 1; day <= 31; day++) {
-                                        document.write(`<option value="${day}">${day}</option>`);
-                                    }
-                                </script>
-                            </select>
-                        </p>
-                    </div>
-                </div>
 
-                <div class="error">{% if error: %} {{error}} {% endif %}</div>
+                <div class="flash">
+                    {% include 'components/component_flash.html '%}
+                </div>
                 <div class="signupBoxButtons">
                     <button type="submit" class="signupBtn">登録する</button>
                 </div>

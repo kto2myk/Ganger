@@ -1,5 +1,5 @@
 from sqlalchemy.exc import SQLAlchemyError
-from Ganger.app.model.database_manager.database_connector import DatabaseConnector
+from Ganger.app.model.database_manager.database_manager import DatabaseConnector
 import os
 
 class TableManager(DatabaseConnector):
