@@ -104,6 +104,35 @@ body {
     width: 100%;
 }
 
+.link-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 20px;
+}
+
+.link-nav a {
+    font-size: 18px;
+    color: #555;
+    text-decoration: none;
+    padding: 10px 20px;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.link-nav a[data-link="men"] {
+    color: blue;
+}
+
+.link-nav a[data-link="women"] {
+    color: red;
+}
+
+.link-nav a[data-link="kids"] {
+    color: #f1d501;
+}
+
+
 /* メインコンテンツエリア */
 #content {
     margin: 20px;
@@ -126,18 +155,49 @@ body {
     </nav>
 </header>
 
-<nav class="category-nav">
-    <button data-category="all">すべてのアイテム</button>
-    <button data-category="accessories">アクセサリー</button>
-    <button data-category="web-items">ウェブアイテム</button>
-    <button data-category="shoes">シューズ</button>
-</nav>
+    <nav class="category-nav">
+        <button data-category="all">すべてのアイテム</button>
+        <button data-category="accessories">アクセサリー</button>
+        <button data-category="web-items">ウェブアイテム</button>
+        <button data-category="shoes">シューズ</button>
+    </nav>
+
+    <nav class="link-nav">
+        <a href="#" data-link="all" class="active">すべて</a>
+        <a href="#" data-link="men">メンズ</a>
+        <a href="#" data-link="women">レディース</a>
+        <a href="#" data-link="kids">キッズ</a>
+    </nav>
 
 <main id="content">
-    <p>こちらにカテゴリに応じた内容が表示されます。</p>
+    <div class="swiper">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide">Slide 1</div>
+          <div class="swiper-slide">Slide 2</div>
+          <div class="swiper-slide">Slide 3</div>
+        </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+      
 </main>
 
 <script>
+    import Swiper from 'swiper';
+    import 'swiper/swiper-bundle.css';
+
+    const swiper = new Swiper('.swiper', {
+    loop: true,
+    autoplay: { delay: 3000 },
+    pagination: { el: '.swiper-pagination', clickable: true },
+    navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+    },
+    });
+
+
     document.querySelectorAll('.category-nav button').forEach(button => {
         button.addEventListener('click', () => {
             const category = button.getAttribute('data-category');
@@ -159,6 +219,13 @@ body {
                 default:
                     content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
             }
+        });
+    });
+    document.querySelectorAll('.link-nav a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.link-nav a').forEach(a => a.classList.remove('active'));
+            link.classList.add('active');
         });
     });
 </script>
