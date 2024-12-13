@@ -144,7 +144,7 @@
 
 <body>
     <div class="wrapper">
-        <form action="{{ url_for('login') }}" method="post">
+        <form method="post">
             <div class="loginBox">
                 <div class="loginBoxCenter">
                     <p><input type="text" id="text" name="identifier" class="loginInput" required placeholder="ユーザーID/メールアドレスを入力してください" /></p>
@@ -153,7 +153,7 @@
                 </div>
                 <div class="loginBoxButtons">
                     <button class="loginBtn">ログイン</button>
-                    <a href={{url_for("signup")}}><div>新規会員登録</div></a>
+                    <a href="./signup.html"><div>新規会員登録</div></a>
                 </div>
                 <div class="social-icons"> 
                     <a href="#"><i class="fab fa-line"></i></a>
