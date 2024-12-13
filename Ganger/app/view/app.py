@@ -52,6 +52,8 @@ def login():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "GET":
+        if "id" in session:
+            redirect(url_for("home"))
         return render_template("signup.html", error=None)
 
     elif request.method == "POST":
@@ -90,6 +92,13 @@ def home():
             return redirect(url_for("login"))    
         # ログイン済みの場合、ホームページを表示
         return render_template("temp_layout.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 80, True)

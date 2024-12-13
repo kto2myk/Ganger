@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZOZOTOWN風ヘッダー</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+<style>
+    /* ベーススタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+/* ヘッダースタイル */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+}
+
+.logo {
+    height: 40px;
+}
+
+.search-bar {
+    flex: 1;
+    margin: 0 20px;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.nav-links a {
+    margin-left: 15px;
+    font-size: 18px;
+    color: #333;
+    text-decoration: none;
+}
+
+.nav-links a.login {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.nav-links i {
+    font-size: 20px;
+}
+
+.menu {
+    font-size: 24px;
+}
+
+/* カテゴリーナビゲーションスタイル */
+.category-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    border-bottom: 2px solid #ddd;
+}
+
+.category-nav button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    padding: 10px 20px;
+    cursor: pointer;
+    position: relative;
+    color: #555;
+    transition: color 0.3s;
+}
+
+.category-nav button:hover,
+.category-nav button.active {
+    color: #000;
+}
+
+.category-nav button::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #000;
+    transition: width 0.3s;
+}
+
+.category-nav button:hover::after,
+.category-nav button.active::after {
+    width: 100%;
+}
+
+.link-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 20px;
+}
+
+.link-nav a {
+    font-size: 18px;
+    color: #555;
+    text-decoration: none;
+    padding: 10px 20px;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.link-nav a[data-link="men"] {
+    color: blue;
+}
+
+.link-nav a[data-link="women"] {
+    color: red;
+}
+
+.link-nav a[data-link="kids"] {
+    color: #f1d501;
+}
+
+
+/* メインコンテンツエリア */
+#content {
+    margin: 20px;
+    font-size: 18px;
+    text-align: center;
+}
+
+</style>
+<header class="header">
+    <img src="logo.png" alt="ロゴ" class="logo">
+    
+    <input type="text" placeholder="検索" class="search-bar">
+    
+    <nav class="nav-links">
+        <a href="#" class="login">ログイン</a>
+        <a href="#"><i class="fas fa-bell"></i></a>
+        <a href="#"><i class="fas fa-heart"></i></a>
+        <a href="#"><i class="fas fa-shopping-cart"></i></a>
+        <a href="#" class="menu">≡</a>
+    </nav>
+</header>
+
+    <nav class="category-nav">
+        <button data-category="all">すべてのアイテム</button>
+        <button data-category="accessories">アクセサリー</button>
+        <button data-category="web-items">ウェブアイテム</button>
+        <button data-category="shoes">シューズ</button>
+    </nav>
+
+    <nav class="link-nav">
+        <a href="#" data-link="all" class="active">すべて</a>
+        <a href="#" data-link="men">メンズ</a>
+        <a href="#" data-link="women">レディース</a>
+        <a href="#" data-link="kids">キッズ</a>
+    </nav>
+
+<main id="content">
+    <div class="swiper">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide">Slide 1</div>
+          <div class="swiper-slide">Slide 2</div>
+          <div class="swiper-slide">Slide 3</div>
+        </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+      
+</main>
+
+<script>
+    import Swiper from 'swiper';
+    import 'swiper/swiper-bundle.css';
+
+    const swiper = new Swiper('.swiper', {
+    loop: true,
+    autoplay: { delay: 3000 },
+    pagination: { el: '.swiper-pagination', clickable: true },
+    navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+    },
+    });
+
+
+    document.querySelectorAll('.category-nav button').forEach(button => {
+        button.addEventListener('click', () => {
+            const category = button.getAttribute('data-category');
+            const content = document.getElementById('content');
+            
+            switch(category) {
+                case 'all':
+                    content.innerHTML = '<p>すべてのアイテムが表示されます。</p>';
+                    break;
+                case 'accessories':
+                    content.innerHTML = '<p>アクセサリーが表示されます。</p>';
+                    break;
+                case 'web-items':
+                    content.innerHTML = '<p>ウェブアイテムが表示されます。</p>';
+                    break;
+                case 'shoes':
+                    content.innerHTML = '<p>シューズが表示されます。</p>';
+                    break;
+                default:
+                    content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
+            }
+        });
+    });
+    document.querySelectorAll('.link-nav a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.link-nav a').forEach(a => a.classList.remove('active'));
+            link.classList.add('active');
+        });
+    });
+</script>
+</body>
+</html>
