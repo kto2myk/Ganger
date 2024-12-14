@@ -1,5 +1,6 @@
 from flask import Flask, request, session, render_template, redirect, url_for,flash
 from datetime import timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 
@@ -88,10 +89,41 @@ def home():
         return redirect(url_for("login"))
     return render_template("temp_layout.html")
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
+@app.route('/password-reset', methods=['GET', 'POST'])
+def password_reset():
+    if request.method == 'POST':
+        from Ganger.app.model.database_manager.database_manager import DatabaseManager
+        from Ganger.app.model.model_manager.model import User
+        email = request.form['email']
+        password = request.form['password']
+        password_confirm = request.form['password_confirm']
+        
+        # パスワード一致確認
+        if password != password_confirm:
+            flash('パスワードが一致しません。再度入力してください。')
+            return render_template('password_reset.html')
+        
+        # ユーザーの検索とパスワード更新
+        database_manager = DatabaseManager()
+        user = database_manager.fetch_one(User, filters={"email": email})
+        if not user:
+            flash('該当するメールアドレスが見つかりません。')
+            return redirect(url_for('password_reset'))     
+        # パスワードの更新
+        hashed_password = generate_password_hash(password)
+        success = database_manager.update(User, {"email": email}, {"password": hashed_password})
+        if success:
+            flash('パスワードをリセットしました。ログインしてください。', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('パスワードリセット中にエラーが発生しました。')
+            return redirect(url_for('password_reset'))    
+        
+    return render_template('password_reset.html')
+
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 80, True)
+    try:
+        app.run(host="0.0.0.0", port=80, debug=True)
+    except KeyboardInterrupt:
+        print("\n[INFO] Server 停止")

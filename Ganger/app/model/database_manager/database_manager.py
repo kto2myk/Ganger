@@ -51,7 +51,7 @@ class DatabaseManager(DatabaseConnector):
     def error_log_manager(self):
         return self.__error_log_manager
 
-    def insert(self, model:Base, data:dict, unique_check:dict=None):
+    def insert(self, model, data, unique_check=None):
         """
         データ挿入（重複チェックあり）
         :param model: 操作対象のモデル
@@ -74,17 +74,18 @@ class DatabaseManager(DatabaseConnector):
                 session.add(new_entry)
 
                 # 辞書形式に変換（ローカル変数で管理）
+                session.commit()
                 db_dict = {
                     column.name: getattr(new_entry, column.name) for column in model.__table__.columns
                 }
-                session.commit()
+
                 return db_dict
             
         except SQLAlchemyError as e:
             self.__error_log_manager.add_error(None, str(e))
             return None
     
-    def update(self, model:Base, filters:dict, data:dict):
+    def update(self, model, filters, data):
         """データ更新"""
         try:
             with Session(self.engine) as session:
@@ -99,7 +100,7 @@ class DatabaseManager(DatabaseConnector):
             self.__error_log_manager.add_error(None, str(e))
             return None
 
-    def delete(self, model:Base, filters:dict):
+    def delete(self, model, filters):
         """データ削除"""
         try:
             with Session(self.engine) as session:
@@ -111,7 +112,7 @@ class DatabaseManager(DatabaseConnector):
             self.__error_log_manager.add_error(None, str(e))
             return None
 
-    def fetch(self, model:Base, filters:dict=None, relationships:list[str]=None):
+    def fetch(self, model, filters=None, relationships=None):
         """
         データ取得（リレーションシップ対応）
         :param model: 操作対象のモデル
@@ -144,7 +145,7 @@ class DatabaseManager(DatabaseConnector):
             self.__error_log_manager.add_error(None, str(e))
             return None
 
-    def fetch_all(self, model:Base, filters:dict=None, relationships:list[str]=None):
+    def fetch_all(self, model, filters=None, relationships=None):
         """
         指定した条件に一致する全件のレコードを取得
         """
@@ -154,7 +155,7 @@ class DatabaseManager(DatabaseConnector):
             self.__error_log_manager.add_error(None, str(e))
             return []
 
-    def fetch_one(self, model:Base, filters:dict=None, relationships:list[str]=None):
+    def fetch_one(self, model, filters=None, relationships=None):
         """
         指定した条件に一致する最初のレコードを取得
         """
