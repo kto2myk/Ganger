@@ -10,10 +10,12 @@
     <script type="text/javascript" href="../static/js/main.js"></script>
     <script src="..\static\js\node_modules\@splidejs\splide\dist\js\splide.min.js"></script>
     <script>
-      document.addEventListener( 'DOMContentLoaded', function () {
-        new Splide( '#image-carousel' ).mount();
-      } );
-      
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.splide').forEach(function (carousel) {
+        console.log("Initializing Splide for:", carousel.id);
+        new Splide(carousel).mount();
+      });
+    });      
       window.onload = function() {
         const spinner = document.getElementById('loading');
         spinner.classList.add('loaded');
@@ -37,33 +39,31 @@
     </div>
 
     <div class="contents">
+      {% for post in posts %}
       <div class="post_container">
         <div class="account_info">
-          <img src="{{ session['profile_image'] }}">
-          <p>{{ session["username"] }}</p>
-          <p>{{text}}</p>
+          <img src="{{ session['profile_image'] }}" alt="プロフィール画像">
+          <p>{{ post["user_id"] }}</p>
         </div>
         <div class="image_area">
-          <section id="image-carousel" class="splide">
+          <section id="image-carousel-{{ post['post_id'] }}" class="splide">
             <div class="splide__track">
               <ul class="splide__list">
+                {% for image in post["images"] %}
                 <li class="splide__slide">
-                  <img src="../static/img/fuwa.png" alt="">
+                  <img src="{{ image['img_path'] }}" alt="投稿画像">
                 </li>
-                <li class="splide__slide">
-                  <img src="../static/img/gl.png" alt="">
-                </li>
-                <li class="splide__slide">
-                  <img src="../static/img/hi.png" alt="">
-                </li>
+                {% endfor %}
               </ul>
             </div>
           </section>
         </div>
-        <div class="sentence">{{ session["user_id"] }}</div>
+        <p class="user_name">{{post['username']}}</p>
+        <p class="body_text">{{ post['body_text'] }}</p>
+        <p class="post_time">{{ post['post_time'] }}</p>
       </div>
-    </div>
-
+      {% endfor %}
+    </div>    
     <div class="right_bar">
       <ul>
         <li>a</li>

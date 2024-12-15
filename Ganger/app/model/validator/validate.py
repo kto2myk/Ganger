@@ -86,3 +86,25 @@ class Validator:
         # 成功時は日付を返す
         return birthday
 
+
+    @staticmethod
+    def calculate_time_difference(post_time):
+        """
+        現在時刻と投稿時刻の差分を計算してフォーマットする
+        :param post_time: 投稿時刻 (datetimeオブジェクト)
+        :return: 差分を表す文字列（例: "5秒前", "5分前", "2時間前", "1日前"）
+        """
+        from datetime import datetime
+        now = datetime.now()
+        time_diff = now - post_time
+        seconds_diff = int(time_diff.total_seconds())
+        minutes_diff = seconds_diff // 60
+
+        if seconds_diff < 60:  # 60秒未満
+            return f"{seconds_diff}秒前"
+        elif minutes_diff < 60:  # 60分未満
+            return f"{minutes_diff}分前"
+        elif minutes_diff < 1440:  # 24時間未満
+            return f"{minutes_diff // 60}時間前"
+        else:
+            return f"{minutes_diff // 1440}日前"

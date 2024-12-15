@@ -9,11 +9,16 @@ app = Flask(__name__,
     static_folder=os.path.abspath("Ganger/app/static"),
 )
 
+# 画像保存先の設定
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "Ganger", "app", "static", "images", "post_images")
+
 # Flask の基本設定
 app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=5) 
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config['POST_FOLDER'] = POST_IMAGE_FOLDER
 # @app.before_request
 # def make_session_permanent(): #sessionの一括永続化
 #     session.permanent = True
@@ -39,7 +44,7 @@ def login():
             session["user_id"] = user.user_id
             session["username"] = user.username
             session["profile_image"] = url_for("static",
-                filename=f"profile_images/{user.profile_image}")
+                filename=f"images/profile_images/{user.profile_image}")
             return redirect(url_for("home"))
         else:
             flash(error) 
@@ -72,7 +77,7 @@ def signup():
                 session["id"] = result["id"]
                 session["user_id"] = result["user_id"]
                 session["username"] = result["username"]
-                session["profile_image"] = url_for("static", filename=f"profile_images/{result['profile_image']}")
+                session["profile_image"] = url_for("static", filename=f"images/profile_images/{result['profile_image']}")
                 return redirect(url_for("home"))
             
             except Exception as e:
@@ -85,9 +90,40 @@ def signup():
 
 @app.route("/home", methods=["GET", "POST"])
 def home():
-    if not "id" in session:
+    if "id" not in session:
         return redirect(url_for("login"))
-    return render_template("temp_layout.html")
+    from Ganger.app.model.database_manager.database_manager import DatabaseManager
+    from Ganger.app.model.model_manager.model import Post
+    from Ganger.app.model.validator.validate import Validator
+    db_manager = DatabaseManager()
+
+    try:
+        filters = {"post_id": "8"}  # テスト用フィルタ
+        posts = db_manager.fetch(
+            model=Post,
+            relationships=["images", "author"],
+            filters=filters
+        )
+
+        # テンプレートに渡すデータ構造を生成
+        formatted_posts = []
+        for post in posts:
+            formatted_posts.append({
+                "post_id": post.post_id,
+                "user_id": post.author.user_id,
+                "username": post.author.username,
+                "body_text": post.body_text,
+                "post_time": Validator.calculate_time_difference(post.post_time),  # 差分を計算
+                "images": [
+                    {"img_path": f"../static/images/post_images/{image.img_path}"}
+                    for image in post.images
+                ]
+            })
+        return render_template("temp_layout.html", posts=formatted_posts)
+    except Exception as e:
+        print(f"Error: {e}")
+        # return render_template("error.html", message="投稿データの取得に失敗しました。")
+    
 
 @app.route('/password-reset', methods=['GET', 'POST'])
 def password_reset():
