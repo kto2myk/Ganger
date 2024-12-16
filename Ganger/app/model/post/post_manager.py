@@ -7,15 +7,14 @@ from Ganger.app.model.model_manager.model import Post, Image
 class PostManager(DatabaseManager):
     def __init__(self):
         super().__init__()
-        self.upload_folder = "Ganger/app/static/images/post_images"
-        self.allowed_extensions = {".png", ".jpg", ".jpeg", ".gif"}
 
     def is_allowed_extension(self, filename):
         """
         ファイルの拡張子が許可されているか確認
         """
+        allowed_extensions = {".png", ".jpg", ".jpeg", ".gif"}
         ext = os.path.splitext(filename)[1].lower()
-        return ext in self.allowed_extensions
+        return ext in allowed_extensions
 
     def generate_filename(self, user_id, post_id, img_order, ext):
         """
@@ -39,6 +38,8 @@ class PostManager(DatabaseManager):
         """
         投稿データを作成し、関連する画像を保存する
         """
+        upload_folder = "Ganger/app/static/images/post_images"
+
         try:
             # 投稿データをDBに挿入
             post_result = self.insert(model=Post, data=post_data)
@@ -57,7 +58,7 @@ class PostManager(DatabaseManager):
 
                 ext = os.path.splitext(original_filename)[1].lower()
                 filename = self.generate_filename(user_id, post_id, index, ext)
-                file_path = os.path.join(self.upload_folder, filename)
+                file_path = os.path.join(upload_folder, filename)
 
                 # ファイル名をDBに登録
                 image_data = {

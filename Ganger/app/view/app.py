@@ -115,10 +115,11 @@ def home():
                 "body_text": post.body_text,
                 "post_time": Validator.calculate_time_difference(post.post_time),  # 差分を計算
                 "images": [
-                    {"img_path": f"../static/images/post_images/{image.img_path}"}
-                    for image in post.images
+                {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
+                for image in post.images
                 ]
             })
+            
         return render_template("temp_layout.html", posts=formatted_posts)
     except Exception as e:
         print(f"Error: {e}")
@@ -157,6 +158,61 @@ def password_reset():
         
     return render_template('password_reset.html')
 
+
+@app.route('/create_post', methods=['POST'])
+def create_post():
+    """
+    新しい投稿を作成するエンドポイント
+    """
+    if 'user_id' not in session:
+        flash("ログインしてください。", "error")
+        return redirect(url_for('login'))
+
+    # セッションからユーザーIDを取得
+    user_id = session['user_id']
+    title = request.form.get('title')
+    description = request.form.get('description', "")  # 任意のフィールド
+
+    if not title:
+        flash("タイトルは必須です。", "error")
+        return redirect(url_for('post_page'))
+
+    # 投稿データ
+    post_data = {
+        "user_id": user_id,
+        "title": title,
+        "description": description
+    }
+
+    # 画像ファイルの処理
+    if 'images' not in request.files:
+        flash("画像ファイルを選択してください。", "error")
+        return redirect(url_for('post_page'))
+
+    image_files = request.files.getlist('images')
+
+    if len(image_files) > 6:
+        flash("画像は最大6枚までアップロード可能です。", "error")
+        return redirect(url_for('post_page'))
+
+    # PostManagerを使用して投稿作成
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
+    result = post_manager.create_post(post_data, image_files)
+
+    if "error" in result:
+        flash(result["error"], "error")
+        return redirect(url_for('post_page'))
+
+    flash("投稿が作成されました！", "success")
+    return redirect(url_for('home'))
+
+@app.route('/post_page')
+def post_page():
+    """
+    投稿作成ページの表示
+    """
+    return render_template('post_page.html')
 
 if __name__ == "__main__":
     try:
