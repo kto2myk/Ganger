@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D モデルビューアー</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; overflow: hidden; }
+        #container { display: flex; height: 100vh; }
+        #sidebar {
+            width: 300px; background: #f8f9fa; padding: 20px; display: flex;
+            flex-direction: column; gap: 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        h3 { margin: 0; font-size: 18px; font-weight: bold; }
+        select, button, input {
+            padding: 10px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer;
+        }
+        .button { background: #6c63ff; color: white; }
+        .button:hover { background: #574fe6; }
+        label { font-size: 14px; font-weight: bold; }
+        .color-display {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid #ddd; margin-top: 5px;
+        }
+        #viewer { flex: 1; background: linear-gradient(to bottom, #3d3d3d, #1e1e1e); }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- サイドバー -->
+        <div id="sidebar">
+            <h3>3D モデルビューアー</h3>
+            <label for="model-selector">表示するモデルを選択</label>
+            <select id="model-selector">
+                <option value="ankle_boots.glb">Ankle Boots</option>
+                <option value="backpack.glb">Backpack</option>
+                <option value="beanie.glb">Beanie</option>
+                <option value="boots.glb">Boots</option>
+                <option value="cap.glb">Cap</option>
+                <option value="cushion.glb">Cushion</option>
+                <option value="hoodie.glb">Hoodie</option>
+                <option value="jacket.glb">Jacket</option>
+                <option value="mug.glb">Mug</option>
+                <option value="necklace.glb">Necklace</option>
+                <option value="phone_case.glb">Phone Case</option>
+                <option value="tshirt.glb">T-Shirt</option>
+                <option value="white_sneaker.glb">White Sneaker</option>
+            </select>
+
+            <label for="color">モデルの色</label>
+            <input type="color" id="color" value="#ffffff">
+            <div id="color-display" class="color-display" style="background: #ffffff;"></div>
+
+            <label for="bg-color">背景色</label>
+            <input type="color" id="bg-color" value="#3d3d3d">
+            <div id="bg-color-display" class="color-display" style="background: #3d3d3d;"></div>
+
+            <button class="button" id="upload">テクスチャをアップロード</button>
+            <button class="button" id="save">SAVE</button>
+        </div>
+
+        <!-- 3Dモデル表示エリア -->
+        <div id="viewer"></div>
+    </div>
+
+    <!-- Three.js と GLTFLoader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, controls, loader, model, textureLoader;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 5);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth - 300, window.innerHeight);
+            document.getElementById("viewer").appendChild(renderer.domElement);
+
+            const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+            scene.add(light);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            loader = new THREE.GLTFLoader();
+            textureLoader = new THREE.TextureLoader();
+
+            loadModel("tshirt.glb");
+
+            document.getElementById("model-selector").addEventListener("change", loadSelectedModel);
+            document.getElementById("color").addEventListener("input", applyColor);
+            document.getElementById("bg-color").addEventListener("input", changeBackground);
+            document.getElementById("upload").addEventListener("click", uploadTexture);
+            document.getElementById("save").addEventListener("click", saveImage);
+
+            animate();
+        }
+
+        function loadSelectedModel() {
+            const modelName = document.getElementById("model-selector").value;
+            loadModel(modelName);
+        }
+
+        function loadModel(modelFile) {
+            const modelPath = `/static/3d_models/${modelFile}`;
+            if (model) scene.remove(model);
+
+            loader.load(modelPath, (gltf) => {
+                model = gltf.scene;
+
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3()).length();
+                const scale = 3 / size;
+
+                model.scale.set(scale, scale, scale);
+                model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+                scene.add(model);
+            });
+        }
+
+        function applyColor(e) {
+            const color = e.target.value;
+            document.getElementById("color-display").style.background = color;
+            if (model) model.traverse(child => { if (child.isMesh) child.material.color.set(color); });
+        }
+
+        function changeBackground(e) {
+            const color = e.target.value;
+            document.getElementById("bg-color-display").style.background = color;
+            scene.background = new THREE.Color(color);
+        }
+
+        function uploadTexture() {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = () => {
+                        const targetSize = 1024; // 正方形のテクスチャサイズ
+
+                        // Canvasで正方形にリサイズ
+                        const canvas = document.createElement("canvas");
+                        const ctx = canvas.getContext("2d");
+                        canvas.width = targetSize;
+                        canvas.height = targetSize;
+
+                        // アスペクト比を保ちながら中央に描画
+                        const scale = Math.min(targetSize / img.width, targetSize / img.height);
+                        const newWidth = img.width * scale;
+                        const newHeight = img.height * scale;
+                        const offsetX = (targetSize - newWidth) / 2;
+                        const offsetY = (targetSize - newHeight) / 2;
+
+                        ctx.fillStyle = "white"; // 余白の色（白）を指定
+                        ctx.fillRect(0, 0, targetSize, targetSize); // 背景を白で塗りつぶす
+                        ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+
+                        // テクスチャを生成してモデルに適用
+                        const resizedTexture = new THREE.Texture(canvas);
+                        resizedTexture.needsUpdate = true;
+
+                        model.traverse((child) => {
+                            if (child.isMesh) {
+                                child.material.map = resizedTexture;
+                                child.material.needsUpdate = true;
+                            }
+                        });
+                    };
+                    img.src = event.target.result; // 画像読み込み
+                };
+
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+
+        function saveImage() {
+            renderer.render(scene, camera);
+            const imgData = renderer.domElement.toDataURL("image/png");
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "{{url_for('display')}}";
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "image";
+            input.value = imgData;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
