@@ -20,3 +20,4 @@ class ErrorLogManager(TableConnector):
             except SQLAlchemyError as e:
                 session.rollback()
                 print(f"[ERROR] エラーログ記録中にエラーが発生しました: {e}")
+    

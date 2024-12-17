@@ -7,7 +7,7 @@ body {
     width: 100vw;
     height: 100vh;
     transition: all 1.5s;
-    background-color: #fff;
+    /* background-color: #fff; */
     position: fixed;
     top: 0;
     left: 0;
@@ -28,7 +28,7 @@ body {
       opacity: 0;
     }
   }
-   
+
   .loaded {
     opacity: 0;
     visibility: hidden;
@@ -62,9 +62,9 @@ header {
   border-color: #999;
 }
 
-.replace_button:hover {
+/* .replace_button:hover {
   
-}
+} */
 
 .main_container {
     display: flex;
