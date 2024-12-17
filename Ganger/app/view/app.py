@@ -112,6 +112,7 @@ def home():
                 "post_id": post.post_id,
                 "user_id": post.author.user_id,
                 "username": post.author.username,
+                "profile_image": url_for("static", filename = f"images/profile_images/{post.author.profile_image}"),
                 "body_text": post.body_text,
                 "post_time": Validator.calculate_time_difference(post.post_time),  # 差分を計算
                 "images": [
