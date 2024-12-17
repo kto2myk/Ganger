@@ -27,7 +27,6 @@ def test_add_user(test_session):
         username="TestUser",
         email="test@example.com",
         password="hashed_password",
-        birthday="2000-01-01"
     )
     test_session.add(user)
     test_session.commit()

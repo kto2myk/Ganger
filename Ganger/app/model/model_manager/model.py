@@ -17,7 +17,6 @@ class User(Base):
     create_time = Column(DateTime, default=func.now())
     real_name = Column(String(45))
     address = Column(String(60))
-    birthday = Column(Date, nullable=False)
     profile_image = Column(String(255), nullable=False, default="default-profile.png")
 
     # リレーション
@@ -38,9 +37,8 @@ class User(Base):
     reposts = relationship("Repost", back_populates="user")
     rooms = relationship("RoomMember", back_populates="user")  
     def __repr__(self):
-            return (f"<User(id={self.id}, user_id={self.user_id}, username={self.username}, "
-                    f"email={self.email}, create_time={self.create_time}, birthday={self.birthday}, "
-                    f"profile_image={self.profile_image})>")   
+            return (f"<User(id={self.id}, user_id={self.user_id}, username={self.username},"
+                    f"email={self.email}, create_time={self.create_time}, profile_image={self.profile_image})>")   
 
 class Post(Base):
     __tablename__ = 'posts'
@@ -192,7 +190,7 @@ class Shop(Base):
     __tablename__ = 'shops'
 
     product_id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(Integer, ForeignKey('posts.post_id', ondelete='SET NULL'), nullable=True)
+    post_id = Column(Integer, ForeignKey('posts.post_id', ondelete='CASCADE'), nullable=True)
     tag_id = Column(Integer, ForeignKey('tag_master.tag_id', ondelete='SET NULL'), nullable=True)
     category_id = Column(Integer, ForeignKey('category_master.category_id', ondelete='SET NULL'), nullable=True)
     name = Column(String(45), nullable=False)
