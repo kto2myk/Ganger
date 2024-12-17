@@ -61,9 +61,26 @@ body {
     font-size: 20px;
 }
 
-.menu {
-    font-size: 24px;
+.custom-menu-popup {
+    font-size: 18px;
+    text-align: center;
+    width: 400px !important;  /* 必要に応じて調整 */
 }
+
+.custom-menu-popup ul li {
+    margin: 10px 0;
+}
+
+.custom-menu-popup a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+.custom-menu-popup a:hover {
+    color: #007bff;
+}
+
 
 /* カテゴリーナビゲーションスタイル */
 .category-nav {
@@ -142,10 +159,10 @@ body {
 }
 
 .swiper-slide img {
-      width: 450px;   /* 幅 */
-      height: 300px;  /* 高さ */
-      object-fit: cover; /* 必要なら画像の切り抜き */
-      margin: 0 10px;  /* 左右に余白を追加 (合計20px) */
+      width: 450px;
+      height: 300px; /*画像用意したのちにけす*/
+      object-fit: cover; 
+      margin: 0 10px;
     }
 
 </style>
@@ -198,6 +215,8 @@ body {
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     const swiper = new Swiper('.swiper', {
     loop: true,
@@ -222,29 +241,25 @@ body {
   });
 
 
-    document.querySelectorAll('.category-nav button').forEach(button => {
-        button.addEventListener('click', () => {
-            const category = button.getAttribute('data-category');
-            const content = document.getElementById('content');
-            
-            switch(category) {
-                case 'all':
-                    content.innerHTML = '<p>すべてのアイテムが表示されます。</p>';
-                    break;
-                case 'accessories':
-                    content.innerHTML = '<p>アクセサリーが表示されます。</p>';
-                    break;
-                case 'web-items':
-                    content.innerHTML = '<p>ウェブアイテムが表示されます。</p>';
-                    break;
-                case 'shoes':
-                    content.innerHTML = '<p>シューズが表示されます。</p>';
-                    break;
-                default:
-                    content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
+    document.querySelector('.menu').addEventListener('click', () => {
+        Swal.fire({
+            title: 'メニュー',
+            html: `
+                <ul style="list-style: none; padding: 0; text-align: left;">
+                    <li><a href="#">ホーム</a></li>
+                    <li><a href="#">商品一覧</a></li>
+                    <li><a href="#">カート</a></li>
+                    <li><a href="#">ログイン</a></li>
+                </ul>
+            `,
+            showCloseButton: true,
+            showConfirmButton: false,
+            customClass: {
+                popup: 'custom-menu-popup',
             }
         });
     });
+
     document.querySelectorAll('.link-nav a').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
