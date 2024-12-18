@@ -78,33 +78,45 @@ header {
     width: 25vh;
     margin: 0 auto;
     z-index: 9999;
+    border-right: solid 1px #999;
     
     justify-content: space-between;
 }
 
 .side_bar ul {
-    margin-top: 70px;
+    margin-top: 10vh;
+    padding: 0;
+    width: 100%;
 }
 
 .side_bar ol {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 2.5vh;
+  margin-bottom: 2.5vh;
+  margin-left: 5%;
+  margin-right: 5%;
+  padding: 0;
 }
 
 .side_bar_links {
-  font-size: 15px;
+  font-size: 30px;
   text-decoration: none;
 }
 
 .side_bar_links button {
+  width:100%;
   height: 70px;
   background-color: transparent;
+  border-radius: 10px;
   border: none;
   transition: 0.5s;
 }
 
 .side_bar_links button:hover {
   background-color: #ddd;
+}
+
+.fa-solid {
+  font-size: 15px;
 }
 
 .contents {
