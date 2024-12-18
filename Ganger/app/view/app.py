@@ -230,15 +230,39 @@ def post_page():
 def create_design():
     return render_template("create_design.html")
 
-@app.route("/display", methods=["POST","GET"])
-def display():
-    if request.method == "POST":
-        image_data = request.form.get("image")  # Base64形式の画像データ
-        if not image_data:
-            return "画像データが見つかりません。", 400
-        return render_template("image_display.html", image_data=image_data)
-    return redirect(url_for('home'))
+@app.route('/save_design', methods=['POST'])
+def save_design():
+    image_data = request.form.get("image")  # Base64形式の画像データ
+    if not image_data:
+        return "画像データが見つかりません。", 400
 
+    try:
+        import uuid
+        import base64
+        # 一意なファイル名を生成
+        unique_name = f"{uuid.uuid4()}.png"
+        image_path = os.path.join(app.config['TEMP_FOLDER'], unique_name)
+
+        # Base64データをデコードして保存
+        image_data = image_data.split(",")[1]  # "data:image/png;base64,"を取り除く
+        with open(image_path, "wb") as f:
+            f.write(base64.b64decode(image_data))
+
+        # セッションに画像パスを保存
+        session['image_path'] = image_path
+        return redirect(url_for('display'))
+    except Exception as e:
+        return f"エラーが発生しました: {str(e)}", 500
+
+@app.route('/display', methods=['GET'])
+def display():
+    image_path = session.get('image_path')  # セッションから画像パスを取得
+    if not image_path or not os.path.exists(image_path):
+        return "画像が見つかりません。", 404
+
+    # テンプレートで画像を表示
+    image_url = url_for('static', filename=f"images/temp_images/{os.path.basename(image_path)}")
+    return render_template("image_display.html", image_url=image_url)
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)
