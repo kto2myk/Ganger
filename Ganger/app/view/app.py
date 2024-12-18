@@ -3,22 +3,27 @@ from datetime import timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
+# 実行ディレクトリを基準に保存先を設定  app.pyディレクトリの一階層上 app/までを取得
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))  
 
 app = Flask(__name__,
-    template_folder=os.path.abspath("Ganger/app/templates"),
-    static_folder=os.path.abspath("Ganger/app/static"),
+    template_folder=os.path.join(BASE_DIR,"templates"),
+    static_folder=os.path.join(BASE_DIR,"static"),
 )
 
 # 画像保存先の設定
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "Ganger", "app", "static", "images", "post_images")
+POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "post_images")
+TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
+PROFILE_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "profile_images")
 
 # Flask の基本設定
 app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=5) 
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300) 
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config['POST_FOLDER'] = POST_IMAGE_FOLDER
+app.config['TEMP_FOLDER'] = TEMP_IMAGE_FOLDER
+app.config['PROFILE_FOLDER'] = PROFILE_IMAGE_FOLDER
 # @app.before_request
 # def make_session_permanent(): #sessionの一括永続化
 #     session.permanent = True
@@ -43,8 +48,7 @@ def login():
             session["id"] = user.id
             session["user_id"] = user.user_id
             session["username"] = user.username
-            session["profile_image"] = url_for("static",
-                filename=f"images/profile_images/{user.profile_image}")
+            session["profile_image"] = f"{app.config['PROFILE_FOLDER']} {user.profile_image}" 
             return redirect(url_for("home"))
         else:
             flash(error) 
@@ -78,6 +82,7 @@ def signup():
                 session["user_id"] = result["user_id"]
                 session["username"] = result["username"]
                 session["profile_image"] = url_for("static", filename=f"images/profile_images/{result['profile_image']}")
+                
                 return redirect(url_for("home"))
             
             except Exception as e:
@@ -160,6 +165,11 @@ def password_reset():
         
     return render_template('password_reset.html')
 
+@app.route('/my_profile',methods = ['POST','GET'])
+def my_profile():
+    if request.method == "POST":
+        redirect(url_for('my_profile'))
+    return render_template("my_profile.html")
 
 @app.route('/create_post', methods=['POST'])
 def create_post():
