@@ -12,15 +12,24 @@
             flex-direction: column; gap: 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         h3 { margin: 0; font-size: 18px; font-weight: bold; }
-        select, button, input {
+        select, button {
             padding: 10px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer;
         }
         .button { background: #6c63ff; color: white; }
         .button:hover { background: #574fe6; }
         label { font-size: 14px; font-weight: bold; }
         .color-display {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 1px solid #ddd; margin-top: 5px;
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 1px solid #ddd; display: flex; justify-content: center; align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .color-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
         }
         #viewer { flex: 1; background: linear-gradient(to bottom, #3d3d3d, #1e1e1e); }
     </style>
@@ -43,17 +52,19 @@
                 <option value="mug.glb">Mug</option>
                 <option value="necklace.glb">Necklace</option>
                 <option value="phone_case.glb">Phone Case</option>
-                <option value="tshirt.glb">T-Shirt</option>
+                <option value="tshirt.glb" selected>T-Shirt</option>
                 <option value="white_sneaker.glb">White Sneaker</option>
             </select>
 
-            <label for="color">モデルの色</label>
-            <input type="color" id="color" value="#ffffff">
-            <div id="color-display" class="color-display" style="background: #ffffff;"></div>
+            <label>モデルの色</label>
+            <div id="color-display" class="color-display" style="background: #ffffff;">
+                <input type="color" id="color" class="color-input" value="#ffffff">
+            </div>
 
-            <label for="bg-color">背景色</label>
-            <input type="color" id="bg-color" value="#3d3d3d">
-            <div id="bg-color-display" class="color-display" style="background: #3d3d3d;"></div>
+            <label>背景色</label>
+            <div id="bg-color-display" class="color-display" style="background: #3d3d3d;">
+                <input type="color" id="bg-color" class="color-input" value="#3d3d3d">
+            </div>
 
             <button class="button" id="upload">テクスチャをアップロード</button>
             <button class="button" id="save">SAVE</button>
