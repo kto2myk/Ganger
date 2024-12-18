@@ -86,14 +86,25 @@ header {
     margin-top: 70px;
 }
 
-.side_bar li {
-  margin-top: 10px;
-  margin-bottom: 10px;
+.side_bar ol {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .side_bar_links {
   font-size: 15px;
   text-decoration: none;
+}
+
+.side_bar_links button {
+  height: 70px;
+  background-color: transparent;
+  border: none;
+  transition: 0.5s;
+}
+
+.side_bar_links button:hover {
+  background-color: #ddd;
 }
 
 .contents {

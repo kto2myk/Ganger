@@ -31,17 +31,18 @@
     <div class="header_logo">Ganger</div>
     <button id="ajaxtest">AjaxTest</button>
     <div class="link_to_shopsite"><button class="replace_button" href="{#{{ url_for('{# method replace to shopsite #}') }}#}">shop</button></div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   </header>
   <div class="main_container">
     <div class="side_bar">
       <ul>
-        <ol><a href="" class=side_bar_links>HOME</a></ol>
-        <ol><a href="" class=side_bar_links>検索</a></ol>
-        <ol><a href="" class=side_bar_links>お知らせ</a></ol>
+        <ol><a href="" class=side_bar_links><button><i class="fa-solid fa-house"></i>HOME</button></a></ol>
+        <ol><a href="" class=side_bar_links><button><i class="fa-solid fa-magnifying-glass"></i>検索</button></a></ol>
+        <ol><a href="" class=side_bar_links><button><i class="fa-solid fa-envelope"></i>お知らせ</button></a></ol>
         <ol><a href="" class=side_bar_links>トレンド</a></ol>
         <ol><a href="" class=side_bar_links>メッセージ</a></ol>
         <ol><a href="" class=side_bar_links>カート</a></ol>
-        <ol><a href="" class=side_bar_links>プロフィール</a></ol>
+        <ol><a href="{{ url_for('my_profile') }}" class=side_bar_links><button>プロフィール</button></a></ol>
         <li><a href="{{url_for('create_design')}}">Create Design</a></li>
       </ul>
     </div>
