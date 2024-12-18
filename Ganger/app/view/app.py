@@ -1,4 +1,4 @@
-from flask import Flask, request, session, render_template, redirect, url_for,flash
+from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify
 from datetime import timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -112,6 +112,7 @@ def home():
                 "post_id": post.post_id,
                 "user_id": post.author.user_id,
                 "username": post.author.username,
+                "profile_image": url_for("static", filename = f"images/profile_images/{post.author.profile_image}"),
                 "body_text": post.body_text,
                 "post_time": Validator.calculate_time_difference(post.post_time),  # 差分を計算
                 "images": [
@@ -123,7 +124,8 @@ def home():
         return render_template("temp_layout.html", posts=formatted_posts)
     except Exception as e:
         print(f"Error: {e}")
-        # return render_template("error.html", message="投稿データの取得に失敗しました。")
+        flash("投稿データの取得に失敗しました。")
+        return redirect(url_for("login"))
     
 
 @app.route('/password-reset', methods=['GET', 'POST'])
@@ -212,7 +214,20 @@ def post_page():
     """
     投稿作成ページの表示
     """
-    return render_template('post_page.html')
+    return "<h1>投稿ページにリダイレクトされました！</h1>"
+
+@app.route('/create_design')
+def create_design():
+    return render_template("create_design.html")
+
+@app.route("/display", methods=["POST","GET"])
+def display():
+    if request.method == "POST":
+        image_data = request.form.get("image")  # Base64形式の画像データ
+        if not image_data:
+            return "画像データが見つかりません。", 400
+        return render_template("image_display.html", image_data=image_data)
+    return redirect(url_for('home'))
 
 if __name__ == "__main__":
     try:

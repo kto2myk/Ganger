@@ -28,13 +28,21 @@
     <div class="cssanimation leFadeInLeft sequence"> Example </div>
   </div>
   <header>
+    <div class="header_logo">Ganger</div>
     <button id="ajaxtest">AjaxTest</button>
+    <div class="link_to_shopsite"><button class="replace_button" href="{#{{ url_for('{# method replace to shopsite #}') }}#}">shop</button></div>
   </header>
   <div class="main_container">
     <div class="side_bar">
       <ul>
-        <li>a</li>
-        <li>b</li>
+        <ol><a href="" class=side_bar_links>HOME</a></ol>
+        <ol><a href="" class=side_bar_links>検索</a></ol>
+        <ol><a href="" class=side_bar_links>お知らせ</a></ol>
+        <ol><a href="" class=side_bar_links>トレンド</a></ol>
+        <ol><a href="" class=side_bar_links>メッセージ</a></ol>
+        <ol><a href="" class=side_bar_links>カート</a></ol>
+        <ol><a href="" class=side_bar_links>プロフィール</a></ol>
+        <li><a href="{{url_for('create_design')}}">Create Design</a></li>
       </ul>
     </div>
 
@@ -42,7 +50,7 @@
       {% for post in posts %}
       <div class="post_container">
         <div class="account_info">
-          <img src="{{ session['profile_image'] }}" alt="プロフィール画像">
+          <img src="{{ post['profile_image'] }}" alt="プロフィール画像">
           <p>{{ post["user_id"] }}</p>
         </div>
         <div class="image_area">
