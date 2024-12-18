@@ -3,14 +3,14 @@ from datetime import timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
-# 実行ディレクトリを基準に保存先を設定  app.pyディレクトリの一階層上 app/までを取得
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))  
 
 app = Flask(__name__,
-    template_folder=os.path.join(BASE_DIR,"templates"),
-    static_folder=os.path.join(BASE_DIR,"static"),
+    template_folder=os.path.abspath("Ganger/app/templates"),
+    static_folder=os.path.abspath("Ganger/app/static"),
 )
 
+# 実行ディレクトリを基準に保存先を設定  app.pyディレクトリの一階層上 app/までを取得
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))  
 # 画像保存先の設定
 POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "post_images")
 TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
@@ -48,7 +48,8 @@ def login():
             session["id"] = user.id
             session["user_id"] = user.user_id
             session["username"] = user.username
-            session["profile_image"] = f"{app.config['PROFILE_FOLDER']} {user.profile_image}" 
+            session["profile_image"] =url_for("static", 
+            filename=f"images/profile_images/{user.profile_image}")
             return redirect(url_for("home"))
         else:
             flash(error) 
@@ -82,7 +83,6 @@ def signup():
                 session["user_id"] = result["user_id"]
                 session["username"] = result["username"]
                 session["profile_image"] = url_for("static", filename=f"images/profile_images/{result['profile_image']}")
-                
                 return redirect(url_for("home"))
             
             except Exception as e:
