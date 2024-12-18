@@ -240,7 +240,7 @@ def save_design():
         import uuid
         import base64
         # 一意なファイル名を生成
-        unique_name = f"{uuid.uuid4()}.png"
+        unique_name = f"{uuid.uuid4()}.png"  # 一意なファイル名
         image_path = os.path.join(app.config['TEMP_FOLDER'], unique_name)
 
         # Base64データをデコードして保存
@@ -248,21 +248,23 @@ def save_design():
         with open(image_path, "wb") as f:
             f.write(base64.b64decode(image_data))
 
-        # セッションに画像パスを保存
-        session['image_path'] = image_path
+        # セッションに画像名を保存
+        session['image_name'] = unique_name
         return redirect(url_for('display'))
     except Exception as e:
         return f"エラーが発生しました: {str(e)}", 500
 
 @app.route('/display', methods=['GET'])
 def display():
-    image_path = session.get('image_path')  # セッションから画像パスを取得
-    if not image_path or not os.path.exists(image_path):
+    # セッションから画像名を取得
+    image_name = session.get('image_name')
+    if not image_name:
         return "画像が見つかりません。", 404
 
-    # テンプレートで画像を表示
-    image_url = url_for('static', filename=f"images/temp_images/{os.path.basename(image_path)}")
+    # URLを生成してHTMLに渡す
+    image_url = url_for('static', filename=f"images/temp_images/{image_name}")
     return render_template("image_display.html", image_url=image_url)
+
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)
