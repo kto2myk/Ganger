@@ -86,11 +86,21 @@ header {
     margin-top: 70px;
 }
 
+.side_bar li {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.side_bar_links {
+  font-size: 15px;
+  text-decoration: none;
+}
+
 .contents {
     height: 100vh;
     width: 75vw;
     margin-left: 25vh;
-    margin-top: 70px;
+    margin-top: 10vh;
     justify-content: space-between;
 }
 
