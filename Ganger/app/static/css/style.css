@@ -42,7 +42,7 @@ header {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    z-index: 9998;
+    z-index: 9999;
     background-color: #fff;
     border-bottom: solid 1px #999;
 }
@@ -77,28 +77,30 @@ header {
     height: 100vh;
     width: 25vh;
     margin: 0 auto;
-    z-index: 9999;
+    z-index: 9998;
     border-right: solid 1px #999;
     
     justify-content: space-between;
 }
 
 .side_bar ul {
-    margin-top: 10vh;
+    margin-top: 40%;
     padding: 0;
     width: 100%;
 }
 
 .side_bar ol {
-  margin-top: 2.5vh;
-  margin-bottom: 2.5vh;
+  margin-top: 2.5%;
+  margin-bottom: 2.5%;
   margin-left: 5%;
   margin-right: 5%;
   padding: 0;
+  text-align: left;
 }
 
 .side_bar_links {
   text-decoration: none;
+  text-align: left;
 }
 
 .side_bar_links button {
