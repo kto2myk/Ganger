@@ -1,9 +1,12 @@
 from werkzeug.security import check_password_hash
-
+from cryptography.fernet import Fernet
+from datetime import datetime, date
+import re
+from sqlalchemy.orm import Session
 
 class Validator:
-    from sqlalchemy.orm import Session
-
+    SECRET_KEY = Fernet.generate_key()  # 本番環境では固定の安全なキーを使用
+    cipher = Fernet(SECRET_KEY)
 #     @staticmethod
 #     def validate_existence(session: Session, model, conditions: dict):
 #         """
@@ -41,9 +44,27 @@ class Validator:
 #             print(f"[ERROR] Query Execution Failed: {e}")
 #             raise
 #         return result
+
+    @staticmethod
+    def encrypt(value):
+        """
+        指定された値を暗号化する
+        :param value: 暗号化する文字列または数値
+        :return: 暗号化された文字列
+        """
+        return Validator.cipher.encrypt(str(value).encode()).decode()
+
+    @staticmethod
+    def decrypt(value):
+        """
+        指定された暗号化値を復号化する
+        :param value: 暗号化された文字列
+        :return: 復号化された元の値
+        """
+        return Validator.cipher.decrypt(value.encode()).decode()
+
     @staticmethod
     def validate_email_format(email: str):
-        import re
         if not re.match(r'^\S+@\S+\.\S+$', email):
             error_message = "無効なメールアドレス形式"
             raise ValueError (error_message)
@@ -51,7 +72,6 @@ class Validator:
 
     @staticmethod
     def validate_date(year: int, month: int, day: int) -> tuple:
-        from datetime import date, datetime
 
         """
         生年月日を検証し、日付型で返します。
@@ -94,7 +114,6 @@ class Validator:
         :param post_time: 投稿時刻 (datetimeオブジェクト)
         :return: 差分を表す文字列（例: "5秒前", "5分前", "2時間前", "1日前"）
         """
-        from datetime import datetime
         now = datetime.now()
         time_diff = now - post_time
         seconds_diff = int(time_diff.total_seconds())

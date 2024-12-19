@@ -1,8 +1,9 @@
 from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify
+from flask_wtf.csrf import CSRFProtect
 from datetime import timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
-
+from Ganger.app.model.validator.validate import Validator
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -18,13 +19,23 @@ PROFILE_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "profile_image
 
 # Flask の基本設定
 app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
+# csrf = CSRFProtect(app) # CSRF保護を有効化 
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300) 
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config['POST_FOLDER'] = POST_IMAGE_FOLDER
 app.config['TEMP_FOLDER'] = TEMP_IMAGE_FOLDER
 app.config['PROFILE_FOLDER'] = PROFILE_IMAGE_FOLDER
-# @app.before_request
+
+
+
+@app.before_request
+def check_session():
+    if request.endpoint in ["signup","login"]:
+        return 
+    if "id" not in session:
+        return redirect(url_for("login"))
+
 # def make_session_permanent(): #sessionの一括永続化
 #     session.permanent = True
 
@@ -43,16 +54,13 @@ def login():
         identifier = request.form.get("identifier")
         password = request.form.get("password")
 
-        user,error= user_manager.login(identifier=identifier, password=password)
+        # ユーザーログイン処理
+        user, error = user_manager.login(identifier=identifier, password=password)
         if user:
-            session["id"] = user.id
-            session["user_id"] = user.user_id
-            session["username"] = user.username
-            session["profile_image"] =url_for("static", 
-            filename=f"images/profile_images/{user.profile_image}")
             return redirect(url_for("home"))
         else:
-            flash(error) 
+            flash(error)
+            app.logger.error(f"Login failed for identifier: {identifier} - {error}")
             return redirect(url_for("login"))
 
 
@@ -71,35 +79,29 @@ def signup():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        success, result = user_manager.create_user( #successにbool resultに結果
+        # ユーザー作成処理
+        success, error = user_manager.create_user(
             username=username,
-            email=email, 
+            email=email,
             password=password
-            )
-        
-        if success:
-            try:
-                session["id"] = result["id"]
-                session["user_id"] = result["user_id"]
-                session["username"] = result["username"]
-                session["profile_image"] = url_for("static", filename=f"images/profile_images/{result['profile_image']}")
-                return redirect(url_for("home"))
-            
-            except Exception as e:
-                print(f"[ERROR] Failed to save session data: {e}")
-                flash("内部エラーが発生しました。")
-                return redirect(url_for("signup"))
-        else: 
-            flash(result)
-            return redirect(url_for("signup"))
+        )
 
-@app.route("/home", methods=["GET", "POST"])
+        if success:
+            # 成功時、セッション登録はcreate_user内で完了
+            return redirect(url_for("home"))
+        else:
+            # エラーメッセージをフラッシュ
+            flash(error)
+            app.logger.error(f"Signup failed: {error}")
+            return redirect(url_for("signup"))
+        
+@app.route("/home")
 def home():
     if "id" not in session:
         return redirect(url_for("login"))
     from Ganger.app.model.database_manager.database_manager import DatabaseManager
     from Ganger.app.model.model_manager.model import Post
-    from Ganger.app.model.validator.validate import Validator
+    
     db_manager = DatabaseManager()
 
     try:
@@ -115,6 +117,7 @@ def home():
         for post in posts:
             formatted_posts.append({
                 "post_id": post.post_id,
+                "id": Validator.encrypt(post.author.id), #暗号化
                 "user_id": post.author.user_id,
                 "username": post.author.username,
                 "profile_image": url_for("static", filename = f"images/profile_images/{post.author.profile_image}"),
@@ -128,7 +131,7 @@ def home():
             
         return render_template("temp_layout.html", posts=formatted_posts)
     except Exception as e:
-        print(f"Error: {e}")
+        app.logger.error(f"Error: {e}")
         flash("投稿データの取得に失敗しました。")
         return redirect(url_for("login"))
     
@@ -144,15 +147,20 @@ def password_reset():
         
         # パスワード一致確認
         if password != password_confirm:
-            flash('パスワードが一致しません。再度入力してください。')
+            error = 'パスワードが一致しません。再度入力してください。'
+            flash(error)
+            app.logger.error(f"Password reset failed: {error}")
             return render_template('password_reset.html')
         
         # ユーザーの検索とパスワード更新
         database_manager = DatabaseManager()
         user = database_manager.fetch_one(User, filters={"email": email})
         if not user:
-            flash('該当するメールアドレスが見つかりません。')
+            error = '該当するメールアドレスが見つかりません。'
+            flash(error)
+            app.logger.error(f"Password reset failed: {error}")
             return redirect(url_for('password_reset'))     
+        
         # パスワードの更新
         hashed_password = generate_password_hash(password)
         success = database_manager.update(User, {"email": email}, {"password": hashed_password})
@@ -160,33 +168,61 @@ def password_reset():
             flash('パスワードをリセットしました。ログインしてください。', 'success')
             return redirect(url_for('login'))
         else:
-            flash('パスワードリセット中にエラーが発生しました。')
+            error = 'パスワードリセット中にエラーが発生しました。'
+            flash(error)
+            app.logger.error(f"Password reset failed: {error}")
             return redirect(url_for('password_reset'))    
         
     return render_template('password_reset.html')
 
-@app.route('/my_profile',methods = ['POST','GET'])
-def my_profile():
-    if request.method == "POST":
-        redirect(url_for('my_profile'))
-    return render_template("my_profile.html")
+
+@app.route("/my_profile/<id>", methods=["GET"])
+def my_profile(id):
+    from Ganger.app.model.database_manager.database_manager import DatabaseManager
+    from Ganger.app.model.model_manager.model import User
+    db_manager = DatabaseManager()
+
+    try:
+        id = Validator.decrypt(id)
+        # 指定されたユーザーの情報を取得
+        user = db_manager.fetch_one(
+            model=User,
+            filters={"id": id}
+        )
+        if not user:
+            error = "ユーザーが見つかりません。"
+            flash(error)
+            app.logger.error(f"Profile not found: {error}")
+            return redirect(url_for("home"))
+
+        # プロフィール情報を整形してテンプレートに渡す
+        profile_data = {
+            "id":user.id,
+            "user_id": user.user_id,
+            "username": user.username,
+            "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")
+        }
+
+        return render_template("my_profile.html", profile=profile_data)
+    except Exception as e:
+        app.logger.error(f"Error: {e}") # ログにエラーを記録
+        flash("ユーザーデータの取得に失敗しました。")
+        return redirect(url_for("home"))
 
 @app.route('/create_post', methods=['POST'])
 def create_post():
     """
     新しい投稿を作成するエンドポイント
     """
-    if 'user_id' not in session:
-        flash("ログインしてください。", "error")
-        return redirect(url_for('login'))
-
     # セッションからユーザーIDを取得
     user_id = session['user_id']
     title = request.form.get('title')
     description = request.form.get('description', "")  # 任意のフィールド
 
     if not title:
-        flash("タイトルは必須です。", "error")
+        error = "タイトルは必須です。"
+        flash(error, "error")
+        app.logger.error(f"Post creation failed: {error}")
         return redirect(url_for('post_page'))
 
     # 投稿データ
@@ -204,7 +240,9 @@ def create_post():
     image_files = request.files.getlist('images')
 
     if len(image_files) > 6:
-        flash("画像は最大6枚までアップロード可能です。", "error")
+        error = "画像は最大6枚までアップロード可能です。"
+        flash(error,"error")
+        app.logger.error(f"Post creation failed: {error}")
         return redirect(url_for('post_page'))
 
     # PostManagerを使用して投稿作成
@@ -213,18 +251,13 @@ def create_post():
     result = post_manager.create_post(post_data, image_files)
 
     if "error" in result:
-        flash(result["error"], "error")
+        error = result["error"]
+        flash(error, "error")
+        app.logger.error(f"Post creation failed: {error}")
         return redirect(url_for('post_page'))
 
     flash("投稿が作成されました！", "success")
     return redirect(url_for('home'))
-
-@app.route('/post_page')
-def post_page():
-    """
-    投稿作成ページの表示
-    """
-    return "<h1>投稿ページにリダイレクトされました！</h1>"
 
 @app.route('/create_design')
 def create_design():
@@ -252,6 +285,7 @@ def save_design():
         session['image_name'] = unique_name
         return redirect(url_for('display'))
     except Exception as e:
+        app.logger.error(f"Error: {e}")
         return f"エラーが発生しました: {str(e)}", 500
 
 @app.route('/display', methods=['GET'])
@@ -259,7 +293,9 @@ def display():
     # セッションから画像名を取得
     image_name = session.get('image_name')
     if not image_name:
-        return "画像が見つかりません。", 404
+        error = "画像が見つかりません。"
+        app.logger.error(f"Image not found: {error}")
+        return error, 404
 
     # URLを生成してHTMLに渡す
     image_url = url_for('static', filename=f"images/temp_images/{image_name}")

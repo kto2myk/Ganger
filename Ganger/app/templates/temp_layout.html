@@ -37,25 +37,39 @@
     <div class="side_bar">
       <ul>
         <ol>
-          <button><a href="" class=side_bar_links><i class="fa-solid fa-house"></i>&emsp;HOME</a></button>
+          <button><a href="{{url_for('home')}}" class=side_bar_links><i class="fa-solid fa-house"></i>&emsp;HOME</a></button>
         </ol>
+
         <ol>
           <button><a href="" class=side_bar_links><i class="fa-solid fa-magnifying-glass"></i>&emsp;検索</a></button>
         </ol>
+
         <ol>
           <button><a href="" class=side_bar_links><i class="fa-solid fa-envelope"></i>&emsp;お知らせ</a></button>
         </ol>
+
         <ol>
-          <button><a href="" class=side_bar_links>トレンド</button></a>
+          <button><a href="" class=side_bar_links>トレンド</a></button>
         </ol>
+
         <ol>
-          <button><a href="" class=side_bar_links>メッセージ</button></a>
+          <button><a href="" class=side_bar_links>メッセージ</a></button>
         </ol>
+
         <ol>
-          <button><a href="" class=side_bar_links>カート</button></a>
+          <button><a href="" class=side_bar_links>カート</a></button>
         </ol>
-        <ol><a href="{{ url_for('my_profile') }}" class=side_bar_links><button>プロフィール</button></a></ol>
-        <ol><a href="{{ url_for('create_design' )}}" class="side_bar_links"><button>&emsp;Create Design</button></a></ol>
+
+        <ol>
+            <button>
+              <a href="{{ url_for('my_profile',id = session['id']) }}" class=side_bar_links>
+              プロフィール</a>
+            </button>
+        </ol>
+
+        <ol>
+          <a href="{{ url_for('create_design' )}}" class="side_bar_links"><button>&emsp;Create Design</a></button>
+        </ol>
       </ul>
     </div>
 
@@ -63,7 +77,7 @@
       {% for post in posts %}
       <div class="post_container">
         <div class="account_info">
-          <img src="{{ post['profile_image'] }}" alt="プロフィール画像">
+          <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
           <p>{{ post["user_id"] }}</p>
         </div>
         <div class="image_area">
