@@ -265,7 +265,7 @@ def display():
     image_url = url_for('static', filename=f"images/temp_images/{image_name}")
     return render_template("image_display.html", image_url=image_url)
 
-@app.route('/delete_temp', methods=['POST'])
+@app.route('/delete_temp')
 def delete_temp():
     # セッションから画像名を取得
     image_name = session.get('image_name')
