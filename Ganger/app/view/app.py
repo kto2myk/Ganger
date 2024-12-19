@@ -265,6 +265,27 @@ def display():
     image_url = url_for('static', filename=f"images/temp_images/{image_name}")
     return render_template("image_display.html", image_url=image_url)
 
+@app.route('/delete_temp', methods=['POST'])
+def delete_temp():
+    # セッションから画像名を取得
+    image_name = session.get('image_name')
+    if not image_name:
+        return "削除する画像が見つかりません。", 404
+
+    try:
+        # 画像のパスを構築
+        image_path = os.path.join(app.config['TEMP_FOLDER'], image_name)
+
+        # ファイルの存在確認
+        if os.path.exists(image_path):
+            os.remove(image_path)  # ファイルを削除
+            session.pop('image_name', None)  # セッションから削除
+            return redirect('home')
+        else:
+            return "画像ファイルが存在しません。", 404
+    except Exception as e:
+        return f"エラーが発生しました: {str(e)}", 500
+    
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)
