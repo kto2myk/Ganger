@@ -197,7 +197,7 @@
             const imgData = renderer.domElement.toDataURL("image/png");
             const form = document.createElement("form");
             form.method = "POST";
-            form.action = "{{url_for('save_design)}}";
+            form.action = "{{url_for('save_design')}}";
             const input = document.createElement("input");
             input.type = "hidden";
             input.name = "image";
