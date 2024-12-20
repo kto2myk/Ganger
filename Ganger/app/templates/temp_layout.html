@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+
+  <!-- フリー画像ここにある iconify design, svgbackgrounds.com -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ganger</title>
@@ -32,38 +34,56 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   </header>
   <div class="main_container">
-    <div class="side_bar">
+    <div class="side_bar">   <!-- サイドバーエリア -->
       <ul>
         <ol>
-          <button class=side_bar_links><a href="{{url_for('home')}}"><i class="fa-solid fa-house"></i><text>&emsp;HOME</text></a></button>
+          <div class="side_bar_links">
+            <a href="{{url_for('home')}}"><button><img src="../static/images/templates_images/home-alt-3.svg"><text>&emsp;HOME</text></button></a>
+          </div>
         </ol>
+    
         <ol>
-          <button class=side_bar_links><a href="{{ url_for('search_page') }}"><i class="fa-solid fa-magnifying-glass"></i><text>&emsp;検索</text></a></button>
+          <div class="side_bar_links">
+            <a href="{{ url_for('search_page') }}"><button><img src="../static/images/templates_images/search.svg"><text>&emsp;検索</text></button></a>
+          </div>
         </ol>
+    
         <ol>
-          <button class=side_bar_links><a href=""><i class="fa-solid fa-envelope"></i><text>&emsp;お知らせ</text></a></button>
+          <div class="side_bar_links">
+          <a href=""><button><img src="../static/images/templates_images/notification-bell.svg"><text>&emsp;お知らせ</text></button></a>
         </ol>
+    
         <ol>
-          <button class=side_bar_links><a href=""><text>トレンド</text></a></button>
+          <div class="side_bar_links">
+            <a href=""><button><img src="../static/images/templates_images/settings.svg"><text>&emsp;設定</text></button></a>
+          </div>
         </ol>
+    
         <ol>
-          <button class=side_bar_links><a href=""><text>メッセージ</text></a></button>
+          <div class="side_bar_links">
+            <a href=""><button><img src="../static/images/templates_images/email.svg"><text>&emsp;メッセージ</text></button></a>
+          </div>
         </ol>
+    
+        <!-- <ol>
+          <div class="side_bar_links">
+            <a href=""><button><text>&emsp;カート</text></button></a>
+          </div>
+        </ol> -->
+    
         <ol>
-          <button class=side_bar_links><a href=""><text>カート</text></a></button>
+          <div class="side_bar_links">
+            <a href="{{ url_for('my_profile',id = session['id']) }}"><button><img src="###" alt="profile"><text>&emsp;プロフィール</text></button></a>
+          </div>
         </ol>
+    
         <ol>
-            <button class=side_bar_links>
-              <a href="{{ url_for('my_profile',id = session['id']) }}"><text>&emsp;プロフィール</text></a>
-            </button>
-        </ol>
-        <ol>
-          <button class=side_bar_links>
-            <a href="{{ url_for('create_design' )}}"><text>&emsp;Create Design</text></a>
-          </button>
+          <div class="side_bar_links">
+            <a href="{{ url_for('create_design' )}}"><button><img src="###" alt="createTshirts"><text>&emsp;Create Design</text></button></a>
+          </div>
         </ol>
       </ul>
-    </div>
+    </div>  <!-- サイドバーエリア終了 -->
 
     <div class="contents">
       {% for post in posts %}
