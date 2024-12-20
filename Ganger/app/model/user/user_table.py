@@ -1,11 +1,11 @@
-from werkzeug.security import generate_password_hash, check_password_hash
-from ErrorManager import ErrorLogManager
-from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.validator.validate import Validator
-from flask import session, url_for
-from Ganger.app.model.model_manager.model import User
-from sqlalchemy.orm import Session, joinedload
-import uuid
+from werkzeug.security import generate_password_hash, check_password_hash # パスワードハッシュ化用
+from ErrorManager import ErrorLogManager # エラーログ用
+from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベース操作用
+from flask import session, url_for  # セッション管理、画像パス生成用
+from Ganger.app.model.validator.validate import Validator # バリデーション用
+from Ganger.app.model.model_manager.model import User # ユーザーテーブル
+from sqlalchemy.orm import Session, joinedload # セッション管理、リレーション取得用
+import uuid # ランダムID生成用
 
 
 class UserManager(DatabaseManager):
