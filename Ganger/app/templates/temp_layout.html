@@ -37,38 +37,40 @@
     <div class="side_bar">
       <ul>
         <ol>
-          <button><a href="{{url_for('home')}}" class=side_bar_links><i class="fa-solid fa-house"></i>&emsp;HOME</a></button>
+          <button class=side_bar_links><a href="{{url_for('home')}}"><i class="fa-solid fa-house"></i>&emsp;HOME</a></button>
         </ol>
 
         <ol>
-          <button><a href="" class=side_bar_links><i class="fa-solid fa-magnifying-glass"></i>&emsp;検索</a></button>
+          <button class=side_bar_links><a href=""><i class="fa-solid fa-magnifying-glass"></i>&emsp;検索</a></button>
         </ol>
 
         <ol>
-          <button><a href="" class=side_bar_links><i class="fa-solid fa-envelope"></i>&emsp;お知らせ</a></button>
+          <button class=side_bar_links><a href=""><i class="fa-solid fa-envelope"></i>&emsp;お知らせ</a></button>
         </ol>
 
         <ol>
-          <button><a href="" class=side_bar_links>トレンド</a></button>
+          <button class=side_bar_links><a href="">トレンド</a></button>
         </ol>
 
         <ol>
-          <button><a href="" class=side_bar_links>メッセージ</a></button>
+          <button class=side_bar_links><a href="">メッセージ</a></button>
         </ol>
 
         <ol>
-          <button><a href="" class=side_bar_links>カート</a></button>
+          <button class=side_bar_links><a href="">カート</a></button>
         </ol>
 
         <ol>
-            <button>
-              <a href="{{ url_for('my_profile',id = session['id']) }}" class=side_bar_links>
+            <button class=side_bar_links>
+              <a href="{{ url_for('my_profile',id = session['id']) }}">
               プロフィール</a>
             </button>
         </ol>
 
         <ol>
-          <a href="{{ url_for('create_design' )}}" class="side_bar_links"><button>&emsp;Create Design</a></button>
+          <button class=side_bar_links>
+            <a href="{{ url_for('create_design' )}}">&emsp;Create Design</a>
+          </button>
         </ol>
       </ul>
     </div>
@@ -101,8 +103,8 @@
     </div>    
     <div class="right_bar">
       <ul>
-        <li>a</li>
-        <li>b</li>
+        <oi>a</oi>
+        <oi>b</oi>
       </ul>
     </div>
   </div>
