@@ -1,96 +1,91 @@
-<style>
-    #search-container {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        width: 300px;
-    }
-
-    #search-box {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-
-    #search-results {
-        display: none; /* 初期は非表示 */
-        border: 1px solid #ccc;
-        background: white;
-        position: absolute;
-        top: 40px;
-        width: 100%;
-        z-index: 1000;
-    }
-
-    #search-users,
-    #search-tags,
-    #search-categories {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-
-    #search-users div,
-    #search-tags div,
-    #search-categories div {
-        padding: 5px 0;
-        cursor: pointer;
-    }
-
-    #search-users div:hover,
-    #search-tags div:hover,
-    #search-categories div:hover {
-        background: #f0f0f0;
-    }
-
-</style>
 <div id="search-container">
     <input
         type="text"
         id="search-box"
         placeholder="検索..."
-        autocomplete="off"
+        autocomplete="off" 
     />
-    <div id="search-results">
+    <div id="search-results" style="display: none;">
         <div id="search-users"></div>
         <div id="search-tags"></div>
         <div id="search-categories"></div>
     </div>
+    <div id="search-history-container" style="display: none;">
+        <div id="search-history-empty" style="display: none;">キーワードを検索しましょう</div>
+        <div id="search-history-list"></div>
+        <button id="clear-history-btn" style="display: none;">すべて削除</button>
+    </div>
 </div>
+
 <script>
     const searchBox = document.getElementById("search-box");
     const searchResults = document.getElementById("search-results");
-    let timeout = null;
+    const searchHistoryContainer = document.getElementById("search-history-container");
+    const searchHistoryEmpty = document.getElementById("search-history-empty");
+    const searchHistoryList = document.getElementById("search-history-list");
+    const clearHistoryBtn = document.getElementById("clear-history-btn");
 
+    let timeout = null;
+    let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+
+    // ページ読み込み時に履歴を更新
+    document.addEventListener("DOMContentLoaded", updateSearchHistory);
+
+    // 検索履歴を表示
+    searchBox.addEventListener("focus", () => {
+        if (searchBox.value.trim() === "") {
+            updateSearchHistory();
+            searchHistoryContainer.style.display = "block"; // 履歴ボックスを表示
+        }
+    });
+
+    // 検索ボックスで文字入力時
     searchBox.addEventListener("input", () => {
-    clearTimeout(timeout); // 前回のタイマーをクリア
+        clearTimeout(timeout);
         const query = searchBox.value.trim();
 
         if (query.length > 0) {
+            searchHistoryContainer.style.display = "none"; // 履歴ボックスを隠す
             timeout = setTimeout(() => {
-            fetchResults(query); // 0.5秒後に検索
+                fetchResults(query);  // GETリクエストで検索
             }, 500);
         } else {
-            searchResults.style.display = "none"; // クエリが空の場合は非表示
+            searchResults.style.display = "none";  // 結果を非表示
+            searchHistoryContainer.style.display = "block"; // 履歴ボックスを再表示
         }
-        });
+    });
 
-        async function fetchResults(query) {
+    // エンターキーで検索ページに遷移
+    searchBox.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            const query = searchBox.value.trim();
+            if (query.length > 0) {
+                saveToSearchHistory(query); // 検索履歴に保存
+                window.location.href = `/search_page?query=${encodeURIComponent(query)}`;
+            }
+        }
+    });
+
+    // 検索結果を取得
+    async function fetchResults(query) {
         try {
-            const response = await fetch(`/search_func`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query }),
+            const response = await fetch(`/search_func?query=${encodeURIComponent(query)}`, {
+                method: "GET",
             });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch results");
+            }
+
             const data = await response.json();
             displayResults(data);
         } catch (error) {
             console.error("Error fetching search results:", error);
         }
-        }
+    }
 
-        function displayResults(data) {
-        // ユーザー、タグ、カテゴリごとの結果を表示
+    // 検索結果を表示
+    function displayResults(data) {
         const users = document.getElementById("search-users");
         const tags = document.getElementById("search-tags");
         const categories = document.getElementById("search-categories");
@@ -109,4 +104,57 @@
 
         searchResults.style.display = "block";
     }
+
+    // 検索履歴を更新
+    function updateSearchHistory() {
+        if (searchHistory.length === 0) {
+            searchHistoryEmpty.style.display = "block";
+            searchHistoryList.style.display = "none";
+            clearHistoryBtn.style.display = "none";
+        } else {
+            searchHistoryEmpty.style.display = "none";
+            searchHistoryList.style.display = "block";
+            clearHistoryBtn.style.display = "inline-block";
+
+            searchHistoryList.innerHTML = searchHistory
+                .map((item, index) => `
+                    <div data-index="${index}" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${item}</span>
+                        <button data-index="${index}" class="delete-item-btn">×</button>
+                    </div>
+                `)
+                .join("");
+        }
+    }
+
+    // 検索履歴を保存
+    function saveToSearchHistory(query) {
+        if (!searchHistory.includes(query)) {
+            searchHistory.push(query);
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory)); // ローカルストレージに保存
+        }
+        updateSearchHistory();
+    }
+
+    // 検索履歴のすべて削除
+    clearHistoryBtn.addEventListener("click", () => {
+        searchHistory = [];
+        localStorage.removeItem('searchHistory'); // ローカルストレージから削除
+        updateSearchHistory();
+    });
+
+    // 各履歴項目の削除
+    searchHistoryList.addEventListener("click", (event) => {
+        const target = event.target;
+        if (target.classList.contains("delete-item-btn")) {
+            const index = parseInt(target.dataset.index, 10);
+            searchHistory.splice(index, 1); // 正しいインデックスで削除
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+            updateSearchHistory();
+        } else if (target.dataset.index !== undefined) {
+            const index = parseInt(target.dataset.index, 10);
+            searchBox.value = searchHistory[index];
+            searchBox.focus();
+        }
+    });
 </script>

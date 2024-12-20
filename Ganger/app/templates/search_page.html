@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>検索結果</title>
+    <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
+    {% include 'components/component_search.html' %}
     <h1>検索結果: "{{ query }}"</h1>
 
-<h2>ユーザー</h2>
-<ul>
-    {% for user in users %}
-        <li>{{ user.username }} ({{ user.user_id }})</li>
-    {% endfor %}
+    <h2>ユーザー</h2>
+    <ul>
+        {% for user in users %}
+            <li>{{ user.username }} ({{ user.user_id }})</li>
+        {% endfor %}
     </ul>
 
     <h2>タグ</h2>
     <ul>
-    {% for tag in tags %}
-        <li>#{{ tag.tag_name }}</li>
-    {% endfor %}
-</ul>
+        {% for tag in tags %}
+            <li>#{{ tag.tag_name }}</li>
+        {% endfor %}
+    </ul>
 
-<h2>カテゴリ</h2>
-<ul>
-    {% for category in categories %}
-        <li>{{ category.category_name }}</li>
-    {% endfor %}
-</ul>
+    <h2>カテゴリ</h2>
+    <ul>
+        {% for category in categories %}
+            <li>{{ category.category_name }}</li>
+        {% endfor %}
+    </ul>
 
-    
 </body>
 </html>

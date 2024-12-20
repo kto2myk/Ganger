@@ -29,13 +29,13 @@ app.config['PROFILE_FOLDER'] = PROFILE_IMAGE_FOLDER
 
 
 
-@app.before_request
-def check_session():
-    if request.endpoint in ["signup","login"]:
-        return 
-    if "id" not in session:
-        return redirect(url_for("login"))
-
+# @app.before_request
+# def check_session():
+#     if id in session:
+#         return redirect(url_for("home"))
+#     elif request.endpoint not in ["login", "signup", "password_reset"]:
+#             return redirect(url_for("login"))
+#     return None
 # def make_session_permanent(): #sessionの一括永続化
 #     session.permanent = True
 
@@ -97,8 +97,6 @@ def signup():
         
 @app.route("/home")
 def home():
-    if "id" not in session:
-        return redirect(url_for("login"))
     from Ganger.app.model.database_manager.database_manager import DatabaseManager
     from Ganger.app.model.model_manager.model import Post
     
@@ -322,89 +320,47 @@ def delete_temp():
     except Exception as e:
         return f"エラーが発生しました: {str(e)}", 500
     
-@app.route('/search_func', methods=['POST'])
+@app.route('/search_func', methods=['GET'])
 def search_func():
-    # 仮のデータ
-    users = [
-        {"user_id": "aaa", "username": "Aaa User"},
-        {"user_id": "aba", "username": "Aba User"},
-        {"user_id": "abc", "username": "Abc User"},
-    ]
+    try:
+        users = [
+            {"user_id": "aaa", "username": "Aaa User"},
+            {"user_id": "aba", "username": "Aba User"},
+            {"user_id": "abc", "username": "Abc User"},
+        ]
+        tags = [
+            {"tag_name": "Python"},
+            {"tag_name": "Flask"},
+            {"tag_name": "JavaScript"},
+        ]
+        categories = [
+            {"category_name": "Programming"},
+            {"category_name": "Web Development"},
+            {"category_name": "AI & ML"},
+        ]
+        query = request.args.get('query', '').lower()  # クエリパラメータを取得
 
-    tags = [
-        {"tag_name": "Python"},
-        {"tag_name": "Flask"},
-        {"tag_name": "JavaScript"},
-    ]
+        if not query:
+            return jsonify({"users": [], "tags": [], "categories": []}), 200
 
-    categories = [
-        {"category_name": "Programming"},
-        {"category_name": "Web Development"},
-        {"category_name": "AI & ML"},
-    ]
-    data = request.json
-    query = data.get("query", "").lower()
+        # 検索ロジック
+        user_results = [user for user in users if query in user["user_id"] or query in user["username"].lower()][:10]
+        tag_results = [tag for tag in tags if query in tag["tag_name"].lower()][:10]
+        category_results = [category for category in categories if query in category["category_name"].lower()][:10]
 
-    # 検索処理
-    user_results = [
-        user for user in users if query in user["user_id"] or query in user["username"].lower()
-    ][:10]
-
-    tag_results = [
-        tag for tag in tags if query in tag["tag_name"].lower()
-    ][:10]
-
-    category_results = [
-        category for category in categories if query in category["category_name"].lower()
-    ][:10]
-
-    return jsonify({
-        "users": user_results,
-        "tags": tag_results,
-        "categories": category_results,
-    })    
+        return jsonify({
+            "users": user_results,
+            "tags": tag_results,
+            "categories": category_results,
+        }), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred"}), 500
 
 @app.route('/search_page')
 def search_page():
-    users = [
-        {"user_id": "aaa", "username": "Aaa User"},
-        {"user_id": "aba", "username": "Aba User"},
-        {"user_id": "abc", "username": "Abc User"},
-    ]
-
-    tags = [
-        {"tag_name": "Python"},
-        {"tag_name": "Flask"},
-        {"tag_name": "JavaScript"},
-    ]
-
-    categories = [
-        {"category_name": "Programming"},
-        {"category_name": "Web Development"},
-        {"category_name": "AI & ML"},
-    ]
-
     query = request.args.get('query', '').lower()
-    # 詳細な検索ロジック（ユーザー、タグ、カテゴリごとに分ける）
-    user_results = [
-        user for user in users if query in user["user_id"] or query in user["username"].lower()
-    ]
-
-    tag_results = [
-        tag for tag in tags if query in tag["tag_name"].lower()
-    ]
-
-    category_results = [
-        category for category in categories if query in category["category_name"].lower()
-    ]
-
-    return render_template(
-        'search_page.html',
-        query=query,
-        users=user_results,
-        tags=tag_results,
-        categories=category_results,
-    )
+    return render_template('search_page.html', query=query)
 
 
 

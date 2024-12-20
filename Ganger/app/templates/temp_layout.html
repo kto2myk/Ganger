@@ -7,21 +7,19 @@
     <link rel="stylesheet" href="../static/css/style.css">
     <link rel="stylesheet" href="../static/css/splide.min.css">
     <link rel="stylesheet" href="../static/css/cssanimation.min.css">
-    <script type="text/javascript" href="../static/js/main.js"></script>
-    <script src="..\static\js\node_modules\@splidejs\splide\dist\js\splide.min.js"></script>
+    <script type="text/javascript" src="../static/js/main.js"></script>
+    <script src="../static/js/node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
       document.querySelectorAll('.splide').forEach(function (carousel) {
-        console.log("Initializing Splide for:", carousel.id);
         new Splide(carousel).mount();
       });
     });      
-      window.onload = function() {
+    window.onload = function() {
         const spinner = document.getElementById('loading');
         spinner.classList.add('loaded');
-      }
+    }
     </script>
-    
 </head>
 <body>
   <div id="loading">
@@ -39,33 +37,26 @@
         <ol>
           <button class=side_bar_links><a href="{{url_for('home')}}"><i class="fa-solid fa-house"></i><text>&emsp;HOME</text></a></button>
         </ol>
-
         <ol>
           <button class=side_bar_links><a href="{{ url_for('search_page') }}"><i class="fa-solid fa-magnifying-glass"></i><text>&emsp;検索</text></a></button>
         </ol>
-
         <ol>
           <button class=side_bar_links><a href=""><i class="fa-solid fa-envelope"></i><text>&emsp;お知らせ</text></a></button>
         </ol>
-
         <ol>
           <button class=side_bar_links><a href=""><text>トレンド</text></a></button>
         </ol>
-
         <ol>
           <button class=side_bar_links><a href=""><text>メッセージ</text></a></button>
         </ol>
-
         <ol>
           <button class=side_bar_links><a href=""><text>カート</text></a></button>
         </ol>
-
         <ol>
             <button class=side_bar_links>
               <a href="{{ url_for('my_profile',id = session['id']) }}"><text>&emsp;プロフィール</text></a>
             </button>
         </ol>
-
         <ol>
           <button class=side_bar_links>
             <a href="{{ url_for('create_design' )}}"><text>&emsp;Create Design</text></a>
@@ -101,6 +92,7 @@
       {% endfor %}
     </div>    
     <div class="right_bar">
+      {% include 'components/component_search.html' %}
       <ul>
         <oi>a</oi>
         <oi>b</oi>
