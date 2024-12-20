@@ -1,6 +1,7 @@
 body {
     margin: 0 auto;
     width: 100%;
+    font-size: 100%;
 }
 
 #loading {
@@ -38,7 +39,7 @@ body {
 header {
     position: fixed;
     display: flex;
-    height: 70px;
+    height: 7vh;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -84,7 +85,7 @@ header {
 }
 
 .side_bar ul {
-    margin-top: 30vh;
+    margin-top: 20vh;
     padding: 0;
     width: 100%;
     height: 70%;
@@ -100,37 +101,55 @@ header {
   text-align: left;
 }
 
-.side_bar_links a {
-  text-decoration: none;
-  text-align: left;
+.side_bar_links {
+  width: 100%;
+  height: 100%;
 }
 
-.side_bar_links {
+.side_bar_links button {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  position: relative;
   width:100%;
   height: 100%;
-  font-size: 50%;
   background-color: transparent;
   border-radius: 10px;
   border: none;
-  display: table-cell;
-  vertical-align: middle;
-  transition: 0.5s;
+  transition: 0.3s;
 }
 
-.side_bar_links:hover {
+.side_bar_links a{
+  text-decoration: none;
+}
+
+.side_bar_links img {
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+  height: 50%;
+}
+
+.side_bar_links text {
+  padding-left: 20%;
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+  font-size: 150%;
+}
+
+.side_bar_links:hover button {
   background-color: #ddd;
-}
-
-.fa-solid {
-  font-size: 50%;
-  display: table-cell;
-  vertical-align: middle;
 }
 
 
 @media (max-width: 768px) {
   .side_bar {
     width: 10vh;
+  }
+
+  .side_bar_links button {
+    text-align: center;
   }
 
   .side_bar_links text {
