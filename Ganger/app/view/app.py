@@ -1,9 +1,9 @@
-from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify
-from flask_wtf.csrf import CSRFProtect
-from datetime import timedelta
-from werkzeug.security import generate_password_hash, check_password_hash
-import os
-from Ganger.app.model.validator.validate import Validator
+from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify # Flaskの各種機能をインポート
+from flask_wtf.csrf import CSRFProtect  # CSRF保護用
+from datetime import timedelta  # セッションの有効期限設定用
+from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
+import os  # ファイルパス操作用
+from Ganger.app.model.validator.validate import Validator  # バリデーション用
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -322,6 +322,92 @@ def delete_temp():
     except Exception as e:
         return f"エラーが発生しました: {str(e)}", 500
     
+@app.route('/search_func', methods=['POST'])
+def search_func():
+    # 仮のデータ
+    users = [
+        {"user_id": "aaa", "username": "Aaa User"},
+        {"user_id": "aba", "username": "Aba User"},
+        {"user_id": "abc", "username": "Abc User"},
+    ]
+
+    tags = [
+        {"tag_name": "Python"},
+        {"tag_name": "Flask"},
+        {"tag_name": "JavaScript"},
+    ]
+
+    categories = [
+        {"category_name": "Programming"},
+        {"category_name": "Web Development"},
+        {"category_name": "AI & ML"},
+    ]
+    data = request.json
+    query = data.get("query", "").lower()
+
+    # 検索処理
+    user_results = [
+        user for user in users if query in user["user_id"] or query in user["username"].lower()
+    ][:10]
+
+    tag_results = [
+        tag for tag in tags if query in tag["tag_name"].lower()
+    ][:10]
+
+    category_results = [
+        category for category in categories if query in category["category_name"].lower()
+    ][:10]
+
+    return jsonify({
+        "users": user_results,
+        "tags": tag_results,
+        "categories": category_results,
+    })    
+
+@app.route('/search_page')
+def search_page():
+    users = [
+        {"user_id": "aaa", "username": "Aaa User"},
+        {"user_id": "aba", "username": "Aba User"},
+        {"user_id": "abc", "username": "Abc User"},
+    ]
+
+    tags = [
+        {"tag_name": "Python"},
+        {"tag_name": "Flask"},
+        {"tag_name": "JavaScript"},
+    ]
+
+    categories = [
+        {"category_name": "Programming"},
+        {"category_name": "Web Development"},
+        {"category_name": "AI & ML"},
+    ]
+
+    query = request.args.get('query', '').lower()
+    # 詳細な検索ロジック（ユーザー、タグ、カテゴリごとに分ける）
+    user_results = [
+        user for user in users if query in user["user_id"] or query in user["username"].lower()
+    ]
+
+    tag_results = [
+        tag for tag in tags if query in tag["tag_name"].lower()
+    ]
+
+    category_results = [
+        category for category in categories if query in category["category_name"].lower()
+    ]
+
+    return render_template(
+        'search_page.html',
+        query=query,
+        users=user_results,
+        tags=tag_results,
+        categories=category_results,
+    )
+
+
+
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)
