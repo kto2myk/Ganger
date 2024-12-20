@@ -37,39 +37,38 @@
     <div class="side_bar">
       <ul>
         <ol>
-          <button class=side_bar_links><a href="{{url_for('home')}}"><i class="fa-solid fa-house"></i>&emsp;HOME</a></button>
+          <button class=side_bar_links><a href="{{url_for('home')}}"><i class="fa-solid fa-house"></i><text>&emsp;HOME</text></a></button>
         </ol>
 
         <ol>
-          <button class=side_bar_links><a href="{{ url_for('search_page') }}"><i class="fa-solid fa-magnifying-glass"></i>&emsp;検索</a></button>
+          <button class=side_bar_links><a href="{{ url_for('search_page') }}"><i class="fa-solid fa-magnifying-glass"></i><text>&emsp;検索</text></a></button>
         </ol>
 
         <ol>
-          <button class=side_bar_links><a href=""><i class="fa-solid fa-envelope"></i>&emsp;お知らせ</a></button>
+          <button class=side_bar_links><a href=""><i class="fa-solid fa-envelope"></i><text>&emsp;お知らせ</text></a></button>
         </ol>
 
         <ol>
-          <button class=side_bar_links><a href="">トレンド</a></button>
+          <button class=side_bar_links><a href=""><text>トレンド</text></a></button>
         </ol>
 
         <ol>
-          <button class=side_bar_links><a href="">メッセージ</a></button>
+          <button class=side_bar_links><a href=""><text>メッセージ</text></a></button>
         </ol>
 
         <ol>
-          <button class=side_bar_links><a href="">カート</a></button>
+          <button class=side_bar_links><a href=""><text>カート</text></a></button>
         </ol>
 
         <ol>
             <button class=side_bar_links>
-              <a href="{{ url_for('my_profile',id = session['id']) }}">
-              プロフィール</a>
+              <a href="{{ url_for('my_profile',id = session['id']) }}"><text>&emsp;プロフィール</text></a>
             </button>
         </ol>
 
         <ol>
           <button class=side_bar_links>
-            <a href="{{ url_for('create_design' )}}">&emsp;Create Design</a>
+            <a href="{{ url_for('create_design' )}}"><text>&emsp;Create Design</text></a>
           </button>
         </ol>
       </ul>
