@@ -8,28 +8,92 @@
 </head>
 <body>
     {% include 'components/component_search.html' %}
-    <h1>検索結果: "{{ query }}"</h1>
 
-    <h2>ユーザー</h2>
-    <ul>
-        {% for user in users %}
-            <li>{{ user.username }} ({{ user.user_id }})</li>
-        {% endfor %}
-    </ul>
+    <div id="search-tabs">
+        <a href="javascript:void(0);" data-tab="USER" class="tab-link {% if tab == 'USER' %}active{% endif %}">アカウント</a>
+        <a href="javascript:void(0);" data-tab="TAG" class="tab-link {% if tab == 'TAG' %}active{% endif %}">タグ</a>
+        <a href="javascript:void(0);" data-tab="CATEGORY" class="tab-link {% if tab == 'CATEGORY' %}active{% endif %}">カテゴリー</a>
+    </div>
 
-    <h2>タグ</h2>
-    <ul>
-        {% for tag in tags %}
-            <li>#{{ tag.tag_name }}</li>
-        {% endfor %}
-    </ul>
+    <div id="search-results-container">
+        {% if query %}
+            <h1>検索結果: "{{ query }}"</h1>
+            {% if tab == 'USER' %}
+                <h2>ユーザー</h2>
+                {% if results.users %}
+                    <ul>
+                        {% for user in results.users %}
+                        <a href="{{ url_for('my_profile',id = user.id) }}">
+                            <li>{{ user.username }} ({{ user.user_id }})</li></a>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>該当するユーザーは見つかりませんでした。</p>
+                {% endif %}
+            {% elif tab == 'TAG' %}
+                <h2>タグ</h2>
+                {% if results.tags %}
+                    <ul>
+                        {% for tag in results.tags %}
+                            <li>タグID: {{ tag.tag_id }} (投稿ID: {{ tag.post_id }})</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>該当するタグは見つかりませんでした。</p>
+                {% endif %}
+            {% elif tab == 'CATEGORY' %}
+                <h2>カテゴリ</h2>
+                {% if results.categories %}
+                    <ul>
+                        {% for category in results.categories %}
+                            <li>カテゴリID: {{ category.category_id }} (商品ID: {{ category.product_id }})</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>該当するカテゴリは見つかりませんでした。</p>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <h1>検索してみましょう。</h1>
+        {% endif %}
+    </div>
+        
+    <script>
+        document.querySelectorAll('.tab-link').forEach(tab => {
+            tab.addEventListener('click', function () {
+                const selectedTab = this.getAttribute('data-tab');
+                const query = new URLSearchParams(window.location.search).get('query') || '';
 
-    <h2>カテゴリ</h2>
-    <ul>
-        {% for category in categories %}
-            <li>{{ category.category_name }}</li>
-        {% endfor %}
-    </ul>
+                // タブの見た目を更新
+                document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
 
+                // 非同期で結果を取得
+                fetch(`/search_func?query=${encodeURIComponent(query)}&tab=${selectedTab}`)
+                    .then(response => response.json())
+                    .then(data => updateResults(selectedTab, data))
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+
+        function updateResults(tab, data) {
+            const container = document.getElementById('search-results-container');
+            container.innerHTML = ''; // 既存の結果をクリア
+
+            if (tab === 'USER') {
+                container.innerHTML = data.users.length
+                    ? `<ul>${data.users.map(user => `<li>${user.username} (${user.user_id})</li>`).join('')}</ul>`
+                    : '<p>該当するユーザーは見つかりませんでした。</p>';
+            } else if (tab === 'TAG') {
+                container.innerHTML = data.tags.length
+                    ? `<ul>${data.tags.map(tag => `<li>タグID: ${tag.tag_id} (投稿ID: ${tag.post_id})</li>`).join('')}</ul>`
+                    : '<p>該当するタグは見つかりませんでした。</p>';
+            } else if (tab === 'CATEGORY') {
+                container.innerHTML = data.categories.length
+                    ? `<ul>${data.categories.map(category => `<li>カテゴリID: ${category.category_id} (商品ID: ${category.product_id})</li>`).join('')}</ul>`
+                    : '<p>該当するカテゴリは見つかりませんでした。</p>';
+            }
+        }
+    </script>
 </body>
 </html>

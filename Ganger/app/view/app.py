@@ -4,6 +4,10 @@ from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
+from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
+from sqlalchemy.orm import Session  # SQLAlchemyセッション
+from sqlalchemy import or_  # OR条件用
+from Ganger.app.model.model_manager.model import User, CategoryMaster, ProductCategory, TagMaster, TagPost  # モデル
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -97,13 +101,13 @@ def signup():
         
 @app.route("/home")
 def home():
-    from Ganger.app.model.database_manager.database_manager import DatabaseManager
+    
     from Ganger.app.model.model_manager.model import Post
     
     db_manager = DatabaseManager()
 
     try:
-        filters = {"post_id": "8"}  # テスト用フィルタ
+        filters = {"post_id": "3"}  # テスト用フィルタ
         posts = db_manager.fetch(
             model=Post,
             relationships=["images", "author"],
@@ -137,7 +141,7 @@ def home():
 @app.route('/password-reset', methods=['GET', 'POST'])
 def password_reset():
     if request.method == 'POST':
-        from Ganger.app.model.database_manager.database_manager import DatabaseManager
+        
         from Ganger.app.model.model_manager.model import User
         email = request.form['email']
         password = request.form['password']
@@ -176,7 +180,7 @@ def password_reset():
 
 @app.route("/my_profile/<id>", methods=["GET"])
 def my_profile(id):
-    from Ganger.app.model.database_manager.database_manager import DatabaseManager
+    
     from Ganger.app.model.model_manager.model import User
     db_manager = DatabaseManager()
 
@@ -323,45 +327,115 @@ def delete_temp():
 @app.route('/search_func', methods=['GET'])
 def search_func():
     try:
-        users = [
-            {"user_id": "aaa", "username": "Aaa User"},
-            {"user_id": "aba", "username": "Aba User"},
-            {"user_id": "abc", "username": "Abc User"},
-        ]
-        tags = [
-            {"tag_name": "Python"},
-            {"tag_name": "Flask"},
-            {"tag_name": "JavaScript"},
-        ]
-        categories = [
-            {"category_name": "Programming"},
-            {"category_name": "Web Development"},
-            {"category_name": "AI & ML"},
-        ]
-        query = request.args.get('query', '').lower()  # クエリパラメータを取得
+        query = request.args.get('query', '').lower()
+        tab = request.args.get('tab', 'USER').upper()
 
         if not query:
             return jsonify({"users": [], "tags": [], "categories": []}), 200
 
-        # 検索ロジック
-        user_results = [user for user in users if query in user["user_id"] or query in user["username"].lower()][:10]
-        tag_results = [tag for tag in tags if query in tag["tag_name"].lower()][:10]
-        category_results = [category for category in categories if query in category["category_name"].lower()][:10]
+        db_manager = DatabaseManager()
 
-        return jsonify({
-            "users": user_results,
-            "tags": tag_results,
-            "categories": category_results,
-        }), 200
+        with Session(db_manager.engine) as session:
+            if tab == "USER":
+                users = session.query(User).filter(
+                    or_(
+                        User.user_id.ilike(f"%{query}%"),
+                        User.username.ilike(f"%{query}%")
+                    )
+                ).limit(10).all()
+                user_results = [{"user_id": user.user_id, "username": user.username,"id":Validator.encrypt(user.id)} for user in users]
+                return jsonify({"users": user_results, "tags": [], "categories": []}), 200
+
+            elif tab == "TAG":
+                tags = session.query(TagMaster).filter(
+                    TagMaster.tag_text.ilike(f"%{query}%")
+                ).all()
+                if tags:
+                    tag_ids = [tag.tag_id for tag in tags]
+                    posts = session.query(TagPost).filter(
+                        TagPost.tag_id.in_(tag_ids)
+                    ).all()
+                    tag_results = [{"post_id": post.post_id, "tag_id": post.tag_id} for post in posts]
+                else:
+                    tag_results = []
+                return jsonify({"users": [], "tags": tag_results, "categories": []}), 200
+
+            elif tab == "CATEGORY":
+                categories = session.query(CategoryMaster).filter(
+                    CategoryMaster.category_name.ilike(f"%{query}%")
+                ).all()
+                if categories:
+                    category_ids = [category.category_id for category in categories]
+                    products = session.query(ProductCategory).filter(
+                        ProductCategory.category_id.in_(category_ids)
+                    ).all()
+                    category_results = [{"product_id": product.product_id, "category_id": product.category_id} for product in products]
+                else:
+                    category_results = []
+                return jsonify({"users": [], "tags": [], "categories": category_results}), 200
+
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred"}), 500
 
-@app.route('/search_page')
-def search_page():
-    query = request.args.get('query', '').lower()
-    return render_template('search_page.html', query=query)
 
+@app.route('/search_page', defaults={'tab': 'USER'}, methods=['GET'])
+@app.route('/search_page/<tab>', methods=['GET'])
+def search_page(tab):
+    query = request.args.get('query', '').strip().lower()
+    results = {"users": [], "tags": [], "categories": []}  # 初期化
+
+    if query:
+        db_manager = DatabaseManager()
+
+        if tab.upper() == "USER":
+            from Ganger.app.model.model_manager.model import User
+            with Session(db_manager.engine) as session:
+                users = session.query(User).filter(
+                    or_(
+                        User.user_id.ilike(f"%{query}%"),
+                        User.username.ilike(f"%{query}%")
+                    )
+                ).limit(10).all()
+
+                results['users'] = [
+                    {"user_id": user.user_id, "username": user.username, "id":Validator.encrypt(user.id)} for user in users
+                ]
+
+        elif tab.upper() == "TAG":
+            from Ganger.app.model.model_manager.model import TagMaster, TagPost
+            with Session(db_manager.engine) as session:
+                tags = session.query(TagMaster).filter(
+                    TagMaster.tag_text.ilike(f"%{query}%")
+                ).all()
+
+                if tags:
+                    tag_ids = [tag.tag_id for tag in tags]
+                    posts = session.query(TagPost).filter(
+                        TagPost.tag_id.in_(tag_ids)
+                    ).all()
+                    results['tags'] = [
+                        {"post_id": post.post_id, "tag_id": post.tag_id} for post in posts
+                    ]
+
+        elif tab.upper() == "CATEGORY":
+            from Ganger.app.model.model_manager.model import CategoryMaster, ProductCategory
+            with Session(db_manager.engine) as session:
+                categories = session.query(CategoryMaster).filter(
+                    CategoryMaster.category_name.ilike(f"%{query}%")
+                ).all()
+
+                if categories:
+                    category_ids = [category.category_id for category in categories]
+                    products = session.query(ProductCategory).filter(
+                        ProductCategory.category_id.in_(category_ids)
+                    ).all()
+                    results['categories'] = [
+                        {"product_id": product.product_id, "category_id": product.category_id}
+                        for product in products
+                    ]
+
+    return render_template('search_page.html', query=query, tab=tab, results=results)
 
 
 if __name__ == "__main__":

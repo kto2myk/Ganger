@@ -16,9 +16,9 @@ def test_with_existing_images():
 
     # 用意された画像ファイルのパス
     image_paths = [
-        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\fuwa.png"),
-        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\gl.png"),
-        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\hi.png")
+        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\1_8_1.png"),
+        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\1_8_2.png"),
+        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\1_8_3.png")
     ]
 
     # FileStorageオブジェクトを作成
