@@ -1,4 +1,5 @@
 import os
+from sqlalchemy.orm  import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
@@ -81,3 +82,34 @@ class PostManager(DatabaseManager):
         except SQLAlchemyError as e:
             self.error_log_manager.add_error(None, str(e))
             return {"error": str(e)}
+
+
+    def search_tags(self, query):
+        from Ganger.app.model.model_manager.model import TagMaster, TagPost
+        with Session(self.engine) as session:
+            tags = session.query(TagMaster).filter(
+                TagMaster.tag_text.ilike(f"%{query}%")
+            ).all()
+
+            if tags:
+                tag_ids = [tag.tag_id for tag in tags]
+                posts = session.query(TagPost).filter(
+                    TagPost.tag_id.in_(tag_ids)
+                ).all()
+                return [{"post_id": post.post_id, "tag_id": post.tag_id} for post in posts]
+            return []
+
+    def search_categories(self, query):
+        from Ganger.app.model.model_manager.model import CategoryMaster, ProductCategory
+        with Session(self.engine) as session:
+            categories = session.query(CategoryMaster).filter(
+                CategoryMaster.category_name.ilike(f"%{query}%")
+            ).all()
+
+            if categories:
+                category_ids = [category.category_id for category in categories]
+                products = session.query(ProductCategory).filter(
+                    ProductCategory.category_id.in_(category_ids)
+                ).all()
+                return [{"product_id": product.product_id, "category_id": product.category_id} for product in products]
+            return []

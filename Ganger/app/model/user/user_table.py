@@ -4,7 +4,8 @@ from Ganger.app.model.database_manager.database_manager import DatabaseManager #
 from flask import session, url_for  # セッション管理、画像パス生成用
 from Ganger.app.model.validator.validate import Validator # バリデーション用
 from Ganger.app.model.model_manager.model import User # ユーザーテーブル
-from sqlalchemy.orm import Session, joinedload # セッション管理、リレーション取得用
+from sqlalchemy.orm import Session, joinedload# セッション管理、リレーション取得用
+from sqlalchemy import or_ # OR検索用
 import uuid # ランダムID生成用
 
 
@@ -104,3 +105,13 @@ class UserManager(DatabaseManager):
             session["profile_image"] = url_for("static", filename=f"images/profile_images/{source['profile_image']}")
         else:
             session["profile_image"] = url_for("static", filename="images/profile_images/default.png")
+
+    def search_users(self, query):
+        with Session(self.engine) as session:
+            users = session.query(User).filter(
+                or_(
+                    User.user_id.ilike(f"%{query}%"),
+                    User.username.ilike(f"%{query}%")
+                )
+            ).limit(10).all()
+            return [{"user_id": user.user_id, "username": user.username, "id": Validator.encrypt(user.id)} for user in users]

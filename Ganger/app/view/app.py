@@ -324,118 +324,47 @@ def delete_temp():
     except Exception as e:
         return f"エラーが発生しました: {str(e)}", 500
     
-@app.route('/search_func', methods=['GET'])
-def search_func():
+@app.route('/search', methods=['GET'])
+def search():
     try:
-        query = request.args.get('query', '').lower()
-        tab = request.args.get('tab', 'USER').upper()
+        # クエリパラメータから値を取得
+        query = request.args.get('query', '').strip().lower()
+        tab = request.args.get('tab', 'USER').upper()  # デフォルトは "USER"
 
-        if not query:
-            return jsonify({"users": [], "tags": [], "categories": []}), 200
+        # 結果の初期化
+        results = {"users": [], "tags": [], "categories": []}
 
-        db_manager = DatabaseManager()
+        if query:
+            from Ganger.app.model.post.post_manager import PostManager
+            from Ganger.app.model.user.user_table import UserManager
 
-        with Session(db_manager.engine) as session:
+            post_manager = PostManager()
+            user_manager = UserManager()
+
+            # タブに基づいた処理
             if tab == "USER":
-                users = session.query(User).filter(
-                    or_(
-                        User.user_id.ilike(f"%{query}%"),
-                        User.username.ilike(f"%{query}%")
-                    )
-                ).limit(10).all()
-                user_results = [{"user_id": user.user_id, "username": user.username,"id":Validator.encrypt(user.id)} for user in users]
-                return jsonify({"users": user_results, "tags": [], "categories": []}), 200
-
+                results['users'] = user_manager.search_users(query)
             elif tab == "TAG":
-                tags = session.query(TagMaster).filter(
-                    TagMaster.tag_text.ilike(f"%{query}%")
-                ).all()
-                if tags:
-                    tag_ids = [tag.tag_id for tag in tags]
-                    posts = session.query(TagPost).filter(
-                        TagPost.tag_id.in_(tag_ids)
-                    ).all()
-                    tag_results = [{"post_id": post.post_id, "tag_id": post.tag_id} for post in posts]
-                else:
-                    tag_results = []
-                return jsonify({"users": [], "tags": tag_results, "categories": []}), 200
-
+                results['tags'] = post_manager.search_tags(query)
             elif tab == "CATEGORY":
-                categories = session.query(CategoryMaster).filter(
-                    CategoryMaster.category_name.ilike(f"%{query}%")
-                ).all()
-                if categories:
-                    category_ids = [category.category_id for category in categories]
-                    products = session.query(ProductCategory).filter(
-                        ProductCategory.category_id.in_(category_ids)
-                    ).all()
-                    category_results = [{"product_id": product.product_id, "category_id": product.category_id} for product in products]
-                else:
-                    category_results = []
-                return jsonify({"users": [], "tags": [], "categories": category_results}), 200
+                results['categories'] = post_manager.search_categories(query)
+
+        # ログ出力
+        app.logger.info(f"Search completed: query={query}, tab={tab}, results={results}")
+
+        # クライアントのリクエスト形式に応じたレスポンス
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(results), 200
+        else:
+            return render_template('search_page.html', query=query, tab=tab, results=results)
 
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": "An error occurred"}), 500
+        app.logger.error(f"Error occurred: {e}", exc_info=True)
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({"error": "An error occurred"}), 500
+        else:
+            return render_template('error.html', error_message=str(e)), 500
 
-
-@app.route('/search_page', defaults={'tab': 'USER'}, methods=['GET'])
-@app.route('/search_page/<tab>', methods=['GET'])
-def search_page(tab):
-    query = request.args.get('query', '').strip().lower()
-    results = {"users": [], "tags": [], "categories": []}  # 初期化
-
-    if query:
-        db_manager = DatabaseManager()
-
-        if tab.upper() == "USER":
-            from Ganger.app.model.model_manager.model import User
-            with Session(db_manager.engine) as session:
-                users = session.query(User).filter(
-                    or_(
-                        User.user_id.ilike(f"%{query}%"),
-                        User.username.ilike(f"%{query}%")
-                    )
-                ).limit(10).all()
-
-                results['users'] = [
-                    {"user_id": user.user_id, "username": user.username, "id":Validator.encrypt(user.id)} for user in users
-                ]
-
-        elif tab.upper() == "TAG":
-            from Ganger.app.model.model_manager.model import TagMaster, TagPost
-            with Session(db_manager.engine) as session:
-                tags = session.query(TagMaster).filter(
-                    TagMaster.tag_text.ilike(f"%{query}%")
-                ).all()
-
-                if tags:
-                    tag_ids = [tag.tag_id for tag in tags]
-                    posts = session.query(TagPost).filter(
-                        TagPost.tag_id.in_(tag_ids)
-                    ).all()
-                    results['tags'] = [
-                        {"post_id": post.post_id, "tag_id": post.tag_id} for post in posts
-                    ]
-
-        elif tab.upper() == "CATEGORY":
-            from Ganger.app.model.model_manager.model import CategoryMaster, ProductCategory
-            with Session(db_manager.engine) as session:
-                categories = session.query(CategoryMaster).filter(
-                    CategoryMaster.category_name.ilike(f"%{query}%")
-                ).all()
-
-                if categories:
-                    category_ids = [category.category_id for category in categories]
-                    products = session.query(ProductCategory).filter(
-                        ProductCategory.category_id.in_(category_ids)
-                    ).all()
-                    results['categories'] = [
-                        {"product_id": product.product_id, "category_id": product.category_id}
-                        for product in products
-                    ]
-
-    return render_template('search_page.html', query=query, tab=tab, results=results)
 
 
 if __name__ == "__main__":

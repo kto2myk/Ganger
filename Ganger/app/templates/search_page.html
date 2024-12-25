@@ -58,42 +58,6 @@
         {% endif %}
     </div>
         
-    <script>
-        document.querySelectorAll('.tab-link').forEach(tab => {
-            tab.addEventListener('click', function () {
-                const selectedTab = this.getAttribute('data-tab');
-                const query = new URLSearchParams(window.location.search).get('query') || '';
-
-                // タブの見た目を更新
-                document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-
-                // 非同期で結果を取得
-                fetch(`/search_func?query=${encodeURIComponent(query)}&tab=${selectedTab}`)
-                    .then(response => response.json())
-                    .then(data => updateResults(selectedTab, data))
-                    .catch(error => console.error('Error:', error));
-            });
-        });
-
-        function updateResults(tab, data) {
-            const container = document.getElementById('search-results-container');
-            container.innerHTML = ''; // 既存の結果をクリア
-
-            if (tab === 'USER') {
-                container.innerHTML = data.users.length
-                    ? `<ul>${data.users.map(user => `<li>${user.username} (${user.user_id})</li>`).join('')}</ul>`
-                    : '<p>該当するユーザーは見つかりませんでした。</p>';
-            } else if (tab === 'TAG') {
-                container.innerHTML = data.tags.length
-                    ? `<ul>${data.tags.map(tag => `<li>タグID: ${tag.tag_id} (投稿ID: ${tag.post_id})</li>`).join('')}</ul>`
-                    : '<p>該当するタグは見つかりませんでした。</p>';
-            } else if (tab === 'CATEGORY') {
-                container.innerHTML = data.categories.length
-                    ? `<ul>${data.categories.map(category => `<li>カテゴリID: ${category.category_id} (商品ID: ${category.product_id})</li>`).join('')}</ul>`
-                    : '<p>該当するカテゴリは見つかりませんでした。</p>';
-            }
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/SearchPage.js') }}"></script>
 </body>
 </html>
