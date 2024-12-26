@@ -35,7 +35,10 @@
                 {% if results.tags %}
                     <ul>
                         {% for tag in results.tags %}
-                            <li>タグID: {{ tag.tag_id }} (投稿ID: {{ tag.post_id }})</li>
+                        <a href="{# {{url_for('post_display','id' = tag.post_id)}} #}">
+                            <img src="{{ tag.image_url }}" alt="">
+                            <li>タグ: {{ tag.tag_texts[0] }} (投稿ID: {{ tag.post_id }})</li>
+                        </a>
                         {% endfor %}
                     </ul>
                 {% else %}

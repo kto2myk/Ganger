@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine,inspect
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from flask import session
+from flask import current_app as app
 from werkzeug.security import check_password_hash 
 from Ganger.app.model.validator import Validator  # 検証用
 from Ganger.app.model.model_manager.model import Base
@@ -30,7 +30,7 @@ class DatabaseConnector:
         folder_path = os.path.dirname(self.__db_path)
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
-            print(f"Created folder: {folder_path}")
+            app.logger.info(f"Created folder: {folder_path}")
 
     @property
     def engine(self):
@@ -66,7 +66,7 @@ class DatabaseManager(DatabaseConnector):
                     # fetch_oneを使用して重複チェック
                     existing = self.fetch_one(model=model, filters=unique_check)
                     if existing:
-                        print("重複あり.")
+                        app.logger.info("重複あり.")
                         return None
                 
                 # 新規データ挿入
@@ -91,12 +91,13 @@ class DatabaseManager(DatabaseConnector):
             with Session(self.engine) as session:
                 query = session.query(model).filter_by(**filters)
                 if not query.first():
-                    print("No matching entry found for update.")
+                    app.logger.info("No matching entry found for update.")
                     return None
                 query.update(data)
                 session.commit()
                 return query.first()
         except SQLAlchemyError as e:
+            app.logger.error(f"Failed to update data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
 
@@ -109,6 +110,7 @@ class DatabaseManager(DatabaseConnector):
                 session.commit()
                 return deleted_count
         except SQLAlchemyError as e:
+            app.logger.error(f"Failed to delete data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
 
@@ -130,6 +132,7 @@ class DatabaseManager(DatabaseConnector):
                         if hasattr(model, field):
                             query = query.filter(getattr(model, field) == value)
                         else:
+                            app.logger.error(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
                             raise AttributeError(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
 
                 # リレーションシップのロード
@@ -138,10 +141,12 @@ class DatabaseManager(DatabaseConnector):
                         if hasattr(model, rel):
                             query = query.options(joinedload(getattr(model, rel)))
                         else:
+                            app.logger.error(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
                             raise AttributeError(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
 
                 return query.all()
         except SQLAlchemyError as e:
+            app.logger.error(f"Failed to fetch data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
 
@@ -152,6 +157,7 @@ class DatabaseManager(DatabaseConnector):
         try:
             return self.fetch(model, filters=filters, relationships=relationships)
         except Exception as e:
+            app.logger.error(f"Failed to fetch all data: {e}")  # ログ出力
             self.__error_log_manager.add_error(None, str(e))
             return []
 
@@ -160,9 +166,31 @@ class DatabaseManager(DatabaseConnector):
         指定した条件に一致する最初のレコードを取得
         """
         try:
-            records = self.fetch(model, filters=filters, relationships=relationships)
-            return records[0] if records else None
-        except Exception as e:
+            with Session(self.engine) as session:
+                query = session.query(model)
+
+                # フィルターの適用
+                if filters:
+                    for field, value in filters.items():
+                        if hasattr(model, field):
+                            query = query.filter(getattr(model, field) == value)
+                        else:
+                            app.logger.error(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
+                            raise AttributeError(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
+
+                # リレーションシップのロード
+                if relationships:
+                    for rel in relationships:
+                        if hasattr(model, rel):
+                            query = query.options(joinedload(getattr(model, rel)))
+                        else:
+                            app.logger.error(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
+                            raise AttributeError(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
+
+                # 最初の一件を取得
+                return query.first()
+        except SQLAlchemyError as e:
+            app.logger.error(f"Failed to fetch one data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
 

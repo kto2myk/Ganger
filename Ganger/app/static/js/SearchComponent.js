@@ -137,15 +137,49 @@ class SearchComponent {
     }
 
     displayCandidates(data) {
-        const candidates = this.currentTab === "USER" ? data.users || [] : data.items || [];
+        let candidates = [];
+    
+        // タブごとに候補を選択
+        if (this.currentTab === "USER") {
+            candidates = data.users || []; // USERタブの候補
+        } else if (this.currentTab === "TAG") {
+            candidates = data.tags || []; // TAGタブの候補
+        } else if (this.currentTab === "CATEGORY") {
+            candidates = data.categories || []; // CATEGORYタブの候補
+        }
+    
+        console.log("Current Tab:", this.currentTab, "Candidates:", candidates); // デバッグログ
+    
+        // 候補リストを生成
         this.searchCandidates.innerHTML = candidates.length
-            ? candidates.map(item => `<li data-id="${item.id}">${item.name || item.username} (${item.user_id || item.id})</li>`).join("")
+            ? candidates.map(item => {
+                let displayText = "不明な項目"; // デフォルト値
+                let displayId = "不明なID";   // デフォルト値
+    
+                // タブごとの表示ロジック
+                if (this.currentTab === "USER") {
+                    displayText = item.username || item.user_id || "不明なユーザー"; // USERNAMEまたはUSER_ID
+                    displayId = item.user_id || "不明なID"; // USER_IDをdata-idに設定
+                } else if (this.currentTab === "TAG") {
+                    displayText = item.tag_texts?.[0] || "不明なタグ"; // TAG_TEXTの最初の要素を表示
+                    displayId = item.post_id || "不明なID"; // POST_IDをdata-idに設定
+                } else if (this.currentTab === "CATEGORY") {
+                    displayText = item.category_name || "不明なカテゴリ"; // CATEGORY_NAME
+                    displayId = item.category_id || "不明なID"; // CATEGORY_IDをdata-idに設定
+                }
+    
+                // リスト項目を生成
+                return `<li data-id="${displayId}">${displayText} (${displayId})</li>`;
+            }).join("")
             : "<li>候補がありません</li>";
-
+    
+        // 候補リストを表示
         this.searchResults.style.display = "block";
+    
+        // 候補クリック時のリスナーを設定
         this.attachCandidateClickListeners();
     }
-
+                
     attachCandidateClickListeners() {
         this.searchCandidates.querySelectorAll("li").forEach((candidate) => {
             candidate.addEventListener("click", () => {

@@ -107,7 +107,7 @@ def home():
     db_manager = DatabaseManager()
 
     try:
-        filters = {"post_id": "3"}  # テスト用フィルタ
+        filters = {"user_id": "1"}  # テスト用フィルタ
         posts = db_manager.fetch(
             model=Post,
             relationships=["images", "author"],
