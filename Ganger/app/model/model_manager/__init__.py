@@ -8,5 +8,5 @@ __all__ = [
     "Post", "Image", "Like", "Repost",
     "Shop", "Cart", "CartItem", "Sale", "SalesItem",
     "TagMaster", "TagPost",
-    "User", "Follow", "SavedPost", "Block","savedProduct"
+    "User", "Follow", "SavedPost", "Block","SavedProduct"
 ]
