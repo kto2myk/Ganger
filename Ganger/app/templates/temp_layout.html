@@ -98,7 +98,7 @@
           <div class="side_bar_links">
             <a href="{{ url_for('my_profile',id=session['id']) }}">
               <button>
-                <img src="###" alt="profile"><text>&emsp;プロフィール</text>
+                <img src="../static/images/templates_images/profile.svg" alt="profile"><text>&emsp;プロフィール</text>
               </button>
             </a>
           </div>
@@ -108,7 +108,7 @@
           <div class="side_bar_links">
             <a href="{{ url_for( 'create_design' )}}">
               <button>
-                <img src="###" alt="createTshirts"><text>&emsp;Create Design</text>
+                <img src="../static/images/templates_images/t-shirt.svg" alt="createTshirts"><text>&emsp;Create Design</text>
               </button>
             </a>
           </div>
@@ -134,13 +134,13 @@
                 </li>
                 {% endfor %}
               </ul>
-              <div class="post-buttons" data-post-id="{{ post['post_id'] }}">
-                <button class="like-button">いいね</button>
-                <button class="comment-button">コメント</button>
-                <button class="repost-button">リポスト</button>
-              </div>
             </div>
           </section>
+        </div>
+        <div class="post_buttons" data-post-id="{{ post['post_id'] }}">
+          <button class="extension_button"><img src="../static/images/templates_images/like.png"></button>
+          <button class="extension_button"><img src="../static/images/templates_images/comment.png"></button>
+          <button class="extension_button"><img src="../static/images/templates_images/repost.png"></button>
         </div>
         <p class="user_name">{{ post['username'] }}</p>
         <p class="body_text">{{ post['body_text'] }}</p>
