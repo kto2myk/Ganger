@@ -30,39 +30,61 @@
   <header>
     <div class="header_logo">Ganger</div>
     <button id="ajaxtest">AjaxTest</button>
-    <div class="link_to_shopsite"><button class="replace_button" href="{#{{ url_for('{# method replace to shopsite #}') }}#}">shop</button></div>
+    <div class="link_to_shopsite">
+        <button class="replace_button" href="{#{{ url_for('{# method replace to shopsite #}') }}#}">shop</button>
+    </div>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  </header>
-  <div class="main_container">
-    <!-- サイドバーエリア -->
-    <div class="side_bar">
-      <ul>
+</header>
+<div class="side_bar">
+    <ul>
+        <ol>
+            <div class="side_bar_links">
+                <a href="{{ url_for('home') }}">
+                    <button>
+                        <img src="../static/images/templates_images/home-alt-3.svg">
+                        <text>&emsp;HOME</text>
+                    </button>
+                </a>
+            </div>
+        </ol>
+        <ol>
+            <div class="side_bar_links">
+                <!-- 検索ページへのリンク（USERタブがデフォルト） -->
+                <a href="{{ url_for('search', tab='USER') }}">
+                    <button>
+                        <img src="../static/images/templates_images/search.svg">
+                        <text>&emsp;検索</text>
+                    </button>
+                </a>
+            </div>
+        </ol>
+        
         <ol>
           <div class="side_bar_links">
-            <a href="{{url_for('home')}}"><button><img src="../static/images/templates_images/home-alt-3.svg"><text>&emsp;HOME</text></button></a>
+            <a href="">
+              <button>
+                <img src="../static/images/templates_images/notification-bell.svg"><text>&emsp;お知らせ</text>
+              </button>
+            </a>
           </div>
         </ol>
     
         <ol>
           <div class="side_bar_links">
-            <a href="{{ url_for('search_page') }}"><button><img src="../static/images/templates_images/search.svg"><text>&emsp;検索</text></button></a>
+            <a href="">
+              <button>
+                <img src="../static/images/templates_images/settings.svg"><text>&emsp;設定</text></button>
+              </a>
           </div>
         </ol>
     
         <ol>
           <div class="side_bar_links">
-          <a href=""><button><img src="../static/images/templates_images/notification-bell.svg"><text>&emsp;お知らせ</text></button></a>
-        </ol>
-    
-        <ol>
-          <div class="side_bar_links">
-            <a href=""><button><img src="../static/images/templates_images/settings.svg"><text>&emsp;設定</text></button></a>
-          </div>
-        </ol>
-    
-        <ol>
-          <div class="side_bar_links">
-            <a href=""><button><img src="../static/images/templates_images/email.svg"><text>&emsp;メッセージ</text></button></a>
+            <a href="">
+              <button>
+                <img src="../static/images/templates_images/email.svg"><text>&emsp;メッセージ</text>
+              </button>
+            </a>
           </div>
         </ol>
     
@@ -74,13 +96,21 @@
     
         <ol>
           <div class="side_bar_links">
-            <a href="{{ url_for('my_profile',id = session['id']) }}"><button><img src="###" alt="profile"><text>&emsp;プロフィール</text></button></a>
+            <a href="{{ url_for('my_profile',id=session['id']) }}">
+              <button>
+                <img src="###" alt="profile"><text>&emsp;プロフィール</text>
+              </button>
+            </a>
           </div>
         </ol>
     
         <ol>
           <div class="side_bar_links">
-            <a href="{{ url_for('create_design' )}}"><button><img src="###" alt="createTshirts"><text>&emsp;Create Design</text></button></a>
+            <a href="{{ url_for( 'create_design' )}}">
+              <button>
+                <img src="###" alt="createTshirts"><text>&emsp;Create Design</text>
+              </button>
+            </a>
           </div>
         </ol>
       </ul>
@@ -104,6 +134,11 @@
                 </li>
                 {% endfor %}
               </ul>
+              <div class="post-buttons" data-post-id="{{ post['post_id'] }}">
+                <button class="like-button">いいね</button>
+                <button class="comment-button">コメント</button>
+                <button class="repost-button">リポスト</button>
+              </div>
             </div>
           </section>
         </div>

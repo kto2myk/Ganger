@@ -61,7 +61,7 @@ class Validator:
         :param value: 暗号化された文字列
         :return: 復号化された元の値
         """
-        return Validator.cipher.decrypt(value.encode()).decode()
+        return int(Validator.cipher.decrypt(value.encode()).decode())
 
     @staticmethod
     def validate_email_format(email: str):
