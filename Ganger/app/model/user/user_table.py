@@ -1,12 +1,13 @@
 from werkzeug.security import generate_password_hash, check_password_hash # パスワードハッシュ化用
-from ErrorManager import ErrorLogManager # エラーログ用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベース操作用
 from flask import session, url_for  # セッション管理、画像パス生成用
 from Ganger.app.model.validator.validate import Validator # バリデーション用
 from Ganger.app.model.model_manager.model import User # ユーザーテーブル
 from sqlalchemy.orm import Session, joinedload# セッション管理、リレーション取得用
 from sqlalchemy import or_ # OR検索用
+from sqlalchemy.exc import SQLAlchemyError # データベースエラー用
 import uuid # ランダムID生成用
+from flask import current_app as app # ログ出力用
 
 
 class UserManager(DatabaseManager):
@@ -107,11 +108,77 @@ class UserManager(DatabaseManager):
             session["profile_image"] = url_for("static", filename="images/profile_images/default.png")
 
     def search_users(self, query):
-        with Session(self.engine) as session:
-            users = session.query(User).filter(
-                or_(
-                    User.user_id.ilike(f"%{query}%"),
-                    User.username.ilike(f"%{query}%")
+        """
+        指定されたクエリに基づいてユーザーを検索し、結果を返す。
+        """
+        try:
+            with Session(self.engine) as session:
+                users = session.query(User).filter(
+                    or_(
+                        User.user_id.ilike(f"%{query}%"),
+                        User.username.ilike(f"%{query}%")
+                    )
+                ).limit(10).all()
+                return [{"user_id": user.user_id, "username": user.username, "id": Validator.encrypt(user.id)} for user in users]
+        except SQLAlchemyError as e:
+            app.logger.error(f"Failed to search users: {e}")
+            raise
+    def get_user_profile_with_posts(self, user_id):
+        """
+        指定されたユーザーIDのプロフィール情報と投稿データを取得。
+
+        Args:
+            user_id (str): 暗号化されたユーザーID。
+
+        Returns:
+            dict: プロフィール情報と投稿データのリスト。
+        """
+        from Ganger.app.model.model_manager.model import User, Post
+
+        try:
+            # 暗号化されたユーザーIDを復号化
+            decrypted_id = Validator.decrypt(user_id)
+
+            with Session(self.engine) as session:
+                # ユーザー情報を取得
+                user = session.query(User).filter_by(id=decrypted_id).one_or_none()
+                if not user:
+                    raise ValueError("ユーザーが見つかりません。")
+
+                # 投稿データを取得（投稿時間降順）
+                posts = (
+                session.query(Post)
+                .filter_by(user_id=decrypted_id)  # 修正: author_id → user_id
+                .options(joinedload(Post.images))  # 画像を一度に取得
+                .order_by(Post.post_time.desc())  # 投稿時間で降順ソート
+                .all()
                 )
-            ).limit(10).all()
-            return [{"user_id": user.user_id, "username": user.username, "id": Validator.encrypt(user.id)} for user in users]
+
+                # 投稿情報を整形
+                formatted_posts = [
+                    {
+                        "post_id": Validator.encrypt(post.post_id),
+                        "first_image": (
+                            url_for("static", filename=f"images/post_images/{post.images[0].img_path}")
+                            if post.images else None  # 最初の画像のみ取得
+                        ),
+                    }
+                    for post in posts
+                ]
+
+                # プロフィール情報を整形
+                profile_data = {
+                    "id": Validator.encrypt(user.id),
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}"),
+                    "posts": formatted_posts,
+                }
+
+            return profile_data
+        except SQLAlchemyError as db_error:
+            app.logger.error(f"Database error: {db_error}")
+            raise
+        except Exception as e:
+            app.logger.error(f"Unexpected error: {e}")
+            raise

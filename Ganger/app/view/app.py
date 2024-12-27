@@ -101,39 +101,15 @@ def signup():
         
 @app.route("/home")
 def home():
-    
-    from Ganger.app.model.model_manager.model import Post
-    
-    db_manager = DatabaseManager()
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
 
     try:
-        filters = {"user_id": "1"}  # テスト用フィルタ
-        posts = db_manager.fetch(
-            model=Post,
-            relationships=["images", "author"],
-            filters=filters
-        )
+        filters = {"user_id": 1}  # テスト用フィルタ
+        formatted_posts = post_manager.get_formatted_posts(filters)
 
-        # テンプレートに渡すデータ構造を生成
-        formatted_posts = []
-        for post in posts:
-            formatted_posts.append({
-                "post_id": post.post_id,
-                "id": Validator.encrypt(post.author.id), #暗号化
-                "user_id": post.author.user_id,
-                "username": post.author.username,
-                "profile_image": url_for("static", filename = f"images/profile_images/{post.author.profile_image}"),
-                "body_text": post.body_text,
-                "post_time": Validator.calculate_time_difference(post.post_time),  # 差分を計算
-                "images": [
-                {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
-                for image in post.images
-                ]
-            })
-            
         return render_template("temp_layout.html", posts=formatted_posts)
     except Exception as e:
-        app.logger.error(f"Error: {e}")
         flash("投稿データの取得に失敗しました。")
         return redirect(url_for("login"))
     
@@ -180,36 +156,20 @@ def password_reset():
 
 @app.route("/my_profile/<id>", methods=["GET"])
 def my_profile(id):
-    
-    from Ganger.app.model.model_manager.model import User
-    db_manager = DatabaseManager()
+    from Ganger.app.model.user.user_table import UserManager
+    user_manager = UserManager()
 
     try:
-        id = Validator.decrypt(id)
-        # 指定されたユーザーの情報を取得
-        user = db_manager.fetch_one(
-            model=User,
-            filters={"id": id}
-        )
-        if not user:
-            error = "ユーザーが見つかりません。"
-            flash(error)
-            app.logger.error(f"Profile not found: {error}")
-            return redirect(url_for("home"))
+        # プロフィール情報を取得
+        profile_data = user_manager.get_user_profile_with_posts(id)
 
-        # プロフィール情報を整形してテンプレートに渡す
-        profile_data = {
-            "id":user.id,
-            "user_id": user.user_id,
-            "username": user.username,
-            "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")
-        }
-
+        # テンプレートにデータを渡す
         return render_template("my_profile.html", profile=profile_data)
+    except ValueError as e:
+        return (str(e))
     except Exception as e:
-        app.logger.error(f"Error: {e}") # ログにエラーを記録
-        flash("ユーザーデータの取得に失敗しました。")
-        return redirect(url_for("home"))
+        app.logger.error(f"Unexpected error: {e}")
+        return ("ユーザーデータの取得に失敗しました。")
 
 @app.route('/create_post', methods=['POST'])
 def create_post():
@@ -217,7 +177,7 @@ def create_post():
     新しい投稿を作成するエンドポイント
     """
     # セッションからユーザーIDを取得
-    user_id = session['user_id']
+    user_id = session['id']
     title = request.form.get('title')
     description = request.form.get('description', "")  # 任意のフィールド
 
@@ -363,9 +323,29 @@ def search():
         if request.headers.get('Accept') == 'application/json':
             return jsonify({"error": "An error occurred"}), 500
         else:
-            return render_template('error.html', error_message=str(e)), 500
+            return f"An error occurred: {str(e)}", 500
+        
+@app.route('/display_post/<post_id>', methods=['GET'])
+def display_post(post_id):
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
 
+    try:
+        # デバッグ用ログ
+        app.logger.info(f"Fetching post with post_id: {post_id}")
 
+        # 投稿データを取得
+        post_details = post_manager.get_post_details(post_id)
+        app.logger.info(f"Post details: {post_details}")
+
+        # テンプレートにデータを渡す
+        return render_template("display_post.html", post=post_details)
+    except ValueError as e:
+        app.logger.error(f"ValueError: {e}")
+        return "指定された投稿が見つかりませんでした。", 404
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {e}")
+        return "投稿データの取得中にエラーが発生しました。", 500
 
 if __name__ == "__main__":
     try:

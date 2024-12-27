@@ -5,6 +5,8 @@ from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.model_manager.model import Post, Image
 from flask import current_app as app, url_for
+from Ganger.app.model.validator import Validator
+
 class PostManager(DatabaseManager):
     def __init__(self):
         super().__init__()
@@ -87,9 +89,102 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Failed to create post: {e}")
             return {"error": str(e)}
 
+    def get_formatted_posts(self, filters):
+        """
+        指定されたフィルタに基づいて投稿データを取得し、フォーマットして返す。
+
+        Args:
+            filters (dict): 投稿データの取得条件。
+
+        Returns:
+            list: フォーマットされた投稿データのリスト。
+        """
+        from Ganger.app.model.model_manager.model import Post
+        
+        try:
+            posts = self.fetch(
+                model=Post,
+                relationships=["images", "author"],
+                filters=filters
+            )
+
+            formatted_posts = []
+            for post in posts:
+                formatted_posts.append({
+                    "post_id": Validator.encrypt(post.post_id),
+                    "id": Validator.encrypt(post.author.id),
+                    "user_id": post.author.user_id,
+                    "username": post.author.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}"),
+                    "body_text": post.body_text,
+                    "post_time": Validator.calculate_time_difference(post.post_time),
+                    "images": [
+                        {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
+                        for image in post.images
+                    ]
+                })
+
+            return formatted_posts
+        except Exception as e:
+            self.error_log_manager.add_error(None, str(e))
+            app.logger.error(f"Error in get_formatted_posts: {e}")
+            raise
+
+            
+
+    def get_post_details(self, post_id):
+        """
+        指定されたpost_idの投稿データを取得し、フォーマットして返す。
+
+        Args:
+            post_id (int): 取得する投稿のID。
+
+        Returns:
+            dict: フォーマットされた投稿データ。
+        """
+        from Ganger.app.model.model_manager.model import Post
+
+        try:
+            # デバッグ用ログ
+            app.logger.info(f"Querying post with post_id: {post_id}")
+
+            # 投稿データを取得
+            post = self.fetch_one(
+                model=Post,
+                relationships=["images", "author"],
+                filters={"post_id": Validator.decrypt(post_id)}
+            )
+
+            if not post:
+                app.logger.warning(f"Post with post_id {post_id} not found.")
+                raise ValueError("投稿が見つかりません。")
+
+            # データをフォーマット
+            formatted_post = {
+                "post_id": Validator.encrypt(post.post_id),
+                "user_info": {
+                    "id": Validator.encrypt(post.author.id),
+                    "user_id": post.author.user_id,
+                    "username": post.author.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}")
+                },
+                "body_text": post.body_text,
+                "post_time": Validator.calculate_time_difference(post.post_time),
+                "images": [
+                    {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
+                    for image in post.images
+                ]
+            }
+
+            app.logger.info(f"Formatted post: {formatted_post}")
+            return formatted_post
+        except Exception as e:
+            app.logger.error(f"Error in get_post_details: {e}")
+            raise
 
     def search_tags(self, query):
         from Ganger.app.model.model_manager.model import TagMaster, TagPost, Post, Image
+
         with Session(self.engine) as session:
             # タグの検索
             tags = session.query(TagMaster).filter(
@@ -114,7 +209,7 @@ class PostManager(DatabaseManager):
                     ).order_by(Image.img_order).first()  # 画像の順序を考慮
 
                     results.append({
-                        "post_id": post.post_id,
+                        "post_id": Validator.encrypt(post.post_id),
                         "body_text": post.body_text,
                         "post_time": post.post_time,
                         "tag_texts": [tag.tag_text for tag in tags if tag.tag_id in [tp.tag_id for tp in post.tags]],  # POSTのタグ名
@@ -123,7 +218,7 @@ class PostManager(DatabaseManager):
                 
                 return results
             return []
-            
+
     def search_categories(self, query):
         from Ganger.app.model.model_manager.model import CategoryMaster, ProductCategory, Shop, Post, Image
         with Session(self.engine) as session:
@@ -153,7 +248,7 @@ class PostManager(DatabaseManager):
                     ).order_by(Image.img_order).first()  # 画像の順序を考慮
 
                     results.append({
-                        "post_id": post.post_id,
+                        "post_id": Validator.encrypt(post.post_id),
                         "body_text": post.body_text,
                         "post_time": post.post_time,
                         "category_names": [category.category_name for category in categories if category.category_id in [pc.category_id for pc in post.categories]],  # POSTのカテゴリ名

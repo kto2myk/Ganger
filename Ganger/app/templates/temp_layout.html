@@ -96,7 +96,7 @@
     
         <ol>
           <div class="side_bar_links">
-            <a href="{{ url_for('my_profile',id = session['id']) }}">
+            <a href="{{ url_for('my_profile',id=session['id']) }}">
               <button>
                 <img src="###" alt="profile"><text>&emsp;プロフィール</text>
               </button>
@@ -106,7 +106,7 @@
     
         <ol>
           <div class="side_bar_links">
-            <a href="{{ url_for('create_design' )}}">
+            <a href="{{ url_for( 'create_design' )}}">
               <button>
                 <img src="###" alt="createTshirts"><text>&emsp;Create Design</text>
               </button>
@@ -133,10 +133,14 @@
                 </li>
                 {% endfor %}
               </ul>
+              <div class="post-buttons" data-post-id="{{ post['post_id'] }}">
+                <button class="like-button">いいね</button>
+                <button class="comment-button">コメント</button>
+                <button class="repost-button">リポスト</button>
+              </div>
             </div>
           </section>
         </div>
-        <p>post_id:{{ post["post_id"]}}</p>
         <p class="user_name">{{ post['username'] }}</p>
         <p class="body_text">{{ post['body_text'] }}</p>
         <p class="post_time">{{ post['post_time'] }}</p>

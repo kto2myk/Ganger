@@ -6,9 +6,32 @@
     <title>Document</title>
 </head>
 <body>
-    <p>{{ profile["id"] }}</p>
-    <p>{{ profile["user_id"] }}</p>
-    <p>{{ profile["username"] }}</p>
-    <img src="{{ profile['profile_image'] }}" alt="profile_image">
+    <div class="contents">
+        <div class="account_info">
+            <h1>{{ profile.username }} のプロフィール</h1>
+            <img src="{{ profile.profile_image }}" alt="プロフィール画像">
+        </div>
+        <div class="post_container">
+            <h2>投稿一覧</h2>
+
+            <ul>
+                {% if profile.posts %}
+                    {% for post in profile.posts %}
+                        <li>
+                            <div class="image_area">
+                                {% if post.first_image %}
+                                    <a href="{{ url_for('display_post', post_id=post.post_id) }}">
+                                    <img src="{{ post.first_image }}" alt="投稿画像">
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <p>まだ投稿がありません。</p>
+                {% endif %} 
+            </ul>
+        </div>
+    </div>
 </body>
 </html>
