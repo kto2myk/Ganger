@@ -1,7 +1,7 @@
 body {
-    margin: 0 auto;
-    width: 100%;
-    font-size: 100%;
+    margin: 0;
+    width: 100dvh;
+    font-size: 16px;
 }
 
 #loading {
@@ -63,15 +63,15 @@ header {
   border-color: #999;
 }
 
-/* .replace_button:hover {
-  
-} */
-
+/* メインコンテナ */
 .main_container {
+    width: 100%;
+    height: auto;
     display: flex;
     justify-content: space-between;
 }
 
+/* サイドバー */
 .side_bar {
     position: fixed;
     align-items: left;
@@ -107,10 +107,9 @@ header {
 }
 
 .side_bar_links button {
-  text-align: left;
   display: flex;
+  text-align: left;
   align-items: center;
-  position: relative;
   width:100%;
   height: 100%;
   background-color: transparent;
@@ -124,25 +123,18 @@ header {
 }
 
 .side_bar_links img {
-  position: absolute;
-  top: 50%;
-  transform: translate(0, -50%);
   height: 50%;
 }
 
 .side_bar_links text {
-  padding-left: 20%;
-  position: absolute;
-  top: 50%;
-  transform: translate(0, -50%);
-  font-size: 150%;
+  font-size: 1vw;
 }
 
 .side_bar_links:hover button {
   background-color: #ddd;
 }
 
-
+/* ウィンドウ縮小時 */
 @media (max-width: 768px) {
   .side_bar {
     width: 10vh;
@@ -150,6 +142,10 @@ header {
 
   .side_bar_links button {
     text-align: center;
+  }
+
+  .side_bar_links img {
+    margin: 0 auto;
   }
 
   .side_bar_links text {
@@ -162,31 +158,28 @@ header {
   }
 }
 
-
+/* 投稿表示エリア */ 
 .contents {
-    height: 100vh;
-    width: 75vw;
-    margin-left: 25vh;
-    margin-top: 10vh;
-    justify-content: space-between;
+    height: auto;
+    width: 100%;
+    display: flex;
 }
 
 .post_container {
-    width: 500px;
+    width: 300px;
     height: 700px;
-    margin-top: 100px;
-    margin: auto;
+    margin: 0 auto;
 }
 
 .account_info {
     display: flex;
-    justify-content: left;
 }
 
 .account_info img {
-    width: 50px;
-    height: 50px;
+    width: 20%;
+    height: auto;
     border-radius: 50%;
+    justify-content: left;
     background-color: #FFF;
 }
 
