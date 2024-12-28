@@ -130,7 +130,9 @@
               <ul class="splide__list">
                 {% for image in post["images"] %}
                 <li class="splide__slide">
-                  <img src="{{ image['img_path'] }}" alt="投稿画像">
+                  <a href="{{ url_for('display_post', post_id=post['post_id']) }}">
+                    <img src="{{ image['img_path'] }}" alt="投稿画像">
+                  </a>
                 </li>
                 {% endfor %}
               </ul>

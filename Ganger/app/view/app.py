@@ -5,9 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash   # �
 import os  # ファイルパス操作用
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
-from sqlalchemy.orm import Session  # SQLAlchemyセッション
 from sqlalchemy import or_  # OR条件用
-from Ganger.app.model.model_manager.model import User, CategoryMaster, ProductCategory, TagMaster, TagPost  # モデル
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
