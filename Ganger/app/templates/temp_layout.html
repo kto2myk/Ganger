@@ -122,7 +122,7 @@
       <div class="post_container">
         <div class="account_info">
           <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
-          <p>{{ post["user_id"] }}</p>
+          <p>{{ post['username'] }}</p>
         </div>
         <div class="image_area">
           <section id="image-carousel-{{ post['post_id'] }}" class="splide">
@@ -144,7 +144,6 @@
           <button class="extension_button"><img src="../static/images/templates_images/comment.png"></button>
           <button class="extension_button"><img src="../static/images/templates_images/repost.png"></button>
         </div>
-        <p class="user_name">{{ post['username'] }}</p>
         <p class="body_text">{{ post['body_text'] }}</p>
         <p class="post_time">{{ post['post_time'] }}</p>
       </div>
