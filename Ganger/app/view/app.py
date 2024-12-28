@@ -1,19 +1,45 @@
-from flask import Flask, request, session, render_template, redirect, url_for,flash
-from datetime import timedelta
-import os
-
+from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify # Flaskの各種機能をインポート
+from flask_wtf.csrf import CSRFProtect  # CSRF保護用
+from datetime import timedelta  # セッションの有効期限設定用
+from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
+import os  # ファイルパス操作用
+from Ganger.app.model.validator.validate import Validator  # バリデーション用
+from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
+from sqlalchemy.orm import Session  # SQLAlchemyセッション
+from sqlalchemy import or_  # OR条件用
+from Ganger.app.model.model_manager.model import User, CategoryMaster, ProductCategory, TagMaster, TagPost  # モデル
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
     static_folder=os.path.abspath("Ganger/app/static"),
 )
 
+# 実行ディレクトリを基準に保存先を設定  app.pyディレクトリの一階層上 app/までを取得
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))  
+# 画像保存先の設定
+POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "post_images")
+TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
+PROFILE_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "profile_images")
+
 # Flask の基本設定
 app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=5) 
+# csrf = CSRFProtect(app) # CSRF保護を有効化 
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300) 
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config['POST_FOLDER'] = POST_IMAGE_FOLDER
+app.config['TEMP_FOLDER'] = TEMP_IMAGE_FOLDER
+app.config['PROFILE_FOLDER'] = PROFILE_IMAGE_FOLDER
+
+
+
 # @app.before_request
+# def check_session():
+#     if id in session:
+#         return redirect(url_for("home"))
+#     elif request.endpoint not in ["login", "signup", "password_reset"]:
+#             return redirect(url_for("login"))
+#     return None
 # def make_session_permanent(): #sessionの一括永続化
 #     session.permanent = True
 
@@ -32,16 +58,13 @@ def login():
         identifier = request.form.get("identifier")
         password = request.form.get("password")
 
-        user,error= user_manager.login(identifier=identifier, password=password)
+        # ユーザーログイン処理
+        user, error = user_manager.login(identifier=identifier, password=password)
         if user:
-            session["id"] = user.id
-            session["user_id"] = user.user_id
-            session["username"] = user.username
-            session["profile_image"] = url_for("static",
-                filename=f"profile_images/{user.profile_image}")
             return redirect(url_for("home"))
         else:
-            flash(error) 
+            flash(error)
+            app.logger.error(f"Login failed for identifier: {identifier} - {error}")
             return redirect(url_for("login"))
 
 
@@ -60,38 +83,272 @@ def signup():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        success, result = user_manager.create_user( #successにbool resultに結果
+        # ユーザー作成処理
+        success, error = user_manager.create_user(
             username=username,
-            email=email, 
+            email=email,
             password=password
-            )
-        
+        )
+
         if success:
-            try:
-                session["id"] = result["id"]
-                session["user_id"] = result["user_id"]
-                session["username"] = result["username"]
-                session["profile_image"] = url_for("static", filename=f"profile_images/{result['profile_image']}")
-                return redirect(url_for("home"))
-            
-            except Exception as e:
-                print(f"[ERROR] Failed to save session data: {e}")
-                flash("内部エラーが発生しました。")
-                return redirect(url_for("signup"))
-        else: 
-            flash(result)
+            # 成功時、セッション登録はcreate_user内で完了
+            return redirect(url_for("home"))
+        else:
+            # エラーメッセージをフラッシュ
+            flash(error)
+            app.logger.error(f"Signup failed: {error}")
             return redirect(url_for("signup"))
-
-@app.route("/home", methods=["GET", "POST"])
+        
+@app.route("/home")
 def home():
-    if not "id" in session:
-        return redirect(url_for("login"))
-    return render_template("temp_layout.html")
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
+    try:
+        filters = {"user_id": 1}  # テスト用フィルタ
+        formatted_posts = post_manager.get_formatted_posts(filters)
+
+        return render_template("temp_layout.html", posts=formatted_posts)
+    except Exception as e:
+        flash("投稿データの取得に失敗しました。")
+        return redirect(url_for("login"))
+    
+
+@app.route('/password-reset', methods=['GET', 'POST'])
+def password_reset():
+    if request.method == 'POST':
+        
+        from Ganger.app.model.model_manager.model import User
+        email = request.form['email']
+        password = request.form['password']
+        password_confirm = request.form['password_confirm']
+        
+        # パスワード一致確認
+        if password != password_confirm:
+            error = 'パスワードが一致しません。再度入力してください。'
+            flash(error)
+            app.logger.error(f"Password reset failed: {error}")
+            return render_template('password_reset.html')
+        
+        # ユーザーの検索とパスワード更新
+        database_manager = DatabaseManager()
+        user = database_manager.fetch_one(User, filters={"email": email})
+        if not user:
+            error = '該当するメールアドレスが見つかりません。'
+            flash(error)
+            app.logger.error(f"Password reset failed: {error}")
+            return redirect(url_for('password_reset'))     
+        
+        # パスワードの更新
+        hashed_password = generate_password_hash(password)
+        success = database_manager.update(User, {"email": email}, {"password": hashed_password})
+        if success:
+            flash('パスワードをリセットしました。ログインしてください。', 'success')
+            return redirect(url_for('login'))
+        else:
+            error = 'パスワードリセット中にエラーが発生しました。'
+            flash(error)
+            app.logger.error(f"Password reset failed: {error}")
+            return redirect(url_for('password_reset'))    
+        
+    return render_template('password_reset.html')
+
+
+@app.route("/my_profile/<id>", methods=["GET"])
+def my_profile(id):
+    from Ganger.app.model.user.user_table import UserManager
+    user_manager = UserManager()
+
+    try:
+        # プロフィール情報を取得
+        profile_data = user_manager.get_user_profile_with_posts(id)
+
+        # テンプレートにデータを渡す
+        return render_template("my_profile.html", profile=profile_data)
+    except ValueError as e:
+        return (str(e))
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {e}")
+        return ("ユーザーデータの取得に失敗しました。")
+
+@app.route('/create_post', methods=['POST'])
+def create_post():
+    """
+    新しい投稿を作成するエンドポイント
+    """
+    # セッションからユーザーIDを取得
+    user_id = session['id']
+    title = request.form.get('title')
+    description = request.form.get('description', "")  # 任意のフィールド
+
+    if not title:
+        error = "タイトルは必須です。"
+        flash(error, "error")
+        app.logger.error(f"Post creation failed: {error}")
+        return redirect(url_for('post_page'))
+
+    # 投稿データ
+    post_data = {
+        "user_id": user_id,
+        "title": title,
+        "description": description
+    }
+
+    # 画像ファイルの処理
+    if 'images' not in request.files:
+        flash("画像ファイルを選択してください。", "error")
+        return redirect(url_for('post_page'))
+
+    image_files = request.files.getlist('images')
+
+    if len(image_files) > 6:
+        error = "画像は最大6枚までアップロード可能です。"
+        flash(error,"error")
+        app.logger.error(f"Post creation failed: {error}")
+        return redirect(url_for('post_page'))
+
+    # PostManagerを使用して投稿作成
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
+    result = post_manager.create_post(post_data, image_files)
+
+    if "error" in result:
+        error = result["error"]
+        flash(error, "error")
+        app.logger.error(f"Post creation failed: {error}")
+        return redirect(url_for('post_page'))
+
+    flash("投稿が作成されました！", "success")
+    return redirect(url_for('home'))
+
+@app.route('/create_design')
+def create_design():
+    return render_template("create_design.html")
+
+@app.route('/save_design', methods=['POST'])
+def save_design():
+    image_data = request.form.get("image")  # Base64形式の画像データ
+    if not image_data:
+        return "画像データが見つかりません。", 400
+
+    try:
+        import uuid
+        import base64
+        # 一意なファイル名を生成
+        unique_name = f"{uuid.uuid4()}.png"  # 一意なファイル名
+        image_path = os.path.join(app.config['TEMP_FOLDER'], unique_name)
+
+        # Base64データをデコードして保存
+        image_data = image_data.split(",")[1]  # "data:image/png;base64,"を取り除く
+        with open(image_path, "wb") as f:
+            f.write(base64.b64decode(image_data))
+
+        # セッションに画像名を保存
+        session['image_name'] = unique_name
+        return redirect(url_for('display'))
+    except Exception as e:
+        app.logger.error(f"Error: {e}")
+        return f"エラーが発生しました: {str(e)}", 500
+
+@app.route('/display', methods=['GET'])
+def display():
+    # セッションから画像名を取得
+    image_name = session.get('image_name')
+    if not image_name:
+        error = "画像が見つかりません。"
+        app.logger.error(f"Image not found: {error}")
+        return error, 404
+
+    # URLを生成してHTMLに渡す
+    image_url = url_for('static', filename=f"images/temp_images/{image_name}")
+    return render_template("image_display.html", image_url=image_url)
+
+@app.route('/delete_temp')
+def delete_temp():
+    # セッションから画像名を取得
+    image_name = session.get('image_name')
+    if not image_name:
+        return "削除する画像が見つかりません。", 404
+
+    try:
+        # 画像のパスを構築
+        image_path = os.path.join(app.config['TEMP_FOLDER'], image_name)
+
+        # ファイルの存在確認
+        if os.path.exists(image_path):
+            os.remove(image_path)  # ファイルを削除
+            session.pop('image_name', None)  # セッションから削除
+            return redirect('home')
+        else:
+            return "画像ファイルが存在しません。", 404
+    except Exception as e:
+        return f"エラーが発生しました: {str(e)}", 500
+    
+@app.route('/search', methods=['GET'])
+def search():
+    try:
+        # クエリパラメータから値を取得
+        query = request.args.get('query', '').strip().lower()
+        tab = request.args.get('tab', 'USER').upper()  # デフォルトは "USER"
+
+        # 結果の初期化
+        results = {"users": [], "tags": [], "categories": []}
+
+        if query:
+            from Ganger.app.model.post.post_manager import PostManager
+            from Ganger.app.model.user.user_table import UserManager
+
+            post_manager = PostManager()
+            user_manager = UserManager()
+
+            # タブに基づいた処理
+            if tab == "USER":
+                results['users'] = user_manager.search_users(query)
+            elif tab == "TAG":
+                results['tags'] = post_manager.search_tags(query)
+            elif tab == "CATEGORY":
+                results['categories'] = post_manager.search_categories(query)
+
+        # ログ出力
+        app.logger.info(f"Search completed: query={query}, tab={tab}, results={results}")
+
+        # クライアントのリクエスト形式に応じたレスポンス
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(results), 200
+        else:
+            return render_template('search_page.html', query=query, tab=tab, results=results)
+
+    except Exception as e:
+        app.logger.error(f"Error occurred: {e}", exc_info=True)
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({"error": "An error occurred"}), 500
+        else:
+            return f"An error occurred: {str(e)}", 500
+        
+@app.route('/display_post/<post_id>', methods=['GET'])
+def display_post(post_id):
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
+
+    try:
+        # デバッグ用ログ
+        app.logger.info(f"Fetching post with post_id: {post_id}")
+
+        # 投稿データを取得
+        post_details = post_manager.get_post_details(post_id)
+        app.logger.info(f"Post details: {post_details}")
+
+        # テンプレートにデータを渡す
+        return render_template("display_post.html", post=post_details)
+    except ValueError as e:
+        app.logger.error(f"ValueError: {e}")
+        return "指定された投稿が見つかりませんでした。", 404
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {e}")
+        return "投稿データの取得中にエラーが発生しました。", 500
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 80, True)
+    try:
+        app.run(host="0.0.0.0", port=80, debug=True)
+    except KeyboardInterrupt:
+        print("\n[INFO] Server 停止")

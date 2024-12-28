@@ -1,0 +1,190 @@
+<div id="search-container">
+    <div style="position: relative;">
+        <input
+            type="text"
+            id="search-box"
+            placeholder="アカウントを検索..."
+            autocomplete="off"
+            style="padding-right: 30px;"
+        />
+        <button id="clear-search-btn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px;">×</button>
+    </div>
+    <div id="search-results" style="display: none; position: absolute; background: #fff; border: 1px solid #ccc; z-index: 1000; width: 100%;">
+        <ul id="search-candidates" style="list-style: none; margin: 0; padding: 0;"></ul>
+    </div>
+    <div id="search-history-container" style="display: none;">
+        <div id="search-history-empty" style="display: none;">検索してみましょう</div>
+        <div id="search-history-list"></div>
+        <button id="clear-history-btn" style="display: none;">すべて削除</button>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/SearchComponent.js') }}"></script>
+
+<!-- <script>
+    // const searchBox = document.getElementById("search-box");
+    // const searchResults = document.getElementById("search-results");
+    // const searchCandidates = document.getElementById("search-candidates");
+    // const searchHistoryContainer = document.getElementById("search-history-container");
+    // const searchHistoryEmpty = document.getElementById("search-history-empty");
+    // const searchHistoryList = document.getElementById("search-history-list");
+    // const clearHistoryBtn = document.getElementById("clear-history-btn");
+    // const clearSearchBtn = document.getElementById("clear-search-btn");
+
+    // let timeout = null;
+    // let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+
+    // // ページロード時にURLのクエリを検索ボックスに反映
+    // document.addEventListener("DOMContentLoaded", () => {
+    //     const params = new URLSearchParams(window.location.search);
+    //     const query = params.get('query');
+    //     if (query) {
+    //         searchBox.value = query; // URLのクエリを検索ボックスにセット
+    //     }
+    //     updateSearchHistory(); // 検索履歴を更新
+    // });
+
+    // // 検索履歴を保存する関数
+    // function saveToSearchHistory(query) {
+    //     if (!searchHistory.includes(query) && query.trim() !== "") {
+    //         searchHistory.push(query);
+    //         localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    //         console.log(`Saved to search history: ${query}`);
+    //         updateSearchHistory();
+    //     }
+    // }
+
+    // // 検索ボックスのフォーカス時
+    // searchBox.addEventListener("focus", () => {
+    //     if (searchBox.value.trim() === "") {
+    //         updateSearchHistory();
+    //         searchHistoryContainer.style.display = "block";
+    //     }
+    // });
+
+    // // 入力時のリアルタイム検索
+    // searchBox.addEventListener("input", () => {
+    //     clearTimeout(timeout);
+    //     const query = searchBox.value.trim();
+
+    //     if (query.length > 0) {
+    //         searchHistoryContainer.style.display = "none";
+    //         timeout = setTimeout(() => fetchCandidates(query), 300);
+    //     } else {
+    //         searchResults.style.display = "none";
+    //         searchHistoryContainer.style.display = "block";
+    //     }
+    // });
+
+    // // エンターキー押下時のリダイレクト
+    // searchBox.addEventListener("keydown", (event) => {
+    //     if (event.key === "Enter") {
+    //         event.preventDefault();
+    //         const query = searchBox.value.trim();
+    //         if (query.length > 0) {
+    //             saveToSearchHistory(query); // 検索履歴に保存
+    //             console.log(`Redirecting to: /search_page/USER?query=${encodeURIComponent(query)}`);
+    //             window.location.href = `/search_page/USER?query=${encodeURIComponent(query)}`;
+    //         }
+    //     }
+    // });
+
+    // // 検索候補を取得
+    // async function fetchCandidates(query) {
+    //     try {
+    //         const response = await fetch(`/search_func?query=${encodeURIComponent(query)}&tab=USER`);
+    //         if (!response.ok) throw new Error("Failed to fetch candidates");
+    //         const data = await response.json();
+    //         displayCandidates(data.users);
+    //     } catch (error) {
+    //         console.error("Error fetching search candidates:", error);
+    //     }
+    // }
+
+    // // 検索候補を表示
+    // function displayCandidates(users) {
+    //     searchCandidates.innerHTML = users.length
+    //         ? users.map(user => `
+    //             <li 
+    //                 style="padding: 5px; cursor: pointer;" 
+    //                 data-id="${user.id}">
+    //                 ${user.username} (${user.user_id})
+    //             </li>
+    //         `).join('')
+    //         : '<li style="padding: 5px; color: #888;">候補がありません</li>';
+
+    //     searchResults.style.display = "block";
+
+    //     // 候補をクリックしたときのリダイレクト
+    //     document.querySelectorAll('#search-candidates li').forEach(candidate => {
+    //         candidate.addEventListener('click', (event) => {
+    //             const userId = event.target.getAttribute('data-id'); // 暗号化されたID
+    //             if (userId) {
+    //                 console.log(`Redirecting to: /my_profile/${userId}`);
+    //                 window.location.href = `/my_profile/${userId}`;
+    //             }
+    //         });
+    //     });
+    // }
+
+    // // 検索履歴を更新
+    // function updateSearchHistory() {
+    //     if (searchHistory.length === 0) {
+    //         searchHistoryEmpty.style.display = "block";
+    //         searchHistoryList.style.display = "none";
+    //         clearHistoryBtn.style.display = "none";
+    //     } else {
+    //         searchHistoryEmpty.style.display = "none";
+    //         searchHistoryList.style.display = "block";
+    //         clearHistoryBtn.style.display = "inline-block";
+
+    //         searchHistoryList.innerHTML = searchHistory
+    //             .map(
+    //                 (item, index) => `
+    //                 <div style="display: flex; justify-content: space-between; align-items: center;">
+    //                     <span data-query="${item}" class="history-item" style="cursor: pointer;">${item}</span>
+    //                     <button data-index="${index}" class="delete-item-btn" style="background: none; border: none; cursor: pointer;">×</button>
+    //                 </div>
+    //             `
+    //             )
+    //             .join("");
+
+    //         // 履歴をクリック時のリダイレクト
+    //         document.querySelectorAll('.history-item').forEach((element) => {
+    //             element.addEventListener('click', (event) => {
+    //                 const query = event.target.getAttribute('data-query');
+    //                 if (query) {
+    //                     console.log(`Redirecting to: /search_page/USER?query=${encodeURIComponent(query)}`);
+    //                     window.location.href = `/search_page/USER?query=${encodeURIComponent(query)}`;
+    //                 }
+    //             });
+    //         });
+
+    //         // 履歴の削除ボタン
+    //         document.querySelectorAll('.delete-item-btn').forEach((button) => {
+    //             button.addEventListener('click', (event) => {
+    //                 const index = parseInt(button.getAttribute('data-index'), 10);
+    //                 searchHistory.splice(index, 1);
+    //                 localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+    //                 updateSearchHistory();
+    //             });
+    //         });
+    //     }
+    // }
+
+    // // 履歴の全削除
+    // clearHistoryBtn.addEventListener("click", () => {
+    //     searchHistory = [];
+    //     localStorage.removeItem('searchHistory');
+    //     updateSearchHistory();
+    // });
+
+    // // 検索ボックスの内容をクリア
+    // clearSearchBtn.addEventListener("click", () => {
+    //     searchBox.value = "";
+    //     searchResults.style.display = "none";
+    // });
+
+    
+</script> -->

@@ -1,50 +1,70 @@
 from werkzeug.security import check_password_hash
-
+from cryptography.fernet import Fernet
+from datetime import datetime, date
+import re
+from sqlalchemy.orm import Session
 
 class Validator:
-    from sqlalchemy.orm import Session
+    SECRET_KEY = Fernet.generate_key()  # 本番環境では固定の安全なキーを使用
+    cipher = Fernet(SECRET_KEY)
+#     @staticmethod
+#     def validate_existence(session: Session, model, conditions: dict):
+#         """
+#         任意のモデルと条件に基づいてデータを検索し、結果を返すメソッド。
+#         データが存在しない場合は None を返す。
+#         """
+#         query = session.query(model)  # クエリ作成
+#         print(f"[DEBUG] Initial Query: {query}")
+#         print(f"[DEBUG] Model Columns: {[col.key for col in model.__table__.columns]}")
+
+#         # 条件の確認
+#         print(f"[DEBUG] Conditions: {conditions} (Type: {type(conditions)})")
+#         if not isinstance(conditions, dict):
+#             print(f"[ERROR] Invalid conditions type: {type(conditions)}. Expected dict.")
+#             raise TypeError("Conditions must be a dictionary.")
+#         if not conditions:
+#             print("[ERROR] No conditions provided.")
+#             raise ValueError("Conditions must not be empty.")
+
+#         # フィルタリング処理
+#         for field, value in conditions.items():
+#             print(f"[DEBUG] Adding Filter: {field} == {value}")
+#             print(f"[DEBUG] Does Model Have Field '{field}'? {hasattr(model, field)}")
+#             if hasattr(model, field):
+#                 query = query.filter(getattr(model, field) == value)
+#                 print(f"[DEBUG] Query after Filter: {query}")
+#             else:
+#                 raise AttributeError(f"Model '{model.__name__}' does not have attribute '{field}'")
+
+#         # クエリ結果を取得
+#         try:
+#             result = query.first()  # 最初の一致データを取得
+#             print(f"[DEBUG] Query Result: {result}")
+#         except Exception as e:
+#             print(f"[ERROR] Query Execution Failed: {e}")
+#             raise
+#         return result
 
     @staticmethod
-    def validate_existence(session: Session, model, conditions: dict):
+    def encrypt(value):
         """
-        任意のモデルと条件に基づいてデータを検索し、結果を返すメソッド。
-        データが存在しない場合は None を返す。
+        指定された値を暗号化する
+        :param value: 暗号化する文字列または数値
+        :return: 暗号化された文字列
         """
-        query = session.query(model)  # クエリ作成
-        print(f"[DEBUG] Initial Query: {query}")
-        print(f"[DEBUG] Model Columns: {[col.key for col in model.__table__.columns]}")
+        return Validator.cipher.encrypt(str(value).encode()).decode()
 
-        # 条件の確認
-        print(f"[DEBUG] Conditions: {conditions} (Type: {type(conditions)})")
-        if not isinstance(conditions, dict):
-            print(f"[ERROR] Invalid conditions type: {type(conditions)}. Expected dict.")
-            raise TypeError("Conditions must be a dictionary.")
-        if not conditions:
-            print("[ERROR] No conditions provided.")
-            raise ValueError("Conditions must not be empty.")
-
-        # フィルタリング処理
-        for field, value in conditions.items():
-            print(f"[DEBUG] Adding Filter: {field} == {value}")
-            print(f"[DEBUG] Does Model Have Field '{field}'? {hasattr(model, field)}")
-            if hasattr(model, field):
-                query = query.filter(getattr(model, field) == value)
-                print(f"[DEBUG] Query after Filter: {query}")
-            else:
-                raise AttributeError(f"Model '{model.__name__}' does not have attribute '{field}'")
-
-        # クエリ結果を取得
-        try:
-            result = query.first()  # 最初の一致データを取得
-            print(f"[DEBUG] Query Result: {result}")
-        except Exception as e:
-            print(f"[ERROR] Query Execution Failed: {e}")
-            raise
-        return result
+    @staticmethod
+    def decrypt(value):
+        """
+        指定された暗号化値を復号化する
+        :param value: 暗号化された文字列
+        :return: 復号化された元の値
+        """
+        return int(Validator.cipher.decrypt(value.encode()).decode())
 
     @staticmethod
     def validate_email_format(email: str):
-        import re
         if not re.match(r'^\S+@\S+\.\S+$', email):
             error_message = "無効なメールアドレス形式"
             raise ValueError (error_message)
@@ -52,7 +72,6 @@ class Validator:
 
     @staticmethod
     def validate_date(year: int, month: int, day: int) -> tuple:
-        from datetime import date, datetime
 
         """
         生年月日を検証し、日付型で返します。
@@ -87,3 +106,24 @@ class Validator:
         # 成功時は日付を返す
         return birthday
 
+
+    @staticmethod
+    def calculate_time_difference(post_time):
+        """
+        現在時刻と投稿時刻の差分を計算してフォーマットする
+        :param post_time: 投稿時刻 (datetimeオブジェクト)
+        :return: 差分を表す文字列（例: "5秒前", "5分前", "2時間前", "1日前"）
+        """
+        now = datetime.now()
+        time_diff = now - post_time
+        seconds_diff = int(time_diff.total_seconds())
+        minutes_diff = seconds_diff // 60
+
+        if seconds_diff < 60:  # 60秒未満
+            return f"{seconds_diff}秒前"
+        elif minutes_diff < 60:  # 60分未満
+            return f"{minutes_diff}分前"
+        elif minutes_diff < 1440:  # 24時間未満
+            return f"{minutes_diff // 60}時間前"
+        else:
+            return f"{minutes_diff // 1440}日前"

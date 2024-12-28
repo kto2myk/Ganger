@@ -10,6 +10,19 @@
 </head>
 <body>
 <style>
+    @media (max-width: 768px) {
+    .header {
+        flex-wrap: wrap;
+    }
+    .search-bar {
+        margin: 10px 0;
+    }
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
     /* ベーススタイル */
 * {
     margin: 0;
@@ -61,9 +74,28 @@ body {
     font-size: 20px;
 }
 
-.menu {
-    font-size: 24px;
+.custom-menu-popup {
+    font-size: 18px;
+    text-align: center;
+    width: 600px !important;
+    height: 500px;
 }
+
+.custom-menu-popup ul li {
+    margin: 10px 0;
+}
+
+.custom-menu-popup a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+.custom-menu-popup a:hover {
+    color: #007bff;
+}
+
+
 
 /* カテゴリーナビゲーションスタイル */
 .category-nav {
@@ -142,13 +174,19 @@ body {
 }
 
 .swiper-slide img {
-      width: 450px;   /* 幅 */
-      height: 300px;  /* 高さ */
-      object-fit: cover; /* 必要なら画像の切り抜き */
-      margin: 0 10px;  /* 左右に余白を追加 (合計20px) */
+      width: 450px;
+      height: 300px; /*画像用意したのちにけす*/
+      object-fit: cover; 
+      margin: 0 10px;
     }
 
+
+.main_content{display: flex;}
+.shop_select{display: flex;}
 </style>
+
+
+
 <header class="header">
     <img src="logo.png" alt="ロゴ" class="logo">
     
@@ -164,10 +202,10 @@ body {
 </header>
 
     <nav class="category-nav">
-        <button data-category="all">すべてのアイテム</button>
-        <button data-category="accessories">アクセサリー</button>
-        <button data-category="web-items">ウェブアイテム</button>
-        <button data-category="shoes">シューズ</button>
+        <a href="{{ url_for(######) }}"><button data-category="all">すべてのアイテム</button></a>
+        <a href="{{ url_for(######) }}"><button data-category="accessories">アクセサリー</button></a>
+        <a href="{{ url_for(######) }}"><button data-category="web-items">ウェブアイテム</button></a>
+        <a href="{{ url_for(######) }}"><button data-category="shoes">シューズ</button></a>
     </nav>
 
     <nav class="link-nav">
@@ -178,48 +216,125 @@ body {
     </nav>
 
 <main id="content">
+
     <div class="swiper">
         <div class="swiper-wrapper">
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/img/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
         </div>
         <div class="swiper-pagination"></div>
         <div class="swiper-button-next"></div>
         <div class="swiper-button-prev"></div>
     </div>
+
+    <!-- <div class="main_content">
+
+        <div>
+            <h2>探す</h2>
+            <ul>
+                <li>
+                    <a href=""><p>ブランド</p></a>
+                    <a href=""><p>ショップ</p></a>
+                    <a href=""><p>ランキング</p></a>
+                    <a href=""><p>古着</p></a>
+                </li>
+            </ul>
+        </div>
+            
+        <div>
+            <h2>人気アイテム</h2>
+            <div class="shop_select">
+                <div>
+                    <a href=""><img src="../static/images/logo_images/Ganger.png" alt=""></a>
+                    <h4>ZARA</h4>
+                    <p>ワンピース</p>
+                    <h3>￥11,759</h3>
+                </div>
+                <div>
+                    <a href=""><img src="../static/images/logo_images/Ganger.png" alt=""></a>
+                    <h4>ZARA</h4>
+                    <p>ワンピース</p>
+                    <h3>￥11,759</h3>
+                </div>
+                <div>
+                    <a href=""><img src="../static/imgaes/logo_images/Ganger.png" alt=""></a>
+                    <h4>ZARA</h4>
+                    <p>ワンピース</p>
+                    <h3>￥11,759</h3>
+                </div>
+            </div>
+        </div>
+    </div>
       
-</main>
+</main> -->
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    const swiper = new Swiper('.swiper', {
-    loop: true,
-    autoplay: {
-      delay: 5000,
-      disableOnInteraction: false,
-    },
-    direction: 'horizontal',
+    /*ハンバーガーメニュー内部*/
+    document.querySelector('.menu').addEventListener('click', () => {
+    Swal.fire({
+        title: 'お気に入り',
+        html: `
+            <div style="text-align: left;">
+                <h2>お気に入り</h2>
+                <ul style="list-style: none; padding: 0;">
+                    <li><a href="/items">アイテム一覧</a></li>
+                    <li><a href="/brands">ブランド一覧</a></li>
+                    <li><a href="/shops">ショップ一覧</a></li>
+                </ul>
 
-    slidesPerView: 3,  // 3枚表示
-    centeredSlides: true,  // 中央寄せ
-    spaceBetween: 0,  // スライド間の余白
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <h3>ブランド</h3>
+                        <ul>
+                            <li><a href="/brands/brand1">ブランド1</a></li>
+                            <li><a href="/brands/brand2">ブランド2</a></li>
+                            <li><a href="/brands/brand3">ブランド3</a></li>
+                        </ul>
+                    </div>
 
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true,
-    },
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev',
-    },
-  });
+                    <div>
+                        <h3>ショップ</h3>
+                        <ul>
+                            <li><a href="/shops/shop1">ショップ1</a></li>
+                            <li><a href="/shops/shop2">ショップ2</a></li>
+                            <li><a href="/shops/shop3">ショップ3</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `,
+        showCloseButton: true,
+        showConfirmButton: false,
+        customClass: {
+            popup: 'custom-menu-popup',
+        }
+    });
+});
+
+    /*カテゴリー別ページ*/
+    // const categories = 
+    // [
+    //     { id: 'all', label: 'すべてのアイテム' },
+    //     { id: 'accessories', label: 'アクセサリー' },
+    //     { id: 'web-items', label: 'ウェブアイテム' },
+    //     { id: 'shoes', label: 'シューズ' },
+    // ];
+
+    // categories.forEach(category => {
+    //     const button = document.createElement('button');
+    //     button.textContent = category.label;
+    //     button.setAttribute('data-category', category.id);
+    //     document.querySelector('.category-nav').appendChild(button);
+    // });
 
 
     document.querySelectorAll('.category-nav button').forEach(button => {
@@ -245,6 +360,8 @@ body {
             }
         });
     });
+
+    /*性別*/
     document.querySelectorAll('.link-nav a').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -252,6 +369,29 @@ body {
             link.classList.add('active');
         });
     });
+
+    /*スライドショー*/
+    const swiper = new Swiper('.swiper', {
+    loop: true,
+    autoplay: {
+      delay: 5000,
+      disableOnInteraction: false,
+    },
+    direction: 'horizontal',
+
+    slidesPerView: 3,  // 3枚表示
+    centeredSlides: true,  // 中央寄せ
+    spaceBetween: 0,  // スライド間の余白
+
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+  });
 </script>
 </body>
 </html>
