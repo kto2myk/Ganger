@@ -208,7 +208,8 @@ header {
 
 .splide__slide img {
     width: 100%;
-    height: auto;
+    height: 55vh;
+    object-fit: contain;
   }
 
 .post_buttons {
@@ -275,6 +276,13 @@ header {
   height: 20%; */
   text-align: left;
 }
+
+@media (max-width: 1200px) {
+  .right_bar {
+    display: none;
+  }
+}
+
 .footer_container {
     display: flex;
     width: 100%;
