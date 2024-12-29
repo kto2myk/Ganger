@@ -36,6 +36,8 @@ class User(Base):
     cart = relationship("Cart", back_populates="user") # Cartとのリレーション
     notifications = relationship("Notification", back_populates="user") # Notificationとのリレーション
     notification_statuses = relationship("NotificationStatus", back_populates="user", cascade="all, delete-orphan")  # NotificationStatusとのリレーション
+    sent_details = relationship("NotificationDetail", foreign_keys="[NotificationDetail.sender_id]", back_populates="sender")
+    received_details = relationship("NotificationDetail", foreign_keys="[NotificationDetail.recipient_id]", back_populates="recipient")
     reposts = relationship("Repost", back_populates="user") # Repostとのリレーション
     rooms = relationship("RoomMember", back_populates="user") # RoomMemberとのリレーション
     def __repr__(self):
@@ -353,8 +355,8 @@ class Notification(Base):
     # リレーション
     user = relationship("User", back_populates="notifications")
     notification_type_relation = relationship("NotificationType", back_populates="notifications")
-    statuses = relationship("NotificationStatus", back_populates="notification", cascade="all, delete-orphan")  # リレーション追加
-
+    statuses = relationship("NotificationStatus", back_populates="notification", cascade="all, delete-orphan") 
+    details = relationship("NotificationDetail", back_populates="notification", cascade="all, delete-orphan")
     def __repr__(self):
         return (f"<Notification(notification_id={self.notification_id}, user_id={self.user_id}, "
                 f"notification_type_id={self.notification_type_id}, sent_time={self.sent_time})>")
@@ -387,10 +389,34 @@ class NotificationType(Base):
     type_name = Column(String(45), nullable=False, unique=True)
 
     notifications = relationship("Notification", back_populates="notification_type_relation", cascade="all, delete-orphan")
-
+    details = relationship("NotificationDetail", back_populates="notification_type", cascade="all, delete-orphan")
     def __repr__(self):
         return f"<NotificationType(notification_type_id={self.notification_type_id}, type_name={self.type_name})>"
 
+class NotificationDetail(Base):
+    __tablename__ = 'notification_details'
+
+    detail_id = Column(Integer, primary_key=True, autoincrement=True)
+    notification_id = Column(Integer, ForeignKey('notifications.notification_id', ondelete='CASCADE'), nullable=False)
+    sender_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    recipient_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    notification_type_id = Column(Integer, ForeignKey('notification_types.notification_type_id', ondelete='CASCADE'), nullable=False)
+    related_item_id = Column(Integer, nullable=True)  # 関連項目（例: PostID, CartID）
+    related_item_type = Column(String(50), nullable=True)  # 関連項目の種類（例: "post", "cart"）
+    created_at = Column(DateTime, default=func.now())
+
+    # リレーション
+    notification = relationship("Notification", back_populates="details")
+    sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_details")
+    recipient = relationship("User", foreign_keys=[recipient_id], back_populates="received_details")
+    notification_type = relationship("NotificationType", back_populates="details")
+
+    def __repr__(self):
+        return (f"<NotificationDetail(detail_id={self.detail_id}, notification_id={self.notification_id}, "
+                f"sender_id={self.sender_id}, recipient_id={self.recipient_id}, "
+                f"related_item_id={self.related_item_id}, related_item_type={self.related_item_type})>")
+    
+# 保存された投稿
 class SavedPost(Base):
     __tablename__ = 'saved_posts'
 

@@ -345,6 +345,27 @@ def display_post(post_id):
         app.logger.error(f"Unexpected error: {e}")
         return "投稿データの取得中にエラーが発生しました。", 500
 
+@app.route("/notifications", methods=["GET"])
+def notifications():
+    """
+    通知一覧を表示するエンドポイント
+    """
+    from Ganger.app.model.notification.notification_manager import NotificationManager
+    # セッションからユーザーIDを取得
+
+    # NotificationManager を使って通知データを取得
+    notification_manager = NotificationManager()
+    try:
+        notifications = notification_manager.get_notifications_for_user(session["id"])
+        app.logger.info(f"Notifications: {notifications}")
+    except Exception as e:
+        app.logger.error(f"Failed to fetch notifications: {e}")
+        flash("通知の取得中にエラーが発生しました。")
+        return redirect(url_for("home"))
+
+    # HTML テンプレートに通知データを渡す
+    return render_template("display_notification.html", notifications=notifications)
+
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)
