@@ -153,23 +153,28 @@ class SearchComponent {
         // 候補リストを生成
         this.searchCandidates.innerHTML = candidates.length
             ? candidates.map(item => {
-                let displayText = "不明な項目"; // デフォルト値
-                let displayId = "不明なID";   // デフォルト値
-    
-                // タブごとの表示ロジック
+                let displayText = "不明な項目"; // 表示テキストのデフォルト値
+                let dataId = "不明なID";       // data-id のデフォルト値
+
                 if (this.currentTab === "USER") {
-                    displayText = item.username || item.user_id || "不明なユーザー"; // USERNAMEまたはUSER_ID
-                    displayId = item.user_id || "不明なID"; // USER_IDをdata-idに設定
+                    // ユーザータブの表示フォーマット
+                    const userId = item.user_id || "不明なユーザー"; // ユーザーID
+                    const userName = item.username || "";           // ユーザー名
+                    dataId = item.id || "不明なID";                 // 暗号化されたID
+                    // ユーザーIDと名前を表示
+                    return `<li data-id="${dataId}">${userId} (${userName})</li>`;
                 } else if (this.currentTab === "TAG") {
-                    displayText = item.tag_texts?.[0] || "不明なタグ"; // TAG_TEXTの最初の要素を表示
-                    displayId = item.post_id || "不明なID"; // POST_IDをdata-idに設定
+                    // タグタブの表示フォーマット
+                    displayText = item.tag_texts?.[0] || "不明なタグ"; // タグ名
+                    dataId = item.post_id || "不明なID";               // POST ID
                 } else if (this.currentTab === "CATEGORY") {
-                    displayText = item.category_name || "不明なカテゴリ"; // CATEGORY_NAME
-                    displayId = item.category_id || "不明なID"; // CATEGORY_IDをdata-idに設定
+                    // カテゴリタブの表示フォーマット
+                    displayText = item.category_name || "不明なカテゴリ"; // カテゴリ名
+                    dataId = item.category_id || "不明なID";               // カテゴリ ID
                 }
-    
-                // リスト項目を生成
-                return `<li data-id="${displayId}">${displayText} (${displayId})</li>`;
+
+                // タグ・カテゴリ共通の表示フォーマット
+                return `<li data-id="${dataId}">${displayText}</li>`;
             }).join("")
             : "<li>候補がありません</li>";
     
@@ -183,20 +188,25 @@ class SearchComponent {
     attachCandidateClickListeners() {
         this.searchCandidates.querySelectorAll("li").forEach((candidate) => {
             candidate.addEventListener("click", () => {
-                const id = candidate.getAttribute("data-id");
-                if (id) {
-                    if (this.currentTab === "USER") {
+                const id = candidate.getAttribute("data-id"); // 候補のIDを取得
+                const query = candidate.textContent.trim();  // 候補の表示テキストを取得
+    
+                if (this.currentTab === "USER") {
+                    // ユーザーの場合: IDを基にプロフィールページへ
+                    if (id) {
                         window.location.href = `/my_profile/${id}`;
-                    } else if (this.currentTab === "TAG") {
-                        window.location.href = `/tag_overview/${id}`;
-                    } else if (this.currentTab === "CATEGORY") {
-                        window.location.href = `/category_overview/${id}`;
+                    }
+                } else if (this.currentTab === "TAG" || this.currentTab === "CATEGORY") {
+                    // タグまたはカテゴリの場合: 表示テキストを検索クエリとして使用
+                    if (query) {
+                        this.saveToSearchHistory(query); // 必要であれば履歴に保存
+                        window.location.href = `/search?query=${encodeURIComponent(query)}&tab=${this.currentTab}`;
                     }
                 }
             });
         });
     }
-
+        
     saveToSearchHistory(query) {
         if (!this.searchHistory.includes(query) && query.trim() !== "") {
             this.searchHistory.push(query);

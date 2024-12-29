@@ -5,9 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash   # �
 import os  # ファイルパス操作用
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
-from sqlalchemy.orm import Session  # SQLAlchemyセッション
 from sqlalchemy import or_  # OR条件用
-from Ganger.app.model.model_manager.model import User, CategoryMaster, ProductCategory, TagMaster, TagPost  # モデル
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -346,6 +344,27 @@ def display_post(post_id):
     except Exception as e:
         app.logger.error(f"Unexpected error: {e}")
         return "投稿データの取得中にエラーが発生しました。", 500
+
+@app.route("/notifications", methods=["GET"])
+def notifications():
+    """
+    通知一覧を表示するエンドポイント
+    """
+    from Ganger.app.model.notification.notification_manager import NotificationManager
+    # セッションからユーザーIDを取得
+
+    # NotificationManager を使って通知データを取得
+    notification_manager = NotificationManager()
+    try:
+        notifications = notification_manager.get_notifications_for_user(session["id"])
+        app.logger.info(f"Notifications: {notifications}")
+    except Exception as e:
+        app.logger.error(f"Failed to fetch notifications: {e}")
+        flash("通知の取得中にエラーが発生しました。")
+        return redirect(url_for("home"))
+
+    # HTML テンプレートに通知データを渡す
+    return render_template("display_notification.html", notifications=notifications)
 
 if __name__ == "__main__":
     try:

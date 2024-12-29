@@ -123,6 +123,8 @@ class UserManager(DatabaseManager):
         except SQLAlchemyError as e:
             app.logger.error(f"Failed to search users: {e}")
             raise
+
+        
     def get_user_profile_with_posts(self, user_id):
         """
         指定されたユーザーIDのプロフィール情報と投稿データを取得。

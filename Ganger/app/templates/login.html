@@ -15,6 +15,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden;
         }
 
         .wrapper {
@@ -22,10 +23,71 @@
             max-width: 400px;
             padding: 20px;
             box-sizing: border-box;
+            text-align: center;
             position: relative;
         }
 
+        h1 {
+            position: absolute;
+            width: 100%;
+            top: 20%;
+            left: 0;
+            text-align: center;
+            font-size: 2em;
+            line-height: 1.5;
+        }
+
+        h1 span {
+            display: inline-block;
+            animation: fadeInLeft 1s ease-in-out forwards;
+        }
+
+        h1 span:nth-child(1) { animation-delay: 0s; }
+        h1 span:nth-child(2) { animation-delay: 0.1s; }
+        h1 span:nth-child(3) { animation-delay: 0.2s; }
+        h1 span:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #login-text {
+            animation: fadeOut 1s ease-in-out forwards;
+            animation-delay: 2s;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+            }
+        }
+
+        #ganger-text {
+            opacity: 0;
+            animation: fadeInUp 1s ease-in-out forwards;
+            animation-delay: 3s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .loginBox {
+            margin-top: 180px; /* ログインフォームの位置調整 */
             background-color: #F0F4F6;
             border: 1px solid #BfD6E1;
             border-radius: 5px;
@@ -34,31 +96,18 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .loginBoxCenter {
-            margin-bottom: 20px;
-        }
-
-        .loginBoxCenter p {
-            margin-bottom: 10px;
-        }
-
         .loginInput {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
             border: 1px solid #D2D9DC;
             border-radius: 2px;
-            padding: 10px;
-            width: 100%;
-            margin-bottom: 10px;
-            box-sizing: border-box;
         }
 
         .loginInput:focus {
             border-color: #B7D4EA;
-            box-shadow: 0 0 8px #B7D4EA;
             outline: none;
-        }
-
-        .loginBoxButtons {
-            text-align: center;
+            box-shadow: 0 0 8px #B7D4EA;
         }
 
         .loginBtn {
@@ -67,93 +116,34 @@
             border-radius: 20px;
             color: #fff;
             padding: 10px 50px;
-            font-size: 14px;
             cursor: pointer;
             text-transform: uppercase;
-            transition: background 0.3s;
         }
 
         .loginBtn:hover {
             background: linear-gradient(to top, #007BFF, #85CFEE);
         }
 
-        .forgetLink {
-            display: inline-block;
-            margin-top: 10px;
-            font-size: 12px;
-            color: #ABABAB;
-            text-decoration: none;
-        }
-
-        .forgetLink:hover {
-            color: #000;
-        }
-
-        .social-icons {
-            text-align: center;
-            margin-top: 20px;
-        }
-
         .social-icons a {
             margin: 0 10px;
             font-size: 20px;
             color: #444;
-            transition: color 0.3s;
         }
 
         .social-icons a:hover {
             color: #007BFF;
         }
-
-        @media (max-width: 480px) {
-            body {
-                height: 100vh;
-            }
-
-            .wrapper {
-                width: 100%;
-                height: 100%;
-                padding: 0; 
-            }
-
-            .loginBox {
-                width: 100%;
-                height: 100%;
-                padding: 20px; /* 可选，控制内容间距 */
-                box-sizing: border-box;
-            }
-
-            .loginBoxCenter {
-                flex: 1; /* 填充剩余空间 */
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
-
-            .loginBtn {
-                width: 100%; /* 按钮拉伸到全宽 */
-            }
-        }
-
-        .leFadeInLeft span {
-            display: inline-block;
-            opacity: 0;
-            transform: translateX(-60px);
-            animation: leFadeInLeft 1s ease-out forwards;
-        }
-
-        @keyframes leFadeInLeft {
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <h1 class="leFadeInLeft">
+        <!-- 初期表示の「ログイン」 -->
+        <h1 id="login-text">
             <span>ロ</span><span>グ</span><span>イ</span><span>ン</span>
+        </h1>
+        <!-- 後から表示する「Ganger」 -->
+        <h1 id="ganger-text">
+            Ganger
         </h1>
         <form method="post">
             <div class="loginBox">
@@ -163,13 +153,13 @@
                     <div class="flash">
                         {% include 'components/component_flash.html '%}
                     </div>
-                    <p><a class="forgetLink" href="{{url_for('password_reset')}}">パスワードを忘れた方はこちらをクリック</a></p>
+                    <p><a class="forgetLink" href="#">パスワードを忘れた方はこちらをクリック</a></p>
                 </div>
                 <div class="loginBoxButtons">
                     <button class="loginBtn">ログイン</button>
-                    <a href="{{url_for('signup')}}"><div>新規会員登録</div></a>
+                    <a href="#"><div>新規会員登録</div></a>
                 </div>
-                <div class="social-icons"> 
+                <div class="social-icons">
                     <a href="#"><i class="fab fa-line"></i></a>
                     <a href="#"><i class="fab fa-instagram"></i></a>
                     <a href="#"><i class="fab fa-google"></i></a>
@@ -178,13 +168,5 @@
             </div>
         </form>
     </div>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const spans = document.querySelectorAll('.leFadeInLeft span');
-            spans.forEach((span, index) => {
-                span.style.animationDelay = `${index * 0.2}s`;
-            });
-        });
-    </script>
 </body>
 </html>

@@ -127,3 +127,44 @@ class Validator:
             return f"{minutes_diff // 60}時間前"
         else:
             return f"{minutes_diff // 1440}日前"
+        
+    # @staticmethod
+    # def object_to_dict(obj, include_relationships=True):
+    #     """
+    #     SQLAlchemy オブジェクトを辞書型に変換する関数。
+    #     """
+    #     from sqlalchemy.inspection import inspect
+
+    #     try:
+    #         # オブジェクトのカラム属性を辞書化
+    #         result = {}
+    #         for c in inspect(obj).mapper.column_attrs:
+    #             value = getattr(obj, c.key)
+    #             # 'id' が含まれるキーを暗号化
+    #             if "id" in c.key.lower() and value is not None:
+    #                 result[c.key] = Validator.encrypt(value)
+    #             else:
+    #                 result[c.key] = value
+
+    #         if include_relationships:
+    #             for relationship in inspect(obj).mapper.relationships:
+    #                 related_obj = getattr(obj, relationship.key)
+    #                 if related_obj is not None:
+    #                     if relationship.uselist:  # 多対多・一対多の場合
+    #                         result[relationship.key] = [
+    #                             Validator.object_to_dict(o, include_relationships=False) for o in related_obj
+    #                         ]
+    #                     else:  # 一対一の場合
+    #                         result[relationship.key] = Validator.object_to_dict(related_obj, include_relationships=False)
+
+    #         return result
+
+    #     except Exception as e:
+    #         # エラーメッセージを生成してスロー
+    #         error_message = f"Failed to convert object to dict: {str(e)}"
+    #         raise ValueError(error_message) from e
+        
+    @staticmethod
+    def to_json(obj):
+        import json
+        return json.dumps(obj)
