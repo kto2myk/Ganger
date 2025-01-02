@@ -10,15 +10,15 @@ def test_with_existing_images():
     # テストデータ
     post_data = {
         "user_id": 1,
-        "body_text": "これは用意された画像を使ったテスト投稿です。",
+        "body_text": "4test",
         "reply_id": None
     }
 
     # 用意された画像ファイルのパス
     image_paths = [
-        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\fuwa.png"),
-        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\gl.png"),
-        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\hi.png")
+        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\1_3_1.png"),
+        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\1_3_2.png"),
+        os.path.abspath(r"C:\HAL\IH\IH22\Ganger\app\static\images\post_images\1_3_3.png")
     ]
 
     # FileStorageオブジェクトを作成

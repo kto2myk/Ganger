@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>display_post</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/splide.min.css">
+    <link rel="stylesheet" href="../static/css/cssanimation.min.css">
+    <script type="text/javascript" src="../static/js/main.js"></script>
+    <script src="../static/js/node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.splide').forEach(function (carousel) {
+        new Splide(carousel).mount();
+    });
+    });      
+    window.onload = function() {
+        const spinner = document.getElementById('loading');
+        spinner.classList.add('loaded');
+    }
+    </script>
+    
+</head>
+<body>
+<div class="contents">
+    <div class="account_info">
+        <h1>{{ post.user_info.username }}の投稿</h1>
+        <a href="{{ url_for('my_profile',id = post.user_info.id)}}">
+            <img src="{{ post.user_info.profile_image }}" alt="プロフィール画像">
+        </a>
+    </div>
+    <div class="post_container">
+        <div class="image_area">
+            <section id="image-carousel-{{ post['post_id'] }}" class="splide">
+                <div class="splide__track">
+                    <ul class="splide__list">
+                        {% for image in post.images %}
+                        <li class="splide__slide"><img src="{{ image.img_path }}" alt="投稿画像"></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <p>{{ post.body_text }}</p>
+    <p>投稿時間: {{ post.post_time }}</p>
+
+</div>
+
+</body>
+</html>

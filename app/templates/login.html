@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>ログイン</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .loginBox {
+            background-color: #F0F4F6;
+            border: 1px solid #BfD6E1;
+            border-radius: 5px;
+            color: #444;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .loginBoxCenter {
+            margin-bottom: 20px;
+        }
+
+        .loginBoxCenter p {
+            margin-bottom: 10px;
+        }
+
+        .loginInput {
+            border: 1px solid #D2D9DC;
+            border-radius: 2px;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .loginInput:focus {
+            border-color: #B7D4EA;
+            box-shadow: 0 0 8px #B7D4EA;
+            outline: none;
+        }
+
+        .loginBoxButtons {
+            text-align: center;
+        }
+
+        .loginBtn {
+            background: linear-gradient(to bottom, #007BFF, #85CFEE);
+            border: 1px solid #98CCE7;
+            border-radius: 20px;
+            color: #fff;
+            padding: 10px 50px;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.3s;
+        }
+
+        .loginBtn:hover {
+            background: linear-gradient(to top, #007BFF, #85CFEE);
+        }
+
+        .forgetLink {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #ABABAB;
+            text-decoration: none;
+        }
+
+        .forgetLink:hover {
+            color: #000;
+        }
+
+        .social-icons {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            margin: 0 10px;
+            font-size: 20px;
+            color: #444;
+            transition: color 0.3s;
+        }
+
+        .social-icons a:hover {
+            color: #007BFF;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                height: 100vh;
+            }
+
+            .wrapper {
+                width: 100%;
+                height: 100%;
+                padding: 0; 
+            }
+
+            .loginBox {
+                width: 100%;
+                height: 100%;
+                padding: 20px; /* 可选，控制内容间距 */
+                box-sizing: border-box;
+            }
+
+            .loginBoxCenter {
+                flex: 1; /* 填充剩余空间 */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .loginBtn {
+                width: 100%; /* 按钮拉伸到全宽 */
+            }
+        }
+
+        .leFadeInLeft span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateX(-60px);
+            animation: leFadeInLeft 1s ease-out forwards;
+        }
+
+        @keyframes leFadeInLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <h1 class="leFadeInLeft">
+            <span>ロ</span><span>グ</span><span>イ</span><span>ン</span>
+        </h1>
+        <form method="post">
+            <div class="loginBox">
+                <div class="loginBoxCenter">
+                    <p><input type="text" id="text" name="identifier" class="loginInput" required placeholder="ユーザーID/メールアドレスを入力してください" /></p>
+                    <p><input type="password" id="password" name="password" class="loginInput" required placeholder="パスワードを入力してください" /></p>
+                    <div class="flash">
+                        {% include 'components/component_flash.html '%}
+                    </div>
+                    <p><a class="forgetLink" href="{{url_for('password_reset')}}">パスワードを忘れた方はこちらをクリック</a></p>
+                </div>
+                <div class="loginBoxButtons">
+                    <button class="loginBtn">ログイン</button>
+                    <a href="{{url_for('signup')}}"><div>新規会員登録</div></a>
+                </div>
+                <div class="social-icons"> 
+                    <a href="#"><i class="fab fa-line"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-google"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const spans = document.querySelectorAll('.leFadeInLeft span');
+            spans.forEach((span, index) => {
+                span.style.animationDelay = `${index * 0.2}s`;
+            });
+        });
+    </script>
+</body>
+</html>

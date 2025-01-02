@@ -1,9 +1,12 @@
 from werkzeug.security import check_password_hash
-
+from cryptography.fernet import Fernet
+from datetime import datetime, date
+import re
+from sqlalchemy.orm import Session
 
 class Validator:
-    from sqlalchemy.orm import Session
-
+    SECRET_KEY = Fernet.generate_key()  # 本番環境では固定の安全なキーを使用
+    cipher = Fernet(SECRET_KEY)
 #     @staticmethod
 #     def validate_existence(session: Session, model, conditions: dict):
 #         """
@@ -41,9 +44,27 @@ class Validator:
 #             print(f"[ERROR] Query Execution Failed: {e}")
 #             raise
 #         return result
+
+    @staticmethod
+    def encrypt(value):
+        """
+        指定された値を暗号化する
+        :param value: 暗号化する文字列または数値
+        :return: 暗号化された文字列
+        """
+        return Validator.cipher.encrypt(str(value).encode()).decode()
+
+    @staticmethod
+    def decrypt(value):
+        """
+        指定された暗号化値を復号化する
+        :param value: 暗号化された文字列
+        :return: 復号化された元の値
+        """
+        return int(Validator.cipher.decrypt(value.encode()).decode())
+
     @staticmethod
     def validate_email_format(email: str):
-        import re
         if not re.match(r'^\S+@\S+\.\S+$', email):
             error_message = "無効なメールアドレス形式"
             raise ValueError (error_message)
@@ -51,7 +72,6 @@ class Validator:
 
     @staticmethod
     def validate_date(year: int, month: int, day: int) -> tuple:
-        from datetime import date, datetime
 
         """
         生年月日を検証し、日付型で返します。
@@ -94,7 +114,6 @@ class Validator:
         :param post_time: 投稿時刻 (datetimeオブジェクト)
         :return: 差分を表す文字列（例: "5秒前", "5分前", "2時間前", "1日前"）
         """
-        from datetime import datetime
         now = datetime.now()
         time_diff = now - post_time
         seconds_diff = int(time_diff.total_seconds())
@@ -108,3 +127,44 @@ class Validator:
             return f"{minutes_diff // 60}時間前"
         else:
             return f"{minutes_diff // 1440}日前"
+        
+    # @staticmethod
+    # def object_to_dict(obj, include_relationships=True):
+    #     """
+    #     SQLAlchemy オブジェクトを辞書型に変換する関数。
+    #     """
+    #     from sqlalchemy.inspection import inspect
+
+    #     try:
+    #         # オブジェクトのカラム属性を辞書化
+    #         result = {}
+    #         for c in inspect(obj).mapper.column_attrs:
+    #             value = getattr(obj, c.key)
+    #             # 'id' が含まれるキーを暗号化
+    #             if "id" in c.key.lower() and value is not None:
+    #                 result[c.key] = Validator.encrypt(value)
+    #             else:
+    #                 result[c.key] = value
+
+    #         if include_relationships:
+    #             for relationship in inspect(obj).mapper.relationships:
+    #                 related_obj = getattr(obj, relationship.key)
+    #                 if related_obj is not None:
+    #                     if relationship.uselist:  # 多対多・一対多の場合
+    #                         result[relationship.key] = [
+    #                             Validator.object_to_dict(o, include_relationships=False) for o in related_obj
+    #                         ]
+    #                     else:  # 一対一の場合
+    #                         result[relationship.key] = Validator.object_to_dict(related_obj, include_relationships=False)
+
+    #         return result
+
+    #     except Exception as e:
+    #         # エラーメッセージを生成してスロー
+    #         error_message = f"Failed to convert object to dict: {str(e)}"
+    #         raise ValueError(error_message) from e
+        
+    @staticmethod
+    def to_json(obj):
+        import json
+        return json.dumps(obj)

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .notification {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .notification.read {
+            background-color: #e9e9e9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Notifications</h1>
+    {% if notifications %}
+        {% for notification in notifications %}
+            <div class="notification {% if notification.statuses[0].is_read %}read{% endif %}">
+                <p><strong>{{ notification.notification_type }}</strong></p>
+                <p>{{ notification.contents }}</p>
+                <small>送信日時: {{ notification.sent_time }}</small>
+                
+                {% for detail in notification.details %}
+                    <div>
+                        <a href="{{ url_for('my_profile', id = detail.sender.id) }}">
+                            <img src="{{ detail.sender.profile_image}}" alt="">
+                            <p>{{ detail.sender.username }}</p>
+                        </a>
+                        {% if detail.related_item_type == "post" %}
+                            <p>関連項目: 
+                                <a href="{{ url_for('display_post', post_id = detail.related_item_id)}}">投稿詳細 (ID: {{ detail.related_item_id }})</a>
+                            </p>
+                        {% elif detail.related_item_type == "user" %}
+                            <p>関連項目: 
+                                <a href="{{url_for('my_profile', id = detail.related_item_id) }}">ユーザープロフィール (ID: {{ detail.related_item_id }})</a>
+                            </p>
+                        {% else %}
+                            <p>関連項目: 不明なタイプ</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>通知はありません。</p>
+    {% endif %}
+</body>
+</html>
