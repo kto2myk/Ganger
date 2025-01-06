@@ -3,7 +3,7 @@ from sqlalchemy.orm  import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager.model import Post, Image
+from Ganger.app.model.model_manager.model import Post, Image,Like
 from flask import current_app as app, url_for
 from Ganger.app.model.validator import Validator
 
@@ -274,3 +274,52 @@ class PostManager(DatabaseManager):
             app.logger.info(f"タグ '{tag_text}' が投稿 {post_id} に追加されました。")
         except Exception as e:
             app.logger.error(f"エラーが発生しました: {e}")
+
+
+
+    def toggle_like(self, post_id, recipient_id, sender_id):
+        """
+        いいね機能を切り替えるメソッド
+
+        :param post_id: いいね対象の投稿ID
+        :param recipient_id: いいねを受け取るユーザーID
+        :param sender_id: いいねを送信するユーザーID
+        :return: 処理結果を表す辞書
+        """
+        from Ganger.app.model.notification.notification_manager import NotificationManager
+        from flask import session
+        try:
+            # Likeテーブルを検索
+            notification_manager = NotificationManager()
+            unique_check = {'post_id': post_id, 'user_id': sender_id}
+            existing_like = self.fetch_one(model=Like, filters=unique_check)
+
+            if existing_like:
+                # いいねが存在する場合は削除
+                self.delete(model=Like, filters=unique_check)
+                notification_manager.delete_notification(
+                    sender_id=sender_id,
+                    recipient_id=recipient_id,
+                    type_name="LIKE",
+                    related_item_id=post_id,
+                    related_item_type="post"
+                )
+                app.logger.info(f"Like removed: post_id={post_id}, user_id={sender_id}")
+                return {"status": "removed"}
+            else:
+                # いいねが存在しない場合は作成
+                self.insert(model=Like, data={'post_id': post_id, 'user_id': sender_id})
+                notification_manager.create_full_notification(
+                    sender_id=sender_id,
+                    recipient_ids=recipient_id,  # 受信者は単一でもリスト形式で処理可能
+                    type_name="LIKE",
+                    contents=f"{session["username"]}さんがあなたの投稿にいいねしました",
+                    related_item_id=post_id,
+                    related_item_type="post"
+                )
+                app.logger.info(f"Like added: post_id={post_id}, user_id={sender_id}")
+                return {"status": "added"}
+        except Exception as e:
+            app.logger.error(f"Failed to toggle like: {e}")
+            self.error_log_manager.add_error(sender_id, str(e))
+            raise

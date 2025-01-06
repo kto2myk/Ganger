@@ -232,6 +232,8 @@ header {
 .extension_button img:hover {
   background-color: #ddd;
 }
+.svg-filled {
+  fill: red;
 
   @media (max-width: 1200px) {
     .contents {

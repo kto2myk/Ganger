@@ -103,7 +103,7 @@ def home():
     post_manager = PostManager()
 
     try:
-        filters = {"user_id": 1}  # テスト用フィルタ
+        filters = {"user_id": 3}  # テスト用フィルタ
         formatted_posts = post_manager.get_formatted_posts(filters)
 
         return render_template("temp_layout.html", posts=formatted_posts)
@@ -151,40 +151,22 @@ def password_reset():
         
     return render_template('password_reset.html')
 
-@app.route('/like/<string:post_id>', methods=['POST'])
-def toggle_like(post_id):
+@app.route('/like/<string:post_id>/<string:user_id>', methods=['POST'])
+def toggle_like(post_id, user_id):
+    from Ganger.app.model.post.post_manager import PostManager
     try:
-        user_id = Validator.decrypt(session["id"])
+        sender_id = Validator.decrypt(session.get("id"))
         post_id = Validator.decrypt(post_id)
+        recipient_id = Validator.decrypt(user_id)
 
-        if not user_id:
-            app.logger.error("Unauthorized access")
+        if not sender_id or not recipient_id or not post_id:
+            app.logger.error("Missing required IDs for authentication.")
             return jsonify({'error': 'Unauthorized'}), 401
 
-        # データベース操作
-        from Ganger.app.model.model_manager.model import Like
-        from Ganger.app.model.database_manager.database_manager import DatabaseManager
-        db_manager = DatabaseManager()
+        post_manager = PostManager()
+        result = post_manager.toggle_like(post_id=post_id, recipient_id=recipient_id, sender_id=sender_id)
 
-        unique_check = {'post_id': post_id, 'user_id': user_id}
-        existing_like = db_manager.fetch_one(model=Like, filters=unique_check)
-
-        if existing_like:
-            deleted_count = db_manager.delete(model=Like, filters=unique_check)
-            if deleted_count > 0:
-                app.logger.info(f"Like removed for user_id: {user_id}, post_id: {post_id}")
-                return jsonify({'status': 'removed'}), 200
-        else:
-            new_like = db_manager.insert(
-                model=Like,
-                data={'post_id': post_id, 'user_id': user_id},
-                unique_check=unique_check
-            )
-            if new_like:
-                app.logger.info(f"Like added for user_id: {user_id}, post_id: {post_id}")
-                return jsonify({'status': 'added'}), 200
-
-        return jsonify({'error': 'Operation failed'}), 400
+        return jsonify(result), 200
 
     except Exception as e:
         app.logger.error(f"Error toggling like: {e}")
