@@ -122,8 +122,24 @@ header {
   text-decoration: none;
 }
 
-.side_bar_links img {
+/* .side_bar_links img {
   height: 50%;
+} */
+
+::before{
+  content: attr(data-count);
+  color: red;
+  position: absolute;
+  font: 600 14px/1 sans-serif;
+  font-variant-numeric: tabular-nums;
+  display: grid;
+  place-items: center;
+  padding: .32em 1.3em;
+  border-radius: 1rem;
+}
+.side_bar_links svg {
+  height: 70%;
+  
 }
 
 .side_bar_links text {
@@ -234,6 +250,7 @@ header {
 }
 .svg-filled {
   fill: red;
+}
 
   @media (max-width: 1200px) {
     .contents {

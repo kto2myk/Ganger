@@ -10,6 +10,36 @@ class NotificationManager(DatabaseManager):
     def __init__(self):
         super().__init__()
 
+    def get_notification_count(self, user_id, is_read=None, is_deleted=False):
+        """
+        特定のユーザーの通知件数を取得
+
+        :param user_id: 通知の対象ユーザーID
+        :param is_read: 既読/未読を指定（Noneの場合はすべての通知を対象）
+        :param is_deleted: 削除済みを含むかどうか（デフォルトはFalse）
+        :return: 通知件数（int）
+        """
+        try:
+            with Session(self.engine) as session:
+                # ベースクエリ
+                query = session.query(NotificationStatus).join(Notification).filter(
+                    NotificationStatus.user_id == user_id,
+                    NotificationStatus.is_deleted == is_deleted
+                )
+
+                # 未読/既読のフィルタリング
+                if is_read is not None:
+                    query = query.filter(NotificationStatus.is_read == is_read)
+
+                count = query.count()  # 件数を取得
+                app.logger.info(f"Notification count for user {user_id}: {count}")
+                return count
+
+        except Exception as e:
+            app.logger.error(f"Error retrieving notification count: {e}")
+            self.error_log_manager.add_error(None, str(e))
+            raise
+        
     def get_notifications_for_user(self, user_id):
         """
         指定したユーザーの通知情報を降順で取得するメソッド

@@ -3,13 +3,15 @@ from sqlalchemy.orm  import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager.model import Post, Image,Like
-from flask import current_app as app, url_for
+from Ganger.app.model.model_manager.model import Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop
+from Ganger.app.model.notification.notification_manager import NotificationManager
+from flask import current_app as app, session, url_for
 from Ganger.app.model.validator import Validator
 
 class PostManager(DatabaseManager):
     def __init__(self):
         super().__init__()
+        self.__notification_manager = NotificationManager()
 
     def is_allowed_extension(self, filename):
         """
@@ -99,7 +101,6 @@ class PostManager(DatabaseManager):
         Returns:
             list: フォーマットされた投稿データのリスト。
         """
-        from Ganger.app.model.model_manager.model import Post
         
         try:
             posts = self.fetch(
@@ -142,7 +143,6 @@ class PostManager(DatabaseManager):
         Returns:
             dict: フォーマットされた投稿データ。
         """
-        from Ganger.app.model.model_manager.model import Post
 
         try:
             # デバッグ用ログ
@@ -183,7 +183,6 @@ class PostManager(DatabaseManager):
             raise
 
     def search_tags(self, query):
-        from Ganger.app.model.model_manager.model import TagMaster, TagPost, Post, Image
 
         with Session(self.engine) as session:
             # タグの検索
@@ -220,7 +219,6 @@ class PostManager(DatabaseManager):
             return []
 
     def search_categories(self, query):
-        from Ganger.app.model.model_manager.model import CategoryMaster, ProductCategory, Shop, Post, Image
         with Session(self.engine) as session:
             # カテゴリーの検索
             categories = session.query(CategoryMaster).filter(
@@ -259,7 +257,6 @@ class PostManager(DatabaseManager):
             return []
         
     def add_tag_to_post(self, tag_text, post_id):
-        from Ganger.app.model.model_manager.model import TagMaster, TagPost
         try:
             # タグが既存か確認
             tag_data = {"tag_text": tag_text}
@@ -277,7 +274,7 @@ class PostManager(DatabaseManager):
 
 
 
-    def toggle_like(self, post_id, recipient_id, sender_id):
+    def toggle_like(self, post_id, sender_id):
         """
         いいね機能を切り替えるメソッド
 
@@ -286,20 +283,17 @@ class PostManager(DatabaseManager):
         :param sender_id: いいねを送信するユーザーID
         :return: 処理結果を表す辞書
         """
-        from Ganger.app.model.notification.notification_manager import NotificationManager
-        from flask import session
         try:
             # Likeテーブルを検索
-            notification_manager = NotificationManager()
             unique_check = {'post_id': post_id, 'user_id': sender_id}
-            existing_like = self.fetch_one(model=Like, filters=unique_check)
+            existing_like = self.fetch_one(model=Like, filters=unique_check,relationships=["post"])
 
             if existing_like:
                 # いいねが存在する場合は削除
                 self.delete(model=Like, filters=unique_check)
-                notification_manager.delete_notification(
+                self.__notification_manager.delete_notification(
                     sender_id=sender_id,
-                    recipient_id=recipient_id,
+                    recipient_id=existing_like.post.user_id,
                     type_name="LIKE",
                     related_item_id=post_id,
                     related_item_type="post"
@@ -309,9 +303,10 @@ class PostManager(DatabaseManager):
             else:
                 # いいねが存在しない場合は作成
                 self.insert(model=Like, data={'post_id': post_id, 'user_id': sender_id})
-                notification_manager.create_full_notification(
+                post = self.fetch_one(Post, filters={"post_id": post_id})
+                self.__notification_manager.create_full_notification(
                     sender_id=sender_id,
-                    recipient_ids=recipient_id,  # 受信者は単一でもリスト形式で処理可能
+                    recipient_ids=post.user_id,  # 受信者は単一でもリスト形式で処理可能
                     type_name="LIKE",
                     contents=f"{session["username"]}さんがあなたの投稿にいいねしました",
                     related_item_id=post_id,
@@ -322,4 +317,46 @@ class PostManager(DatabaseManager):
         except Exception as e:
             app.logger.error(f"Failed to toggle like: {e}")
             self.error_log_manager.add_error(sender_id, str(e))
+            raise
+
+    def add_comment(self, user_id, parent_post_id, comment_text):
+        """
+        コメントを投稿し、通知を送信するメソッド
+
+        :param user_id: コメントを投稿するユーザーのID
+        :param parent_post_id: 親投稿のID
+        :param comment_text: コメント本文
+        :return: 作成されたコメントの情報
+        """
+        try:
+            # 親投稿の存在確認とリレーションの事前ロード
+            parent_post = self.fetch_one(Post, filters={"post_id": parent_post_id}, relationships=["author"])
+            if not parent_post:
+                raise ValueError(f"Parent post with ID {parent_post_id} does not exist.")
+            # コメントデータを挿入
+            comment_data = {
+                "user_id": user_id,
+                "reply_id": parent_post_id,
+                "body_text": comment_text
+            }
+            new_comment = self.insert(model=Post, data=comment_data)
+
+            if not new_comment:
+                raise ValueError("Failed to insert the comment. Possible duplicate.")
+
+            # 通知を送信
+            self.__notification_manager.create_full_notification(
+                sender_id=user_id,
+                recipient_ids=parent_post.author.id,
+                type_name="COMMENT",
+                contents=f"{session["username"]}さんがあなたの投稿にコメントしました。: {comment_text[:50]}...",
+                related_item_id=new_comment["post_id"],
+                related_item_type="post"
+            )
+
+            return new_comment
+
+        except Exception as e:
+            app.logger.error(f"Failed to add comment: {e}")
+            self.__error_log_manager.add_error(user_id, str(e))
             raise

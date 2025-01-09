@@ -68,7 +68,7 @@
         <ol>
           <div class="side_bar_links">
             <a href="{{ url_for('notifications') }}">
-              <button>
+              <button  data-count="{{notification_count}}">
                 <svg data-icon-name="notification-bell" data-style="line" icon_origin_id="20556" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="notification-bell" class="icon line" width="24" height="24">
                   <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M19.38,14.38a2.12,2.12,0,0,1,.62,1.5h0A2.12,2.12,0,0,1,17.88,18H6.12A2.12,2.12,0,0,1,4,15.88H4a2.12,2.12,0,0,1,.62-1.5L6,13V9a6,6,0,0,1,6-6h0a6,6,0,0,1,6,6v4ZM15,18H9a3,3,0,0,0,3,3h0A3,3,0,0,0,15,18Z" id="primary">  
                   </path>
@@ -179,7 +179,7 @@
             </div>
           </button>          
             <!-- コメントボタン -->
-          <button id="comment-button-{{ post['post_id'] }}" class="extension_button">
+          <button id="comment-button-{{ post['post_id'] }}" class="extension_button" popovertarget="comment-popover-{{ post['post_id'] }}">
             <svg width="16" height="16" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
                 <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
                     <g id="Icon-Set" sketch:type="MSLayerGroup" transform="translate(-100.000000, -255.000000)" fill="black">
@@ -189,6 +189,42 @@
                 </g>
             </svg>          
           </button>
+          <div id="comment-popover-{{ post['post_id'] }}" popover>
+            <div>
+              <p>{{ post['username'] }}</p>
+              <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
+              <form action="{{url_for('submit_comment', post_id=post['post_id'])}}" method="post" >
+                <input type="text" id="comment-input-{{ post['post_id'] }}" name="comment" placeholder="コメントを入力">
+                <button id="comment-submit-{{ post['post_id'] }}">送信する</button>
+              </form>
+            </div>
+            <div class="image_area">
+              <section id="image-carousel-{{ post['post_id'] }}" class="splide">
+                <div class="splide__track">
+                  <ul class="splide__list">
+                    {% for image in post["images"] %}
+                    <li class="splide__slide">
+                      <a href="{{ url_for('display_post', post_id=post['post_id']) }}">
+                        <img src="{{ image['img_path'] }}" alt="投稿画像">
+                      </a>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </section>
+            </div>
+            <div class="post_buttons" data-post-id="{{ post['post_id'] }}">
+              <!-- いいねボタン -->
+              <button id="like-button-{{ post['post_id'] }}" class="extension_button">
+                <div class="svg-container">
+                  <svg viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z">
+                    </path>
+                  </svg>
+                </div>
+              </button>
+            </div>
+          </div>
         <!-- リポストボタン -->
           <button id="repost-button-{{ post['post_id'] }}" class="extension_button">
             <?xml version="1.0" encoding="utf-8"?>

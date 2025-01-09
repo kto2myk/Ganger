@@ -2,9 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 動的にボタンを取得してイベントを登録
     document.querySelectorAll('[data-post-id]').forEach(post => {
         const postId = post.dataset.postId; // 投稿ID
-        const userId = post.dataset.userId; // ユーザーID
-
-        console.log(`Post ID: ${postId}, User ID: ${userId}`);
 
         // いいねボタン
         const likeButton = document.getElementById(`like-button-${postId}`);
@@ -23,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // サーバーにリクエストを送信
-                const response = await fetch(`/like/${postId}/${userId}`, { method: 'POST' });
+                const response = await fetch(`/like/${postId}`, { method: 'POST' });
                 const result = await response.json();
 
                 // サーバーのレスポンスに応じてSVGを切り替える
@@ -46,10 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // コメントボタン
-        const commentButton = document.getElementById(`comment-button-${postId}`);
-        commentButton.addEventListener('click', () => {
-            window.location.href = `/comments/${postId}`;
-        });
+        // const commentButton = document.getElementById(`comment-button-${postId}`);
+        // commentButton.addEventListener('click', () => {
+        //     window.location.href = `/comments/${postId}`;
+        // });
     
         // リポストボタン
         const repostButton = document.getElementById(`repost-button-${postId}`);
