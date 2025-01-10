@@ -104,8 +104,10 @@ def home():
     post_manager = PostManager()
     notification_manager = NotificationManager()
     try:
+        # フィルターを設定して投稿データを取得
         filters = {"user_id": 3}  # テスト用フィルタ
         formatted_posts = post_manager.get_formatted_posts(filters)
+        # 未読通知の数を取得
         count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
 
         return render_template("temp_layout.html", posts=formatted_posts,notification_count = count_notifications)
@@ -413,6 +415,29 @@ def notifications():
     # HTML テンプレートに通知データを渡す
     return render_template("display_notification.html", notifications=notifications)
 
+@app.route("/repost/<post_id>", methods=["POST"])
+def repost(post_id):
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
+
+    try:
+        sender_id = Validator.decrypt(session.get("id"))
+        post_id = Validator.decrypt(post_id)
+
+        if not sender_id or not post_id:
+            app.logger.error("Missing required IDs for authentication.")
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        result = post_manager.create_repost(post_id=post_id, user_id=sender_id)
+        # 成功時の応答
+        if result:
+            return jsonify({'success': True, 'message': 'リポストが完了しました！'}), 200
+        else:
+            return jsonify({'success': False, 'message': 'リポストに失敗しました。'}), 400
+        
+    except Exception as e:
+        app.logger.error(f"Error reposting: {e}")
+        return jsonify({'error': 'Server error'}), 500
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)

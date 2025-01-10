@@ -9,8 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Like button not found for post ID: ${postId}`);
             return;
         }
-
+        
         likeButton.addEventListener('click', async () => {
+            if (likeButton.disabled) {
+                return;
+            }
+            likeButton.disabled = true; // ボタンを無効化
             try {
                 // SVGのpath要素を取得
                 const svgContainer = likeButton.querySelector('.svg-container');
@@ -39,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error('Error toggling like:', error);
+            }finally {
+                likeButton.disabled = false; // ボタンを有効化
             }
         });
 
@@ -48,20 +54,34 @@ document.addEventListener('DOMContentLoaded', () => {
         //     window.location.href = `/comments/${postId}`;
         // });
     
-        // // リポストボタン
-        // const repostButton = document.getElementById(`repost-button-${postId}`);
-        // repostButton.addEventListener('click', async () => {
-        //     try {
-        //     const response = await fetch(`/api/repost/${postId}`, { method: 'POST' });
-        //     const result = await response.json();
-        //     if (result.success) {
-        //         alert('リポストが完了しました！');
-        //     }
-        //     } catch (error) {
-        //     console.error('Error reposting:', error);
-        //     }
-        // });
-    
+        // リポストボタン
+        const repostButton = document.getElementById(`repost-button-${postId}`);
+                if (repostButton) {
+                    // リスナーがすでに登録されていないか確認
+                    if (!repostButton.dataset.listenerAdded) {
+                        repostButton.addEventListener('click', async () => {
+                            try {
+                                // `/repost/<postId>`にPOSTリクエストを送信
+                                const response = await fetch(`/repost/${postId}`, { method: 'POST' });
+                                const result = await response.json();
+
+                                if (result.success) {
+                                    alert('リポストが完了しました！');
+                                    repostButton.disabled = true; // ボタンを無効化
+                                } else {
+                                    alert(result.message || 'リポストに失敗しました。');
+                                }
+                            } catch (error) {
+                                console.error(`Error while reposting post ID ${postId}:`, error);
+                                alert('リポスト処理中にエラーが発生しました。');
+                            }
+                        });
+                        repostButton.dataset.listenerAdded = "true"; // リスナーが追加されたことを記録
+                    }
+                } else {
+                    console.error(`Repost button not found for post ID: ${postId}`);
+                }
+            });
         // 保存ボタン
         const saveButton = document.getElementById(`save-button-${postId}`);
         saveButton.addEventListener('click', async () => {
@@ -77,6 +97,4 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error saving post:', error);
             }
         });
-        });
     });
-    

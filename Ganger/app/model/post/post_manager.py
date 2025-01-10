@@ -3,7 +3,7 @@ from sqlalchemy.orm  import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager.model import Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop
+from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost
 from Ganger.app.model.notification.notification_manager import NotificationManager
 from flask import current_app as app, session, url_for
 from Ganger.app.model.validator import Validator
@@ -93,7 +93,7 @@ class PostManager(DatabaseManager):
 
     def get_formatted_posts(self, filters):
         """
-        指定されたフィルタに基づいて投稿データを取得し、フォーマットして返す。
+        フィルターに基づいて投稿を取得し、リポスト情報を付加して返す。
 
         Args:
             filters (dict): 投稿データの取得条件。
@@ -101,35 +101,67 @@ class PostManager(DatabaseManager):
         Returns:
             list: フォーマットされた投稿データのリスト。
         """
-        import random
         try:
-            posts = self.fetch(
-                model=Post,
-                relationships=["images", "author"],
-                filters=filters
-            )
+            with Session(self.engine) as session:
+                # フィルターに基づいて投稿を取得
+                post_query = session.query(Post).options(
+                    joinedload(Post.author),  # 投稿の作成者をロード
+                    joinedload(Post.images)  # 投稿に関連付けられた画像をロード
+                )
+                if filters:
+                    for field, value in filters.items():
+                        post_query = post_query.filter(getattr(Post, field) == value)
+                posts = post_query.all()
 
-            formatted_posts = []
-            for post in posts:
-                formatted_posts.append({
-                    "post_id": Validator.encrypt(post.post_id),
-                    "id": Validator.encrypt(post.author.id),
-                    "user_id": post.author.user_id,
-                    "username": post.author.username,
-                    "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}"),
-                    "body_text": post.body_text,
-                    "post_time": Validator.calculate_time_difference(post.post_time),
-                    "images": [
-                        {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
-                        for image in post.images
-                    ]
-                })
-            random.shuffle(formatted_posts)
-            return formatted_posts
+                # リポスト情報を取得
+                repost_query = session.query(Repost).join(Post, Repost.post_id == Post.post_id).join(User, Repost.user_id == User.id).options(
+                    joinedload(Repost.post),        # リポスト元投稿をロード
+                    joinedload(Repost.user)         # リポストしたユーザーをロード
+                )
+                reposts = repost_query.all()
+
+                # 投稿データをフォーマット
+                formatted_posts = []
+
+                # 投稿とリポストを組み合わせて処理
+                for post in posts:
+                    # デフォルトはオリジナル投稿としてフォーマット
+                    formatted_post = {
+                        "is_repost": False,
+                        "id": Validator.encrypt(post.author.id),
+                        "post_id": Validator.encrypt(post.post_id),
+                        "user_id": post.author.user_id,
+                        "username": post.author.username,
+                        "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}"),
+                        "body_text": post.body_text,
+                        "post_time": Validator.calculate_time_difference(post.post_time),
+                        "images": [
+                            {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
+                            for image in post.images
+                        ],
+                        "repost_user": None  # リポスト情報はデフォルトでNone
+                    }
+
+                    # リポストが存在するかチェック
+                    for repost in reposts:
+                        if repost.post_id == post.post_id:
+                            formatted_post["is_repost"] = True
+                            formatted_post["repost_user"] = {
+                                "id": Validator.encrypt(repost.user.id),
+                                "user_id": repost.user.user_id,
+                                "username": repost.user.username,
+                                "profile_image": url_for("static", filename=f"images/profile_images/{repost.user.profile_image}")
+                            }
+                            break
+
+                    formatted_posts.append(formatted_post)
+
+                return formatted_posts
         except Exception as e:
-            self.error_log_manager.add_error(None, str(e))
             app.logger.error(f"Error in get_formatted_posts: {e}")
+            self.error_log_manager.add_error(None, str(e))
             raise
+
 
             
 
@@ -360,3 +392,49 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Failed to add comment: {e}")
             self.__error_log_manager.add_error(user_id, str(e))
             raise
+
+
+    def create_repost(self, user_id, post_id):
+        """
+        リポストを作成し、通知を発行するメソッド。
+
+        Args:
+            user_id (int): リポストを行うユーザーのID。
+            post_id (int): リポストする投稿のID。
+
+        Returns:
+            dict: 作成されたリポストの情報。
+        """
+        try:
+            # リポストデータを挿入
+            repost_data = {
+                "user_id": user_id,
+                "post_id": post_id,
+            }
+
+            # 重複チェックを含めて挿入
+            unique_check = {"user_id": user_id, "post_id": post_id}
+            repost = self.insert(model=Repost, data=repost_data, unique_check=unique_check)
+
+            if repost:
+                # 通知を発行
+                post_author = self.fetch_one(model=Post, filters={"post_id": post_id}, relationships=["author"])
+                self.__notification_manager.create_full_notification(
+                    sender_id=user_id,
+                    recipient_ids=[post_author.author.id],  # 投稿の作成者に通知
+                    type_name="REPOST",
+                    contents=f"{session["username"]}さんがあなたの投稿をリポストしました。",
+                    related_item_id=post_id,
+                    related_item_type="post"
+                )
+
+                return repost
+            else:
+                app.logger.info("リポストはすでに存在します。")
+                return None
+
+        except Exception as e:
+            app.logger.error(f"Failed to create repost: {e}")
+            self.error_log_manager.add_error(None, str(e))
+            raise
+
