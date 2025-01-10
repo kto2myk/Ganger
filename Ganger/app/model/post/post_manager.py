@@ -101,7 +101,7 @@ class PostManager(DatabaseManager):
         Returns:
             list: フォーマットされた投稿データのリスト。
         """
-        
+        import random
         try:
             posts = self.fetch(
                 model=Post,
@@ -124,7 +124,7 @@ class PostManager(DatabaseManager):
                         for image in post.images
                     ]
                 })
-
+            random.shuffle(formatted_posts)
             return formatted_posts
         except Exception as e:
             self.error_log_manager.add_error(None, str(e))
