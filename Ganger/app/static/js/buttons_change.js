@@ -48,19 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
         //     window.location.href = `/comments/${postId}`;
         // });
     
-        // リポストボタン
-        const repostButton = document.getElementById(`repost-button-${postId}`);
-        repostButton.addEventListener('click', async () => {
-            try {
-            const response = await fetch(`/api/repost/${postId}`, { method: 'POST' });
-            const result = await response.json();
-            if (result.success) {
-                alert('リポストが完了しました！');
-            }
-            } catch (error) {
-            console.error('Error reposting:', error);
-            }
-        });
+        // // リポストボタン
+        // const repostButton = document.getElementById(`repost-button-${postId}`);
+        // repostButton.addEventListener('click', async () => {
+        //     try {
+        //     const response = await fetch(`/api/repost/${postId}`, { method: 'POST' });
+        //     const result = await response.json();
+        //     if (result.success) {
+        //         alert('リポストが完了しました！');
+        //     }
+        //     } catch (error) {
+        //     console.error('Error reposting:', error);
+        //     }
+        // });
     
         // 保存ボタン
         const saveButton = document.getElementById(`save-button-${postId}`);

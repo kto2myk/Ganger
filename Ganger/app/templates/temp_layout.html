@@ -189,42 +189,6 @@
                 </g>
             </svg>          
           </button>
-          <div id="comment-popover-{{ post['post_id'] }}" popover>
-            <div>
-              <p>{{ post['username'] }}</p>
-              <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
-              <form action="{{url_for('submit_comment', post_id=post['post_id'])}}" method="post" >
-                <input type="text" id="comment-input-{{ post['post_id'] }}" name="comment" placeholder="コメントを入力">
-                <button id="comment-submit-{{ post['post_id'] }}">送信する</button>
-              </form>
-            </div>
-            <div class="image_area">
-              <section id="image-carousel-{{ post['post_id'] }}" class="splide">
-                <div class="splide__track">
-                  <ul class="splide__list">
-                    {% for image in post["images"] %}
-                    <li class="splide__slide">
-                      <a href="{{ url_for('display_post', post_id=post['post_id']) }}">
-                        <img src="{{ image['img_path'] }}" alt="投稿画像">
-                      </a>
-                    </li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </section>
-            </div>
-            <div class="post_buttons" data-post-id="{{ post['post_id'] }}">
-              <!-- いいねボタン -->
-              <button id="like-button-{{ post['post_id'] }}" class="extension_button">
-                <div class="svg-container">
-                  <svg viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z">
-                    </path>
-                  </svg>
-                </div>
-              </button>
-            </div>
-          </div>
         <!-- リポストボタン -->
           <button id="repost-button-{{ post['post_id'] }}" class="extension_button">
             <?xml version="1.0" encoding="utf-8"?>
@@ -237,18 +201,67 @@
           </button>
         <!-- 保存ボタン -->
           <button id="save-button-{{ post['post_id'] }}" class="extension_button">
-            <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 8.98987V20.3499C16 21.7999 14.96 22.4099 13.69 21.7099L9.76001 19.5199C9.34001 19.2899 8.65999 19.2899 8.23999 19.5199L4.31 21.7099C3.04 22.4099 2 21.7999 2 20.3499V8.98987C2 7.27987 3.39999 5.87988 5.10999 5.87988H12.89C14.6 5.87988 16 7.27987 16 8.98987Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M22 5.10999V16.47C22 17.92 20.96 18.53 19.69 17.83L16 15.77V8.98999C16 7.27999 14.6 5.88 12.89 5.88H8V5.10999C8 3.39999 9.39999 2 11.11 2H18.89C20.6 2 22 3.39999 22 5.10999Z" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7 12H11" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 14V10" stroke="#292D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <?xml version="1.0" encoding="utf-8"?>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bookmark"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
           </button>
         </div>
 
         <p class="body_text">{{ post['body_text'] }}</p>
         <p class="post_time">{{ post['post_time'] }}</p>
+      </div>
+
+      <!-- コメントポップオーバー -->
+        <div id="comment-popover-{{ post['post_id'] }}" class="comment-popover" popover>
+          <div class="comment-form">
+            <p>{{ post['username'] }}</p>
+            <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
+            <form action="{{url_for('submit_comment', post_id=post['post_id'])}}" method="post" >
+              <input type="text" id="comment-input-{{ post['post_id'] }}" name="comment" placeholder="コメントを入力">
+              <button id="comment-submit-{{ post['post_id'] }}">送信する</button>
+            </form>
+          </div>
+          <!-- <div class="image_area">
+            <section id="image-carousel-{{ post['post_id'] }}" class="splide">
+              <div class="splide__track">
+                <ul class="splide__list">
+                  {% for image in post["images"] %}
+                  <div class="splide__slide">
+                    <li>
+                      <a href="{{ url_for('display_post', post_id=post['post_id']) }}">
+                        <img src="{{ image['img_path'] }}" alt="投稿画像">
+                      </a>
+                    </li>
+                </ul>
+                {% endfor %}
+              </div>
+            </section>
+          </div> -->
+        <div class="post_buttons" data-post-id="{{ post['post_id'] }}">
+          <!-- いいねボタン -->
+          <button id="like-button-{{ post['post_id'] }}" class="extension_button">
+            <div class="svg-container">
+              <svg viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z">
+                </path>
+              </svg>
+            </div>
+          </button>
+          <!-- リポストボタン -->
+          <button id="repost-button-{{ post['post_id'] }}" class="extension_button">
+            <?xml version="1.0" encoding="utf-8"?>
+            <svg fill="#000000" width="20" height="20" viewBox="3 0 24 24" id="repost-round" xmlns="http://www.w3.org/2000/svg" class="icon line">
+              <path id="primary" d="M6,14V9A6,6,0,0,1,16.89,5.54" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></path>
+              <polyline id="primary-2" data-name="primary" points="8 12 6 14 4 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
+              <path id="primary-3" data-name="primary" d="M18,10v5A6,6,0,0,1,7.11,18.46" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></path>
+              <polyline id="primary-4" data-name="primary" points="16 12 18 10 20 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
+            </svg>
+          </button>
+        <!-- 保存ボタン -->
+          <button id="save-button-{{ post['post_id'] }}" class="extension_button">
+            <?xml version="1.0" encoding="utf-8"?>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bookmark"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
       </div>
       {% endfor %}
     </div>    
@@ -260,5 +273,6 @@
       </ul>
     </div>
   </div>
+  
 </body>
 </html>
