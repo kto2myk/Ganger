@@ -1,9 +1,10 @@
 import os
+from sqlalchemy.sql import select
 from sqlalchemy.orm  import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost
+from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost,SavedPost
 from Ganger.app.model.notification.notification_manager import NotificationManager
 from flask import current_app as app, session, url_for
 from Ganger.app.model.validator import Validator
@@ -91,43 +92,60 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Failed to create post: {e}")
             return {"error": str(e)}
 
-    def get_formatted_posts(self, filters):
+
+    def get_filtered_posts_with_reposts(self, filters, current_user_id):
         """
-        フィルターに基づいて投稿を取得し、リポスト情報を付加して返す。
+        指定されたユーザーIDを基に投稿とリポスト元の投稿を取得し、いいねと保存に登録されていない投稿のみを返す。
 
         Args:
             filters (dict): 投稿データの取得条件。
+            current_user_id (int): ログインしているユーザーのID。
 
         Returns:
             list: フォーマットされた投稿データのリスト。
         """
         try:
             with Session(self.engine) as session:
-                # フィルターに基づいて投稿を取得
-                post_query = session.query(Post).options(
-                    joinedload(Post.author),  # 投稿の作成者をロード
-                    joinedload(Post.images)  # 投稿に関連付けられた画像をロード
-                )
-                if filters:
-                    for field, value in filters.items():
-                        post_query = post_query.filter(getattr(Post, field) == value)
-                posts = post_query.all()
+                # フィルターで渡されたUSERIDを取得
+                user_id = filters.get("user_id")
+                if not user_id:
+                    raise ValueError("user_idフィルターが指定されていません。")
 
-                # リポスト情報を取得
-                repost_query = session.query(Repost).join(Post, Repost.post_id == Post.post_id).join(User, Repost.user_id == User.id).options(
-                    joinedload(Repost.post),        # リポスト元投稿をロード
-                    joinedload(Repost.user)         # リポストしたユーザーをロード
+                # サブクエリでログインユーザーの「いいね」と「保存」を取得
+                liked_posts_subquery = session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
+                saved_posts_subquery = session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
+
+                # 指定されたユーザーのオリジナル投稿を取得
+                user_posts_query = session.query(Post).filter(
+                    Post.user_id == user_id,
+                    Post.reply_id == None,  # リプライでない
+                    Post.post_id.notin_(select(liked_posts_subquery)),
+                    Post.post_id.notin_(select(saved_posts_subquery))
+                ).options(
+                    joinedload(Post.images),
+                    joinedload(Post.author)
                 )
-                reposts = repost_query.all()
+
+                # 指定されたユーザーがリポストした元の投稿を取得
+                reposted_posts_query = session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
+                    Repost.user_id == user_id,
+                    Post.reply_id == None,  # リプライでない
+                    Post.post_id.notin_(select(liked_posts_subquery)),
+                    Post.post_id.notin_(select(saved_posts_subquery))
+                ).options(
+                    joinedload(Post.images),
+                    joinedload(Post.author),
+                    joinedload(Repost.user)
+                )
+
+                # オリジナル投稿とリポストを結合し、投稿時間で降順に並べ替え
+                all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).all()
 
                 # 投稿データをフォーマット
                 formatted_posts = []
-
-                # 投稿とリポストを組み合わせて処理
-                for post in posts:
-                    # デフォルトはオリジナル投稿としてフォーマット
+                for post in all_posts:
+                    # 投稿データをフォーマット
                     formatted_post = {
-                        "is_repost": False,
                         "id": Validator.encrypt(post.author.id),
                         "post_id": Validator.encrypt(post.post_id),
                         "user_id": post.author.user_id,
@@ -139,26 +157,22 @@ class PostManager(DatabaseManager):
                             {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
                             for image in post.images
                         ],
-                        "repost_user": None  # リポスト情報はデフォルトでNone
+                        "repost_user": (
+                                {
+                                    "id": Validator.encrypt(repost.user.id),
+                                    "user_id": repost.user.user_id,
+                                    "username": repost.user.username,
+                                    "profile_image": url_for("static", filename=f"images/profile_images/{repost.user.profile_image}")
+                                } if (repost := next((r for r in post.reposts if r.user.id == user_id), None)) else None
+                            )
                     }
-
-                    # リポストが存在するかチェック
-                    for repost in reposts:
-                        if repost.post_id == post.post_id:
-                            formatted_post["is_repost"] = True
-                            formatted_post["repost_user"] = {
-                                "id": Validator.encrypt(repost.user.id),
-                                "user_id": repost.user.user_id,
-                                "username": repost.user.username,
-                                "profile_image": url_for("static", filename=f"images/profile_images/{repost.user.profile_image}")
-                            }
-                            break
 
                     formatted_posts.append(formatted_post)
 
                 return formatted_posts
+
         except Exception as e:
-            app.logger.error(f"Error in get_formatted_posts: {e}")
+            app.logger.error(f"Error in get_filtered_posts_with_reposts: {e}")
             self.error_log_manager.add_error(None, str(e))
             raise
 

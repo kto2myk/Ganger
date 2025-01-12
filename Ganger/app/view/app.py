@@ -106,10 +106,10 @@ def home():
     try:
         # フィルターを設定して投稿データを取得
         filters = {"user_id": 3}  # テスト用フィルタ
-        formatted_posts = post_manager.get_formatted_posts(filters)
+        user_id = Validator.decrypt(session.get("id"))
+        formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id)
         # 未読通知の数を取得
         count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
-
         return render_template("temp_layout.html", posts=formatted_posts,notification_count = count_notifications)
     except Exception as e:
         flash("投稿データの取得に失敗しました。")
