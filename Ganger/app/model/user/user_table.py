@@ -149,11 +149,11 @@ class UserManager(DatabaseManager):
 
                 # 投稿データを取得（投稿時間降順）
                 posts = (
-                session.query(Post)
-                .filter_by(user_id=decrypted_id)  # 修正: author_id → user_id
-                .options(joinedload(Post.images))  # 画像を一度に取得
-                .order_by(Post.post_time.desc())  # 投稿時間で降順ソート
-                .all()
+                    session.query(Post)
+                    .filter(Post.user_id == decrypted_id, Post.reply_id == None)  # NULL判定を追加
+                    .options(joinedload(Post.images))  # 画像を一度に取得
+                    .order_by(Post.post_time.desc())  # 投稿時間で降順ソート
+                    .all()
                 )
 
                 # 投稿情報を整形

@@ -100,15 +100,20 @@ def signup():
 @app.route("/home")
 def home():
     from Ganger.app.model.post.post_manager import PostManager
+    from Ganger.app.model.notification.notification_manager import NotificationManager
     post_manager = PostManager()
-
+    notification_manager = NotificationManager()
     try:
-        filters = {"user_id": 1}  # テスト用フィルタ
-        formatted_posts = post_manager.get_formatted_posts(filters)
-
-        return render_template("temp_layout.html", posts=formatted_posts)
+        # フィルターを設定して投稿データを取得
+        filters = {"user_id": 3}  # テスト用フィルタ
+        user_id = Validator.decrypt(session.get("id"))
+        formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id)
+        # 未読通知の数を取得
+        count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
+        return render_template("temp_layout.html", posts=formatted_posts,notification_count = count_notifications)
     except Exception as e:
         flash("投稿データの取得に失敗しました。")
+        app.logger.error(f"Failed to fetch posts: {e}")
         return redirect(url_for("login"))
     
 
@@ -151,6 +156,25 @@ def password_reset():
         
     return render_template('password_reset.html')
 
+@app.route('/like/<string:post_id>', methods=['POST'])
+def toggle_like(post_id,):
+    from Ganger.app.model.post.post_manager import PostManager
+    try:
+        sender_id = Validator.decrypt(session.get("id"))
+        post_id = Validator.decrypt(post_id)
+
+        if not sender_id or not post_id:
+            app.logger.error("Missing required IDs for authentication.")
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        post_manager = PostManager()
+        result = post_manager.toggle_like(post_id=post_id, sender_id=sender_id)
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        app.logger.error(f"Error toggling like: {e}")
+        return jsonify({'error': 'Server error'}), 500
 
 @app.route("/my_profile/<id>", methods=["GET"])
 def my_profile(id):
@@ -223,6 +247,32 @@ def create_post():
 def create_design():
     return render_template("create_design.html")
 
+@app.route('/submit_comment/<string:post_id>', methods=['POST'])
+def submit_comment(post_id):
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
+
+    try:
+        sender_id = Validator.decrypt(session.get("id"))
+        post_id = Validator.decrypt(post_id)
+        comment = request.form.get("comment")
+
+        if not sender_id or not post_id or not comment:
+            app.logger.error("Missing required IDs for authentication.")
+            return render_template("error.html", message="Unauthorized")
+
+        result = post_manager.add_comment(user_id=sender_id, parent_post_id=post_id, comment_text=comment)
+        if result:
+            app.logger.info("Comment submitted successfully")
+            return redirect(url_for("display_post", post_id=Validator.encrypt(post_id)))
+        else:
+            app.logger.error("Failed to submit comment")
+            return render_template("error.html", message="Failed to submit comment")
+        
+    except Exception as e:
+        app.logger.error(f"Error submitting comment: {e}")
+        return render_template("error.html", message="Server error")
+    
 @app.route('/save_design', methods=['POST'])
 def save_design():
     image_data = request.form.get("image")  # Base64形式の画像データ
@@ -335,7 +385,6 @@ def display_post(post_id):
         # 投稿データを取得
         post_details = post_manager.get_post_details(post_id)
         app.logger.info(f"Post details: {post_details}")
-
         # テンプレートにデータを渡す
         return render_template("display_post.html", post=post_details)
     except ValueError as e:
@@ -366,6 +415,29 @@ def notifications():
     # HTML テンプレートに通知データを渡す
     return render_template("display_notification.html", notifications=notifications)
 
+@app.route("/repost/<post_id>", methods=["POST"])
+def repost(post_id):
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
+
+    try:
+        sender_id = Validator.decrypt(session.get("id"))
+        post_id = Validator.decrypt(post_id)
+
+        if not sender_id or not post_id:
+            app.logger.error("Missing required IDs for authentication.")
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        result = post_manager.create_repost(post_id=post_id, user_id=sender_id)
+        # 成功時の応答
+        if result:
+            return jsonify({'success': True, 'message': 'リポストが完了しました！'}), 200
+        else:
+            return jsonify({'success': False, 'message': 'リポストに失敗しました。'}), 400
+        
+    except Exception as e:
+        app.logger.error(f"Error reposting: {e}")
+        return jsonify({'error': 'Server error'}), 500
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)

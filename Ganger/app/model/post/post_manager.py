@@ -1,15 +1,18 @@
 import os
+from sqlalchemy.sql import select
 from sqlalchemy.orm  import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager.model import Post, Image
-from flask import current_app as app, url_for
+from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost,SavedPost
+from Ganger.app.model.notification.notification_manager import NotificationManager
+from flask import current_app as app, session, url_for
 from Ganger.app.model.validator import Validator
 
 class PostManager(DatabaseManager):
     def __init__(self):
         super().__init__()
+        self.__notification_manager = NotificationManager()
 
     def is_allowed_extension(self, filename):
         """
@@ -89,46 +92,90 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Failed to create post: {e}")
             return {"error": str(e)}
 
-    def get_formatted_posts(self, filters):
+
+    def get_filtered_posts_with_reposts(self, filters, current_user_id):
         """
-        指定されたフィルタに基づいて投稿データを取得し、フォーマットして返す。
+        指定されたユーザーIDを基に投稿とリポスト元の投稿を取得し、いいねと保存に登録されていない投稿のみを返す。
 
         Args:
             filters (dict): 投稿データの取得条件。
+            current_user_id (int): ログインしているユーザーのID。
 
         Returns:
             list: フォーマットされた投稿データのリスト。
         """
-        from Ganger.app.model.model_manager.model import Post
-        
         try:
-            posts = self.fetch(
-                model=Post,
-                relationships=["images", "author"],
-                filters=filters
-            )
+            with Session(self.engine) as session:
+                # フィルターで渡されたUSERIDを取得
+                user_id = filters.get("user_id")
+                if not user_id:
+                    raise ValueError("user_idフィルターが指定されていません。")
 
-            formatted_posts = []
-            for post in posts:
-                formatted_posts.append({
-                    "post_id": Validator.encrypt(post.post_id),
-                    "id": Validator.encrypt(post.author.id),
-                    "user_id": post.author.user_id,
-                    "username": post.author.username,
-                    "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}"),
-                    "body_text": post.body_text,
-                    "post_time": Validator.calculate_time_difference(post.post_time),
-                    "images": [
-                        {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
-                        for image in post.images
-                    ]
-                })
+                # サブクエリでログインユーザーの「いいね」と「保存」を取得
+                liked_posts_subquery = session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
+                saved_posts_subquery = session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
 
-            return formatted_posts
+                # 指定されたユーザーのオリジナル投稿を取得
+                user_posts_query = session.query(Post).filter(
+                    Post.user_id == user_id,
+                    Post.reply_id == None,  # リプライでない
+                    Post.post_id.notin_(select(liked_posts_subquery)),
+                    Post.post_id.notin_(select(saved_posts_subquery))
+                ).options(
+                    joinedload(Post.images),
+                    joinedload(Post.author)
+                )
+
+                # 指定されたユーザーがリポストした元の投稿を取得
+                reposted_posts_query = session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
+                    Repost.user_id == user_id,
+                    Post.reply_id == None,  # リプライでない
+                    Post.post_id.notin_(select(liked_posts_subquery)),
+                    Post.post_id.notin_(select(saved_posts_subquery))
+                ).options(
+                    joinedload(Post.images),
+                    joinedload(Post.author),
+                    joinedload(Repost.user)
+                )
+
+                # オリジナル投稿とリポストを結合し、投稿時間で降順に並べ替え
+                all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).all()
+
+                # 投稿データをフォーマット
+                formatted_posts = []
+                for post in all_posts:
+                    # 投稿データをフォーマット
+                    formatted_post = {
+                        "id": Validator.encrypt(post.author.id),
+                        "post_id": Validator.encrypt(post.post_id),
+                        "user_id": post.author.user_id,
+                        "username": post.author.username,
+                        "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}"),
+                        "body_text": post.body_text,
+                        "post_time": Validator.calculate_time_difference(post.post_time),
+                        "images": [
+                            {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
+                            for image in post.images
+                        ],
+                        "repost_user": (
+                                {
+                                    "id": Validator.encrypt(repost.user.id),
+                                    "user_id": repost.user.user_id,
+                                    "username": repost.user.username,
+                                    "profile_image": url_for("static", filename=f"images/profile_images/{repost.user.profile_image}")
+                                } if (repost := next((r for r in post.reposts if r.user.id == user_id), None)) else None
+                            )
+                    }
+
+                    formatted_posts.append(formatted_post)
+
+                return formatted_posts
+
         except Exception as e:
+            app.logger.error(f"Error in get_filtered_posts_with_reposts: {e}")
             self.error_log_manager.add_error(None, str(e))
-            app.logger.error(f"Error in get_formatted_posts: {e}")
             raise
+
 
             
 
@@ -142,7 +189,6 @@ class PostManager(DatabaseManager):
         Returns:
             dict: フォーマットされた投稿データ。
         """
-        from Ganger.app.model.model_manager.model import Post
 
         try:
             # デバッグ用ログ
@@ -183,7 +229,6 @@ class PostManager(DatabaseManager):
             raise
 
     def search_tags(self, query):
-        from Ganger.app.model.model_manager.model import TagMaster, TagPost, Post, Image
 
         with Session(self.engine) as session:
             # タグの検索
@@ -220,7 +265,6 @@ class PostManager(DatabaseManager):
             return []
 
     def search_categories(self, query):
-        from Ganger.app.model.model_manager.model import CategoryMaster, ProductCategory, Shop, Post, Image
         with Session(self.engine) as session:
             # カテゴリーの検索
             categories = session.query(CategoryMaster).filter(
@@ -259,7 +303,6 @@ class PostManager(DatabaseManager):
             return []
         
     def add_tag_to_post(self, tag_text, post_id):
-        from Ganger.app.model.model_manager.model import TagMaster, TagPost
         try:
             # タグが既存か確認
             tag_data = {"tag_text": tag_text}
@@ -274,3 +317,138 @@ class PostManager(DatabaseManager):
             app.logger.info(f"タグ '{tag_text}' が投稿 {post_id} に追加されました。")
         except Exception as e:
             app.logger.error(f"エラーが発生しました: {e}")
+
+
+
+    def toggle_like(self, post_id, sender_id):
+        """
+        いいね機能を切り替えるメソッド
+
+        :param post_id: いいね対象の投稿ID
+        :param recipient_id: いいねを受け取るユーザーID
+        :param sender_id: いいねを送信するユーザーID
+        :return: 処理結果を表す辞書
+        """
+        try:
+            # Likeテーブルを検索
+            unique_check = {'post_id': post_id, 'user_id': sender_id}
+            existing_like = self.fetch_one(model=Like, filters=unique_check,relationships=["post"])
+
+            if existing_like:
+                # いいねが存在する場合は削除
+                self.delete(model=Like, filters=unique_check)
+                self.__notification_manager.delete_notification(
+                    sender_id=sender_id,
+                    recipient_id=existing_like.post.user_id,
+                    type_name="LIKE",
+                    related_item_id=post_id,
+                    related_item_type="post"
+                )
+                app.logger.info(f"Like removed: post_id={post_id}, user_id={sender_id}")
+                return {"status": "removed"}
+            else:
+                # いいねが存在しない場合は作成
+                self.insert(model=Like, data={'post_id': post_id, 'user_id': sender_id})
+                post = self.fetch_one(Post, filters={"post_id": post_id})
+                self.__notification_manager.create_full_notification(
+                    sender_id=sender_id,
+                    recipient_ids=post.user_id,  # 受信者は単一でもリスト形式で処理可能
+                    type_name="LIKE",
+                    contents=f"{session["username"]}さんがあなたの投稿にいいねしました",
+                    related_item_id=post_id,
+                    related_item_type="post"
+                )
+                app.logger.info(f"Like added: post_id={post_id}, user_id={sender_id}")
+                return {"status": "added"}
+        except Exception as e:
+            app.logger.error(f"Failed to toggle like: {e}")
+            self.error_log_manager.add_error(sender_id, str(e))
+            raise
+
+    def add_comment(self, user_id, parent_post_id, comment_text):
+        """
+        コメントを投稿し、通知を送信するメソッド
+
+        :param user_id: コメントを投稿するユーザーのID
+        :param parent_post_id: 親投稿のID
+        :param comment_text: コメント本文
+        :return: 作成されたコメントの情報
+        """
+        try:
+            # 親投稿の存在確認とリレーションの事前ロード
+            parent_post = self.fetch_one(Post, filters={"post_id": parent_post_id}, relationships=["author"])
+            if not parent_post:
+                raise ValueError(f"Parent post with ID {parent_post_id} does not exist.")
+            # コメントデータを挿入
+            comment_data = {
+                "user_id": user_id,
+                "reply_id": parent_post_id,
+                "body_text": comment_text
+            }
+            new_comment = self.insert(model=Post, data=comment_data)
+
+            if not new_comment:
+                raise ValueError("Failed to insert the comment. Possible duplicate.")
+
+            # 通知を送信
+            self.__notification_manager.create_full_notification(
+                sender_id=user_id,
+                recipient_ids=parent_post.author.id,
+                type_name="COMMENT",
+                contents=f"{session["username"]}さんがあなたの投稿にコメントしました。: {comment_text[:50]}...",
+                related_item_id=new_comment["post_id"],
+                related_item_type="post"
+            )
+
+            return new_comment
+
+        except Exception as e:
+            app.logger.error(f"Failed to add comment: {e}")
+            self.__error_log_manager.add_error(user_id, str(e))
+            raise
+
+
+    def create_repost(self, user_id, post_id):
+        """
+        リポストを作成し、通知を発行するメソッド。
+
+        Args:
+            user_id (int): リポストを行うユーザーのID。
+            post_id (int): リポストする投稿のID。
+
+        Returns:
+            dict: 作成されたリポストの情報。
+        """
+        try:
+            # リポストデータを挿入
+            repost_data = {
+                "user_id": user_id,
+                "post_id": post_id,
+            }
+
+            # 重複チェックを含めて挿入
+            unique_check = {"user_id": user_id, "post_id": post_id}
+            repost = self.insert(model=Repost, data=repost_data, unique_check=unique_check)
+
+            if repost:
+                # 通知を発行
+                post_author = self.fetch_one(model=Post, filters={"post_id": post_id}, relationships=["author"])
+                self.__notification_manager.create_full_notification(
+                    sender_id=user_id,
+                    recipient_ids=[post_author.author.id],  # 投稿の作成者に通知
+                    type_name="REPOST",
+                    contents=f"{session["username"]}さんがあなたの投稿をリポストしました。",
+                    related_item_id=post_id,
+                    related_item_type="post"
+                )
+
+                return repost
+            else:
+                app.logger.info("リポストはすでに存在します。")
+                return None
+
+        except Exception as e:
+            app.logger.error(f"Failed to create repost: {e}")
+            self.error_log_manager.add_error(None, str(e))
+            raise
+
