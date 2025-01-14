@@ -3,3 +3,5 @@ Hew/
 venv/
 # Ignore the ErrorManager folder
 structure.txt
+__pycache__/
+node_modules/
