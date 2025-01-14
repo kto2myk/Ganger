@@ -163,7 +163,10 @@ class PostManager(DatabaseManager):
                                     "user_id": repost.user.user_id,
                                     "username": repost.user.username,
                                     "profile_image": url_for("static", filename=f"images/profile_images/{repost.user.profile_image}")
-                                } if (repost := next((r for r in post.reposts if r.user.id == user_id), None)) else None
+                                } if (repost := next((r for r in post.reposts 
+                                                    if r.user.id == user_id),
+                                                    None)) 
+                                                    else None
                             )
                     }
 
