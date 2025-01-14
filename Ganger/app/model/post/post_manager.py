@@ -354,7 +354,7 @@ class PostManager(DatabaseManager):
                     sender_id=sender_id,
                     recipient_ids=post.user_id,  # 受信者は単一でもリスト形式で処理可能
                     type_name="LIKE",
-                    contents=f"{session["username"]}さんがあなたの投稿にいいねしました",
+                    contents=f"{session['username']}さんがあなたの投稿にいいねしました",
                     related_item_id=post_id,
                     related_item_type="post"
                 )
@@ -395,7 +395,7 @@ class PostManager(DatabaseManager):
                 sender_id=user_id,
                 recipient_ids=parent_post.author.id,
                 type_name="COMMENT",
-                contents=f"{session["username"]}さんがあなたの投稿にコメントしました。: {comment_text[:50]}...",
+                contents=f"{session['username']}さんがあなたの投稿にコメントしました。: {comment_text[:50]}...",
                 related_item_id=new_comment["post_id"],
                 related_item_type="post"
             )
@@ -437,7 +437,7 @@ class PostManager(DatabaseManager):
                     sender_id=user_id,
                     recipient_ids=[post_author.author.id],  # 投稿の作成者に通知
                     type_name="REPOST",
-                    contents=f"{session["username"]}さんがあなたの投稿をリポストしました。",
+                    contents=f"{session['username']}さんがあなたの投稿をリポストしました。",
                     related_item_id=post_id,
                     related_item_type="post"
                 )
