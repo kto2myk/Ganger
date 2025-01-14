@@ -5,7 +5,6 @@ from werkzeug.security import generate_password_hash, check_password_hash   # �
 import os  # ファイルパス操作用
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
-from sqlalchemy import or_  # OR条件用
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -438,6 +437,39 @@ def repost(post_id):
     except Exception as e:
         app.logger.error(f"Error reposting: {e}")
         return jsonify({'error': 'Server error'}), 500
+    
+@app.route("/save_post/<post_id>", methods=["POST"])
+def save_post(post_id):
+    from Ganger.app.model.post.post_manager import PostManager
+    post_manager = PostManager()
+
+    try:
+        post_id = Validator.decrypt(post_id)
+        sender_id = Validator.decrypt(session.get("id"))
+
+        # 必須IDの確認
+        if not sender_id or not post_id:
+            app.logger.error("Missing required IDs for authentication.")
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+
+        # 保存状態のトグル
+        result = post_manager.toggle_saved_post(post_id=post_id, user_id=sender_id)
+
+        if result.get("status") == "added":
+            return jsonify({'success': True, 'message': 'SAVE_POSTが完了しました！', 'status': 'added'}), 200
+        elif result.get("status") == "removed":
+            return jsonify({'success': True, 'message': 'SAVE_POSTが解除されました！', 'status': 'removed'}), 200
+        else:
+            app.logger.error(f"Unexpected result from toggle_saved_post: {result}")
+            return jsonify({'success': False, 'message': 'SAVE_POSTに失敗しました。'}), 400
+
+    except ValueError as e:
+        app.logger.error(f"Decryption error: {e}")
+        return jsonify({'success': False, 'message': 'Invalid data provided.'}), 400
+    except Exception as e:
+        app.logger.error(f"An error occurred in save_post: {e}")
+        return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
+
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)

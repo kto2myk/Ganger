@@ -259,6 +259,13 @@ header {
     }
   }
 
+  /* 保存済みボタンのスタイル */
+button.saved {
+  background-color: #007bff;
+  color: white;
+  border: 1px solid #007bff;
+}
+
 
 .right_bar {
     position: fixed;

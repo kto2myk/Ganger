@@ -409,7 +409,39 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Failed to add comment: {e}")
             self.__error_log_manager.add_error(user_id, str(e))
             raise
+        
+    def toggle_saved_post(self, post_id, user_id):
+        """
+        保存機能をトグルするメソッド。
+        - 指定された投稿を保存または保存解除する。
 
+        :param post_id: 保存対象の投稿ID
+        :param user_id: 保存操作を行うユーザーID
+        :return: 処理結果を表す辞書
+        """
+        try:
+            # SavedPost テーブルを検索
+            unique_check = {'post_id': post_id, 'user_id': user_id}
+            existing_saved_post = self.fetch_one(
+                model=SavedPost,
+                filters=unique_check
+            )
+
+            if existing_saved_post:
+                # 保存済みの場合は削除
+                self.delete(model=SavedPost, filters=unique_check)
+                app.logger.info(f"SavedPost removed: post_id={post_id}, user_id={user_id}")
+                return {"status": "removed"}
+            else:
+                # 保存されていない場合は追加
+                self.insert(model=SavedPost, data={'post_id': post_id, 'user_id': user_id})
+                app.logger.info(f"SavedPost added: post_id={post_id}, user_id={user_id}")
+                return {"status": "added"}
+
+        except Exception as e:
+            app.logger.error(f"Failed to toggle saved post: {e}")
+            self.error_log_manager.add_error(user_id, str(e))
+            raise
 
     def create_repost(self, user_id, post_id):
         """
