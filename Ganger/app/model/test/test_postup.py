@@ -9,8 +9,8 @@ def test_with_existing_images():
 
     # テストデータ
     post_data = {
-        "user_id": 1,
-        "body_text": "4test",
+        "user_id": 3,
+        "body_text": "notification test",
         "reply_id": None
     }
 

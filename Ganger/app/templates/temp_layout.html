@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../static/css/cssanimation.min.css">
     <script type="text/javascript" src="../static/js/main.js"></script>
     <script src="../static/js/node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
+    <script src="../static/js/buttons_change.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
       document.querySelectorAll('.splide').forEach(function (carousel) {
@@ -41,8 +42,11 @@
             <div class="side_bar_links">
                 <a href="{{ url_for('home') }}">
                     <button>
-                        <img src="../static/images/templates_images/home-alt-3.svg">
-                        <text>&emsp;HOME</text>
+                      <svg data-icon-name="home-alt-3" data-style="line" icon_origin_id="20487" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="home-alt-3" class="icon line" width="24" height="24">
+                        <polygon style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" points="19 11 19 21 14 21 14 14 10 14 10 21 5 21 5 11 3 11 12 2 21 11 19 11" id="primary">
+                        </polygon>
+                      </svg>                      
+                      <text>&emsp;HOME</text>
                     </button>
                 </a>
             </div>
@@ -52,8 +56,10 @@
                 <!-- 検索ページへのリンク（USERタブがデフォルト） -->
                 <a href="{{ url_for('search', tab='USER') }}">
                     <button>
-                        <img src="../static/images/templates_images/search.svg">
-                        <text>&emsp;検索</text>
+                      <svg data-icon-name="search" data-style="line" icon_origin_id="20598" 
+                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="search" class="icon line" width="24" height="24">
+                        <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M17,10a7,7,0,1,1-7-7A7,7,0,0,1,17,10Zm4,11-6-6" id="primary"></path></svg>                        
+                      <text>&emsp;検索</text>
                     </button>
                 </a>
             </div>
@@ -62,8 +68,12 @@
         <ol>
           <div class="side_bar_links">
             <a href="{{ url_for('notifications') }}">
-              <button>
-                <img src="../static/images/templates_images/notification-bell.svg"><text>&emsp;お知らせ</text>
+              <button  data-count="{{notification_count}}">
+                <svg data-icon-name="notification-bell" data-style="line" icon_origin_id="20556" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="notification-bell" class="icon line" width="24" height="24">
+                  <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M19.38,14.38a2.12,2.12,0,0,1,.62,1.5h0A2.12,2.12,0,0,1,17.88,18H6.12A2.12,2.12,0,0,1,4,15.88H4a2.12,2.12,0,0,1,.62-1.5L6,13V9a6,6,0,0,1,6-6h0a6,6,0,0,1,6,6v4ZM15,18H9a3,3,0,0,0,3,3h0A3,3,0,0,0,15,18Z" id="primary">  
+                  </path>
+                </svg>                
+                <text>&emsp;お知らせ</text>
               </button>
             </a>
           </div>
@@ -73,8 +83,13 @@
           <div class="side_bar_links">
             <a href="">
               <button>
-                <img src="../static/images/templates_images/settings.svg"><text>&emsp;設定</text></button>
-              </a>
+                <svg data-icon-name="settings" data-style="line" icon_origin_id="20602" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="settings" class="icon line" width="24" height="24">
+                  <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M15,12a3,3,0,1,1-3-3A3,3,0,0,1,15,12Zm5-2h-.59a1,1,0,0,1-.94-.67v0a1,1,0,0,1,.2-1.14l.41-.41a1,1,0,0,0,0-1.42L17.66,4.93a1,1,0,0,0-1.42,0l-.41.41a1,1,0,0,1-1.14.2h0A1,1,0,0,1,14,4.59V4a1,1,0,0,0-1-1H11a1,1,0,0,0-1,1v.59a1,1,0,0,1-.67.94h0a1,1,0,0,1-1.14-.2l-.41-.41a1,1,0,0,0-1.42,0L4.93,6.34a1,1,0,0,0,0,1.42l.41.41a1,1,0,0,1,.2,1.14v0a1,1,0,0,1-.94.67H4a1,1,0,0,0-1,1v2a1,1,0,0,0,1,1h.59a1,1,0,0,1,.94.67v0a1,1,0,0,1-.2,1.14l-.41.41a1,1,0,0,0,0,1.42l1.41,1.41a1,1,0,0,0,1.42,0l.41-.41a1,1,0,0,1,1.14-.2h0a1,1,0,0,1,.67.94V20a1,1,0,0,0,1,1h2a1,1,0,0,0,1-1v-.59a1,1,0,0,1,.67-.94h0a1,1,0,0,1,1.14.2l.41.41a1,1,0,0,0,1.42,0l1.41-1.41a1,1,0,0,0,0-1.42l-.41-.41a1,1,0,0,1-.2-1.14v0a1,1,0,0,1,.94-.67H20a1,1,0,0,0,1-1V11A1,1,0,0,0,20,10Z" id="primary">
+                  </path>
+                </svg>                
+                <text>&emsp;設定</text>
+              </button>
+            </a>
           </div>
         </ol>
     
@@ -82,7 +97,11 @@
           <div class="side_bar_links">
             <a href="">
               <button>
-                <img src="../static/images/templates_images/email.svg"><text>&emsp;メッセージ</text>
+                <svg data-icon-name="email" data-style="line" icon_origin_id="20462" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="email" class="icon line" width="24" height="24">
+                  <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M20,19H4a1,1,0,0,1-1-1V6A1,1,0,0,1,4,5H20a1,1,0,0,1,1,1V18A1,1,0,0,1,20,19ZM3.68,5.45l7.7,6.06a1,1,0,0,0,1.24,0l7.7-6.06" id="primary">
+                  </path>
+                </svg>                
+                <text>&emsp;メッセージ</text>
               </button>
             </a>
           </div>
@@ -98,7 +117,11 @@
           <div class="side_bar_links">
             <a href="{{ url_for('my_profile',id=session['id']) }}">
               <button>
-                <img src="../static/images/templates_images/profile.svg" alt="profile"><text>&emsp;プロフィール</text>
+                <svg data-icon-name="user-circle" data-style="line" icon_origin_id="24289" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="user-circle" class="icon line" width="24" height="24">
+                  <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M12,21h0a9,9,0,0,1-9-9H3a9,9,0,0,1,9-9h0a9,9,0,0,1,9,9h0A9,9,0,0,1,12,21Zm0-6a5,5,0,0,0-5,4.5,9,9,0,0,0,9.94,0A5,5,0,0,0,12,15Zm0-8a4,4,0,1,0,4,4A4,4,0,0,0,12,7Z" id="primary">
+                  </path>
+                </svg>                
+                <text>&emsp;プロフィール</text>
               </button>
             </a>
           </div>
@@ -108,7 +131,13 @@
           <div class="side_bar_links">
             <a href="{{ url_for( 'create_design' )}}">
               <button>
-                <img src="../static/images/templates_images/t-shirt.svg" alt="createTshirts"><text>&emsp;Create Design</text>
+                <svg data-icon-name="vest-2" data-style="line" icon_origin_id="11175" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="vest-2" class="icon line" width="24" height="24">
+                  <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M21,10h0V20a1,1,0,0,1-1,1H14V13l1.84-9.2a1,1,0,0,1,1-.8H18a1,1,0,0,1,1,1V8A2,2,0,0,0,21,10ZM5,8V4A1,1,0,0,1,6,3H7.18a1,1,0,0,1,1,.8L10,13v8H4a1,1,0,0,1-1-1V10H3A2,2,0,0,0,5,8Z" id="primary">  
+                  </path>
+                  <line style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" y2="19" x2="13.9" y1="19" x1="10.1" data-name="primary" id="primary-2"></line>
+                  <line style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" y2="4" x2="8.28" y1="4" x1="15.72" data-name="primary" id="primary-3"></line>
+                </svg>                
+                <text>&emsp;Create Design</text>
               </button>
             </a>
           </div>
@@ -117,38 +146,132 @@
     </div>  <!-- サイドバーエリア終了 -->
 
     <!-- メインコンテンツエリア -->
-    <div class="contents">
-      {% for post in posts %}
-      <div class="post_container">
-        <div class="account_info">
-          <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
-          <p>{{ post['username'] }}</p>
-        </div>
-        <div class="image_area">
-          <section id="image-carousel-{{ post['post_id'] }}" class="splide">
-            <div class="splide__track">
-              <ul class="splide__list">
-                {% for image in post["images"] %}
-                <li class="splide__slide">
-                  <a href="{{ url_for('display_post', post_id=post['post_id']) }}">
-                    <img src="{{ image['img_path'] }}" alt="投稿画像">
-                  </a>
-                </li>
-                {% endfor %}
-              </ul>
+    {% if posts %}
+      <div class="contents">
+        {% for post in posts %}
+          {% if post["repost_user"] %}
+            <a href="{{ url_for('my_profile',id = post['repost_user']['id']) }}">{{ post['repost_user']['username'] }}さんがリポストしました</a>
+          {% endif %}
+          <div class="post_container">
+            <div class="account_info">
+              <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
+              <p>{{ post['username'] }}</p>
             </div>
-          </section>
-        </div>
-        <div class="post_buttons" data-post-id="{{ post['post_id'] }}">
-          <button class="extension_button"><img src="../static/images/templates_images/like.png"></button>
-          <button class="extension_button"><img src="../static/images/templates_images/comment.png"></button>
-          <button class="extension_button"><img src="../static/images/templates_images/repost.png"></button>
-        </div>
-        <p class="body_text">{{ post['body_text'] }}</p>
-        <p class="post_time">{{ post['post_time'] }}</p>
-      </div>
-      {% endfor %}
-    </div>    
+            <div class="image_area">
+              <section id="image-carousel-{{ post['post_id'] }}" class="splide">
+                <div class="splide__track">
+                  <ul class="splide__list">
+                    {% for image in post["images"] %}
+                    <li class="splide__slide">
+                      <a href="{{ url_for('display_post', post_id=post['post_id']) }}">
+                        <img src="{{ image['img_path'] }}" alt="投稿画像">
+                      </a>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </section>
+            </div>
+            <div class="post_buttons" data-post-id="{{ post['post_id'] }}" data-user-id="{{ post['id'] }}">
+              <!-- いいねボタン -->
+              <button id="like-button-{{ post['post_id'] }}" class="extension_button">
+                <div class="svg-container">
+                  <svg viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z">
+                    </path>
+                  </svg>
+                </div>
+              </button>          
+                <!-- コメントボタン -->
+              <button id="comment-button-{{ post['post_id'] }}" class="extension_button" popovertarget="comment-popover-{{ post['post_id'] }}">
+                <svg width="16" height="16" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+                    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+                        <g id="Icon-Set" sketch:type="MSLayerGroup" transform="translate(-100.000000, -255.000000)" fill="black">
+                            <path d="M116,281 C114.832,281 113.704,280.864 112.62,280.633 L107.912,283.463 L107.975,278.824 C104.366,276.654 102,273.066 102,269 C102,262.373 108.268,257 116,257 C123.732,257 130,262.373 130,269 C130,275.628 123.732,281 116,281 L116,281 Z M116,255 C107.164,255 100,261.269 100,269 C100,273.419 102.345,277.354 106,279.919 L106,287 L113.009,282.747 C113.979,282.907 114.977,283 116,283 C124.836,283 132,276.732 132,269 C132,261.269 124.836,255 116,255 L116,255 Z" id="comment-1" sketch:type="MSShapeGroup">
+                            </path>
+                        </g>
+                    </g>
+                </svg>          
+              </button>
+            <!-- リポストボタン -->
+              <button id="repost-button-{{ post['post_id'] }}" class="extension_button">
+                <?xml version="1.0" encoding="utf-8"?>
+                <svg fill="#000000" width="20" height="20" viewBox="3 0 24 24" id="repost-round" xmlns="http://www.w3.org/2000/svg" class="icon line">
+                  <path id="primary" d="M6,14V9A6,6,0,0,1,16.89,5.54" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></path>
+                  <polyline id="primary-2" data-name="primary" points="8 12 6 14 4 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
+                  <path id="primary-3" data-name="primary" d="M18,10v5A6,6,0,0,1,7.11,18.46" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></path>
+                  <polyline id="primary-4" data-name="primary" points="16 12 18 10 20 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
+                </svg>
+              </button>
+            <!-- 保存ボタン -->
+              <button id="save-button-{{ post['post_id'] }}" class="extension_button">
+                <?xml version="1.0" encoding="utf-8"?>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bookmark"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              </button>
+            </div>
+
+            <p class="body_text">{{ post['body_text'] }}</p>
+            <p class="post_time">{{ post['post_time'] }}</p>
+          </div>
+
+          <!-- コメントポップオーバー -->
+            <div id="comment-popover-{{ post['post_id'] }}" class="comment-popover" popover>
+              <div class="comment-form">
+                <p>{{ post['username'] }}</p>
+                <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
+                <form action="{{url_for('submit_comment', post_id=post['post_id'])}}" method="post" >
+                  <input type="text" id="comment-input-{{ post['post_id'] }}" name="comment" placeholder="コメントを入力">
+                  <button id="comment-submit-{{ post['post_id'] }}">送信する</button>
+                </form>
+              </div>
+              <!-- <div class="image_area">
+                <section id="image-carousel-{{ post['post_id'] }}" class="splide">
+                  <div class="splide__track">
+                    <ul class="splide__list">
+                      {% for image in post["images"] %}
+                      <div class="splide__slide">
+                        <li>
+                          <a href="{{ url_for('display_post', post_id=post['post_id']) }}">
+                            <img src="{{ image['img_path'] }}" alt="投稿画像">
+                          </a>
+                        </li>
+                    </ul>
+                    {% endfor %}
+                  </div>
+                </section>
+              </div> -->
+              <div class="post_buttons" data-post-id="{{ post['post_id'] }}">
+                <!-- いいねボタン -->
+                <button id="like-button-{{ post['post_id'] }}" class="extension_button">
+                  <div class="svg-container">
+                    <svg viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z">
+                      </path>
+                    </svg>
+                  </div>
+                </button>
+                <!-- リポストボタン -->
+                <button id="repost-button-{{ post['post_id'] }}" class="extension_button">
+                  <?xml version="1.0" encoding="utf-8"?>
+                  <svg fill="#000000" width="20" height="20" viewBox="3 0 24 24" id="repost-round" xmlns="http://www.w3.org/2000/svg" class="icon line">
+                    <path id="primary" d="M6,14V9A6,6,0,0,1,16.89,5.54" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></path>
+                    <polyline id="primary-2" data-name="primary" points="8 12 6 14 4 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
+                    <path id="primary-3" data-name="primary" d="M18,10v5A6,6,0,0,1,7.11,18.46" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></path>
+                    <polyline id="primary-4" data-name="primary" points="16 12 18 10 20 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
+                  </svg>
+                </button>
+              <!-- 保存ボタン -->
+                <button id="save-button-{{ post['post_id'] }}" class="extension_button">
+                  <?xml version="1.0" encoding="utf-8"?>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bookmark"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </button>
+              </div>
+            </div>
+        {% endfor %}
+      </div>    
+    {% else %}
+      <h1>投稿がありません。</h1>
+    {% endif %}
     <div class="right_bar">
       {% include 'components/component_search.html' %}
       <ul>
@@ -157,5 +280,6 @@
       </ul>
     </div>
   </div>
+  
 </body>
 </html>

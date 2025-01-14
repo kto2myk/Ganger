@@ -74,9 +74,9 @@ class Follow(Base):
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
     follow_user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
-
     user = relationship("User", foreign_keys=[user_id], back_populates="followers")
     followed_user = relationship("User", foreign_keys=[follow_user_id], back_populates="following")
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     def __repr__(self):
         return f"<Follow(user_id={self.user_id}, follow_user_id={self.follow_user_id})>"
@@ -88,6 +88,7 @@ class Repost(Base):
 
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete="CASCADE"), primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     post = relationship("Post", back_populates="reposts")
     user = relationship("User", back_populates="reposts")
@@ -102,6 +103,7 @@ class Block(Base):
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
     blocked_user = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     blocker = relationship("User", foreign_keys=[user_id], back_populates="blocked_users")
     blocked = relationship("User", foreign_keys=[blocked_user], back_populates="blocked_by")
@@ -134,6 +136,7 @@ class Like(Base):
 
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete="CASCADE"), primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     post = relationship("Post", back_populates="likes")
     user = relationship("User", back_populates="likes")
