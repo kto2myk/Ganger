@@ -469,6 +469,11 @@ def save_post(post_id):
     except Exception as e:
         app.logger.error(f"An error occurred in save_post: {e}")
         return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
+    
+
+@app.route("/shop_page")
+def shop_page():
+    return render_template("shop_page.html")
 
 if __name__ == "__main__":
     try:
