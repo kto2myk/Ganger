@@ -105,18 +105,18 @@ class PostManager(DatabaseManager):
             list: フォーマットされた投稿データのリスト。
         """
         try:
-            with Session(self.engine) as session:
+            with Session(self.engine) as db_session:
                 # フィルターで渡されたUSERIDを取得
                 user_id = filters.get("user_id")
                 if not user_id:
                     raise ValueError("user_idフィルターが指定されていません。")
 
                 # サブクエリでログインユーザーの「いいね」と「保存」を取得
-                liked_posts_subquery = session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
-                saved_posts_subquery = session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
+                liked_posts_subquery = db_session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
+                saved_posts_subquery = db_session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
 
                 # 指定されたユーザーのオリジナル投稿を取得
-                user_posts_query = session.query(Post).filter(
+                user_posts_query = db_session.query(Post).filter(
                     Post.user_id == user_id,
                     Post.reply_id == None,  # リプライでない
                     Post.post_id.notin_(select(liked_posts_subquery)),
@@ -127,7 +127,7 @@ class PostManager(DatabaseManager):
                 )
 
                 # 指定されたユーザーがリポストした元の投稿を取得
-                reposted_posts_query = session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
+                reposted_posts_query = db_session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
                     Repost.user_id == user_id,
                     Post.reply_id == None,  # リプライでない
                     Post.post_id.notin_(select(liked_posts_subquery)),
@@ -146,6 +146,7 @@ class PostManager(DatabaseManager):
                 for post in all_posts:
                     # 投稿データをフォーマット
                     formatted_post = {
+                        "is_me": Validator.decrypt(session['id']) == post.author.id,
                         "id": Validator.encrypt(post.author.id),
                         "post_id": Validator.encrypt(post.post_id),
                         "user_id": post.author.user_id,
@@ -169,7 +170,6 @@ class PostManager(DatabaseManager):
                                                     else None
                             )
                     }
-
                     formatted_posts.append(formatted_post)
 
                 return formatted_posts
