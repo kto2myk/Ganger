@@ -32,7 +32,9 @@
     <div class="header_logo">Ganger</div>
     <button id="ajaxtest">AjaxTest</button>
     <div class="link_to_shopsite">
-        <button class="replace_button" href="{#{{ url_for('{# method replace to shopsite #}') }}#}">shop</button>
+      <a href="{{ url_for('shop_page') }}">
+        <button class="replace_button">shop</button>
+      </a>
     </div>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </header>
