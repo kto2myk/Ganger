@@ -320,6 +320,36 @@ body {
     });
 });
 
+//上がうまく動かなかった場合のコード
+// <script>
+// document.querySelectorAll('.category-nav button').forEach(button => {
+//     button.addEventListener('click', () => {
+//         const category = button.getAttribute('data-category');
+//         const content = document.getElementById('content');
+        
+//         console.log('Button clicked:', button);
+//         console.log('Category:', category);
+//         console.log('Content element:', content);
+        
+//         switch(category) {
+//             case 'all':
+//                 content.innerHTML = '<p>すべてのアイテムが表示されます。</p>';
+//                 break;
+//             case 'accessories':
+//                 content.innerHTML = '<p>アクセサリーが表示されます。</p>';
+//                 break;
+//             case 'web-items':
+//                 content.innerHTML = '<p>ウェブアイテムが表示されます。</p>';
+//                 break;
+//             case 'shoes':
+//                 content.innerHTML = '<p>シューズが表示されます。</p>';
+//                 break;
+//             default:
+//                 content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
+//         }
+//     });
+// });
+
     /*カテゴリー別ページ*/
     // const categories = 
     // [
