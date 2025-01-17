@@ -61,7 +61,6 @@ class UserManager(DatabaseManager):
             user = self.fetch_one(User, filters={"email": identifier}) or self.fetch_one(User, filters={"user_id": identifier})
             if not user or not check_password_hash(user.password, password):
                 raise Exception("ユーザー名またはパスワードが間違っています。")
-
             # セッション登録
             self.register_session(user)
 

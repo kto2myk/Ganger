@@ -81,20 +81,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     console.error(`Repost button not found for post ID: ${postId}`);
                 }
-            });
+            
+
         // 保存ボタン
-        const saveButton = document.getElementById(`save-button-${postId}`);
-        saveButton.addEventListener('click', async () => {
-            try {
-            const response = await fetch(`/api/save/${postId}`, { method: 'POST' });
-            const result = await response.json();
-            if (result.status === 'saved') {
-                saveButton.classList.add('saved');
-            } else if (result.status === 'unsaved') {
-                saveButton.classList.remove('saved');
+        const SaveButton = document.getElementById(`save-button-${postId}`);
+        if (SaveButton) {
+            // リスナーがすでに登録されていないか確認
+            if (!SaveButton.dataset.listenerAdded) {
+                SaveButton.addEventListener('click', async () => {
+                    SaveButton.disabled = true; // ボタンを無効化
+                    try {
+                        // `/save_post/<postId>`にPOSTリクエストを送信
+                        const response = await fetch(`/save_post/${postId}`, { method: 'POST' });
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const result = await response.json();
+
+                        // サーバーのレスポンスに基づいてUIを更新
+                        if (result.success) {
+                            if (result.status === 'added') {
+                                alert('SAVE_POSTが完了しました！');
+                                SaveButton.classList.add('saved'); // 保存済みを示すスタイルを適用
+                            } else if (result.status === 'removed') {
+                                alert('SAVE_POSTが解除されました！');
+                                SaveButton.classList.remove('saved'); // 保存済みスタイルを解除
+                            }
+                        } else {
+                            alert(result.message || 'SAVE_POSTに失敗しました。');
+                        }
+                    } catch (error) {
+                        console.error(`Error while saving post ID ${postId}:`, error);
+                        alert('SAVE_POST処理中にエラーが発生しました。');
+                    } finally {
+                        SaveButton.disabled = false; // 成功/失敗に関わらず有効化
+                    }
+                });
+                SaveButton.dataset.listenerAdded = "true"; // リスナーが追加されたことを記録
             }
-            } catch (error) {
-            console.error('Error saving post:', error);
-            }
-        });
+        } else {
+            console.error(`Save button not found for post ID: ${postId}`);
+        }
+
+        
     });
+})

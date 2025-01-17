@@ -14,7 +14,7 @@ from Ganger.app.model.database_manager.database_manager import DatabaseManager
 with app.app_context():
     try:
         db_manager = DatabaseManager()
-        db_manager.delete(Repost, {"post_id":9})
+        db_manager.delete(Repost, {"user_id":5})
         print("Deleted repost")
     except Exception as e:
         print(e)

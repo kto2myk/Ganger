@@ -105,18 +105,18 @@ class PostManager(DatabaseManager):
             list: フォーマットされた投稿データのリスト。
         """
         try:
-            with Session(self.engine) as session:
+            with Session(self.engine) as db_session:
                 # フィルターで渡されたUSERIDを取得
                 user_id = filters.get("user_id")
                 if not user_id:
                     raise ValueError("user_idフィルターが指定されていません。")
 
                 # サブクエリでログインユーザーの「いいね」と「保存」を取得
-                liked_posts_subquery = session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
-                saved_posts_subquery = session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
+                liked_posts_subquery = db_session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
+                saved_posts_subquery = db_session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
 
                 # 指定されたユーザーのオリジナル投稿を取得
-                user_posts_query = session.query(Post).filter(
+                user_posts_query = db_session.query(Post).filter(
                     Post.user_id == user_id,
                     Post.reply_id == None,  # リプライでない
                     Post.post_id.notin_(select(liked_posts_subquery)),
@@ -127,7 +127,7 @@ class PostManager(DatabaseManager):
                 )
 
                 # 指定されたユーザーがリポストした元の投稿を取得
-                reposted_posts_query = session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
+                reposted_posts_query = db_session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
                     Repost.user_id == user_id,
                     Post.reply_id == None,  # リプライでない
                     Post.post_id.notin_(select(liked_posts_subquery)),
@@ -146,6 +146,7 @@ class PostManager(DatabaseManager):
                 for post in all_posts:
                     # 投稿データをフォーマット
                     formatted_post = {
+                        "is_me": Validator.decrypt(session['id']) == post.author.id,
                         "id": Validator.encrypt(post.author.id),
                         "post_id": Validator.encrypt(post.post_id),
                         "user_id": post.author.user_id,
@@ -169,7 +170,6 @@ class PostManager(DatabaseManager):
                                                     else None
                             )
                     }
-
                     formatted_posts.append(formatted_post)
 
                 return formatted_posts
@@ -409,7 +409,39 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Failed to add comment: {e}")
             self.__error_log_manager.add_error(user_id, str(e))
             raise
+        
+    def toggle_saved_post(self, post_id, user_id):
+        """
+        保存機能をトグルするメソッド。
+        - 指定された投稿を保存または保存解除する。
 
+        :param post_id: 保存対象の投稿ID
+        :param user_id: 保存操作を行うユーザーID
+        :return: 処理結果を表す辞書
+        """
+        try:
+            # SavedPost テーブルを検索
+            unique_check = {'post_id': post_id, 'user_id': user_id}
+            existing_saved_post = self.fetch_one(
+                model=SavedPost,
+                filters=unique_check
+            )
+
+            if existing_saved_post:
+                # 保存済みの場合は削除
+                self.delete(model=SavedPost, filters=unique_check)
+                app.logger.info(f"SavedPost removed: post_id={post_id}, user_id={user_id}")
+                return {"status": "removed"}
+            else:
+                # 保存されていない場合は追加
+                self.insert(model=SavedPost, data={'post_id': post_id, 'user_id': user_id})
+                app.logger.info(f"SavedPost added: post_id={post_id}, user_id={user_id}")
+                return {"status": "added"}
+
+        except Exception as e:
+            app.logger.error(f"Failed to toggle saved post: {e}")
+            self.error_log_manager.add_error(user_id, str(e))
+            raise
 
     def create_repost(self, user_id, post_id):
         """
