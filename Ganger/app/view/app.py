@@ -470,6 +470,13 @@ def save_post(post_id):
         app.logger.error(f"An error occurred in save_post: {e}")
         return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
     
+@app.route("/make_post_into_product/<post_id>" ,methods=["POST"])
+def make_post_into_product(post_id):
+    selected_category = request.form.get('category')
+    price = request.form.get('price')
+    product_name = request.form.get('name')
+    return price
+
 
 @app.route("/shop_page")
 def shop_page():

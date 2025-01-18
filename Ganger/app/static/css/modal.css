@@ -1,0 +1,39 @@
+/* モーダル全体 */
+.modal {
+    display: none; /* 初期状態は非表示 */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* モーダルコンテンツ */
+  .modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 50%;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+
+  }.modal-content img {
+    width: 20px; /* 固定幅 */
+    height: 20px; /* 固定高さ */
+    object-fit: cover; /* サイズ変更時のトリミング */
+    display: block;
+    margin: 0 auto;
+}
+
+  /* 閉じるボタン */
+  .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
