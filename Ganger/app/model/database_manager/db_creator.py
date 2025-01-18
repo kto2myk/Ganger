@@ -82,3 +82,14 @@ if __name__ == "__main__":
 
     # テーブル作成
     table_manager.create_tables(Base)
+
+    conn = None
+    try:
+        conn = table_manager.engine().raw_connection()
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA foreign_keys;")
+        result = cursor.fetchone()
+        print("Foreign keys enabled:", result[0])  # 1 が返れば有効
+    finally:
+        if conn:
+            conn.close()

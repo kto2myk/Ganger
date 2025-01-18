@@ -203,6 +203,7 @@ class Shop(Base):
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete='CASCADE'), nullable=True)
     name = Column(String(45), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     # リレーション
     cart_items = relationship("CartItem", back_populates="shop", cascade="all, delete-orphan")

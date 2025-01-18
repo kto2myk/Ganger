@@ -470,12 +470,42 @@ def save_post(post_id):
         app.logger.error(f"An error occurred in save_post: {e}")
         return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
     
-@app.route("/make_post_into_product/<post_id>" ,methods=["POST"])
+@app.route("/make_post_into_product/<post_id>", methods=["POST"])
 def make_post_into_product(post_id):
-    selected_category = request.form.get('category')
-    price = request.form.get('price')
-    product_name = request.form.get('name')
-    return price
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    try:
+        # フォームデータの取得
+        post_id = Validator.decrypt(post_id)
+        selected_category = request.form.get('category')
+        price = request.form.get('price')
+        product_name = request.form.get('name')
+
+        # バリデーション
+        if not selected_category:
+            return jsonify({"status": False, "message": "カテゴリを選択してください。"}), 400
+        if not price or not price.isdigit() or int(price) <= 0:
+            return jsonify({"status": False, "message": "価格を正しく入力してください（正の整数）。"}), 400
+        if not product_name or len(product_name) < 3:
+            return jsonify({"status": False, "message": "商品名は3文字以上で入力してください。"}), 400
+
+        # 商品化処理
+        shop_manager = ShopManager()
+        result = shop_manager.create_product(
+            post_id=post_id,
+            price=int(price),
+            name=product_name,
+            category_name=selected_category
+        )
+
+        # 結果に基づいてレスポンスを生成
+        if result["status"]:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        app.logger.error(f"Error in make_post_into_product: {e}")
+        return jsonify({"status": False, "message": "内部エラーが発生しました。"}), 500
 
 
 @app.route("/shop_page")

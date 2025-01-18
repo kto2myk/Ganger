@@ -1,8 +1,9 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
-from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post
+from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like
+from Ganger.app.model.validator.validate import Validator
 from sqlalchemy.exc import SQLAlchemyError
-from flask import current_app as app
+from flask import current_app as app, session
 
 
 
@@ -11,14 +12,14 @@ class ShopManager(DatabaseManager):
         super().__init__()
         self.__notification_manager = NotificationManager()
     
-    def create_product(self, post_id, price, name, category_name,Session=None):
+    def create_product(self, post_id, price, name, category_name, Session=None):
         """
         Shopテーブルに新しい商品を追加し、カテゴリを設定する
         :param post_id: 関連する投稿のID
         :param price: 商品の価格
         :param name: 商品の名前
         :param category_name: カテゴリ名
-        :return: 挿入された商品の辞書形式データ or None
+        :return: 辞書形式の結果 {status: bool, message: str, product: dict or None}
         """
         try:
             Session = self.make_session(Session)
@@ -30,14 +31,16 @@ class ShopManager(DatabaseManager):
             }
 
             # Step 1: 商品をShopテーブルに挿入
-            inserted_product = self.insert(model=Shop, data=product_data,unique_check={"post_id": post_id},Session=Session)
+            inserted_product = self.insert(model=Shop, data=product_data, unique_check={"post_id": post_id}, Session=Session)
             if not inserted_product:
-                raise SQLAlchemyError("商品作成に失敗しました。重複の可能性があります。")
+                error_result =  {"status": False, "message": "商品作成に失敗しました（重複の可能性）。", "product": None}
+                raise Exception
 
             # Step 2: カテゴリを取得
-            category_id = self.get_category(category_name,Session=Session)
+            category_id = self.get_category(category_name, Session=Session)
             if not category_id:
-                raise SQLAlchemyError(f"カテゴリ '{category_name}' が見つからないため、商品作成を中止しました。")
+                error_result = {"status": False, "message": f"カテゴリ '{category_name}' が見つかりません。", "product": None}
+                raise Exception
 
             # Step 3: ProductCategoryテーブルに挿入
             product_category_data = {
@@ -46,24 +49,71 @@ class ShopManager(DatabaseManager):
             }
 
             inserted_product_category = self.insert(
-                model=ProductCategory, 
+                model=ProductCategory,
                 data=product_category_data,
                 unique_check={"product_id": inserted_product["product_id"]},
-                Session=Session)
-            
+                Session=Session
+            )
             if not inserted_product_category:
-                raise SQLAlchemyError("ProductCategoryテーブルへの挿入に失敗しました。")
+                error_result = {"status": False, "message": "ProductCategoryテーブルへの挿入に失敗しました。", "product": None}
+                raise Exception
 
-            app.logger.info(f"新しい商品とカテゴリが作成されました: {inserted_product}, Category: {category_name}")
+            # Step 4: 通知作成
+            user_ids = [like.user_id for like in self.fetch(model=Like, filters={"post_id": post_id}, Session=Session)]
+            if user_ids:
+                self.__notification_manager.create_full_notification(
+                    sender_id=3,  # session ID の復号化などが必要
+                    recipient_ids=user_ids,
+                    type_name="Productized",
+                    contents=f"あなたが「いいね」した投稿が商品化されました: {name}",
+                    related_item_id=inserted_product["product_id"],
+                    related_item_type="shop",
+                    Session=Session
+                )
 
             self.make_commit_or_flush(Session)
-            return inserted_product
+            return {
+                "status": True,
+                "message": f"商品化が成功しました: {inserted_product['name']}",
+                "product": inserted_product
+            }
 
-        except (Exception ,SQLAlchemyError)as e:
+        except Exception as e:
             self.session_rollback(Session)
             app.logger.error(e)
-            return None
+            return error_result
         
+    def delete_product(self, product_id, Session=None):
+        try:
+            Session = self.make_session(Session)
+
+            # 商品を削除
+            is_deleted = self.delete(model=Shop, filters={"product_id": product_id}, Session=Session)
+
+            if is_deleted:
+                # 関連通知を削除
+                deleted_notifications = self.__notification_manager.delete_notification(
+                    related_item_id=product_id,
+                    related_item_type="shop",
+                    type_name="Productized",
+                    Session=Session
+                )
+                result = {
+                    "status": "deleted",
+                    "product_id": product_id,
+                    "deleted_notifications": deleted_notifications
+                }
+                app.logger.info(f"Product {product_id} deleted with {deleted_notifications} notifications.")
+            else:
+                result = {"status": "not_found", "product_id": product_id}
+                app.logger.info(f"No product found with ID {product_id} to delete.")
+
+            self.make_commit_or_flush(Session)
+            return result
+        except SQLAlchemyError as e:
+            self.session_rollback(Session)
+            app.logger.error(f"Failed to delete product {product_id}: {e}")
+            raise
 
     def get_category(self, category_name,Session=None):
         """

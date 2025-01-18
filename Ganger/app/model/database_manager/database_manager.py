@@ -1,7 +1,7 @@
 import os
 import inspect
 import threading
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine,event
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from flask import current_app as app
@@ -30,6 +30,12 @@ class DatabaseConnector:
                     db_url = f"sqlite:///{db_path}"
                     # SQLAlchemyエンジンを作成
                     DatabaseConnector.__engine = create_engine(db_url, echo=echo,future=True,isolation_level="SERIALIZABLE")
+                    if "sqlite" in db_url:
+                        @event.listens_for(DatabaseConnector.__engine, "connect")
+                        def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+                            cursor = dbapi_connection.cursor()
+                            cursor.execute("PRAGMA foreign_keys=ON")
+                            cursor.close()
 
     @staticmethod
     def __ensure_folder_exists(db_folder):
@@ -211,6 +217,35 @@ class DatabaseManager(DatabaseConnector):
             return None
         
 
+    def build_query(self, Session, model, filters):
+        """
+        動的にクエリを構築する汎用メソッド
+
+        :param Session: SQLAlchemy セッション
+        :param model: 対象モデル
+        :param filters: 条件の辞書 (キー: モデルの属性, 値: フィルタ値)
+        :return: 構築されたクエリ
+        :raises AttributeError: モデルに存在しない属性が指定された場合
+        :raises SQLAlchemyError: クエリ構築中にSQLAlchemy関連のエラーが発生した場合
+        """
+        try:
+            query = Session.query(model)
+            for key, value in filters.items():
+                if value is not None:  # None の条件は無視
+                    if not hasattr(model, key):
+                        raise AttributeError(f"Model '{model.__name__}' has no attribute '{key}'")
+                    query = query.filter(getattr(model, key) == value)
+            return query
+        except AttributeError as ae:
+            app.logger.error(f"Query building error: {ae}")
+            raise
+        except SQLAlchemyError as se:
+            app.logger.error(f"SQLAlchemy error during query building: {se}")
+            raise
+        except Exception as e:
+            app.logger.error(f"Unexpected error during query building: {e}")
+            raise
+
 
     @classmethod
     def push_to_stack(cls, value:bool):
@@ -223,6 +258,7 @@ class DatabaseManager(DatabaseConnector):
             app.logger.info(f"stuck is {cls.__multi_stuck} now")
         except Exception as e:
             app.logger.error(e)
+            raise
 
 
     @classmethod
@@ -242,6 +278,7 @@ class DatabaseManager(DatabaseConnector):
                 return None
         except Exception as e:
             app.logger.error(e)
+            raise
         
     @classmethod
     def session_rollback(cls,Session):
@@ -254,6 +291,7 @@ class DatabaseManager(DatabaseConnector):
             app.logger.info(f"clear the stuck,error occur {inspect.stack()[1].function},session rollback!!")
         except Exception as e:
             app.logger.error(e)
+            raise
         finally:
             DatabaseManager.session_close(Session)
 
@@ -268,8 +306,12 @@ class DatabaseManager(DatabaseConnector):
     
     @staticmethod
     def session_close(Session):
-        Session.close()
-        app.logger.info("session is closed")
+        try:
+            Session.close()
+            app.logger.info("session is closed")
+        except Exception as e:
+            app.logger.error(e)
+            raise
         
     def make_session(self, db_session=None):
         """
@@ -346,6 +388,7 @@ class DatabaseManager(DatabaseConnector):
         except Exception as e:
             self.session_rollback(Session)
             app.logger.error(e)
+            raise
 
     # def get_user_by_identifier(self, session, identifier):
     #     """ユーザーをメールアドレスまたはユーザーIDで取得"""

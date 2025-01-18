@@ -1,9 +1,9 @@
 # # # from sqlalchemy.orm import sessionmaker
 # # # from sqlalchemy import create_engine
 # # # from datetime import datetime
-# # # from Ganger.app.model.model_manager.model import (
-# # #     Notification, NotificationStatus, NotificationType, NotificationDetail, User
-# # # )
+from Ganger.app.model.model_manager.model import Notification, NotificationStatus, NotificationType, NotificationDetail, User
+from Ganger.app.view.app import app
+from Ganger.app.model.database_manager.database_manager import DatabaseManager
 
 # # # # データベース接続設定
 # # # db_path = r"C:\HAL\IH\IH22\Ganger\app\model\database_manager\Ganger.db"
@@ -87,11 +87,11 @@
 # # # finally:
 # # #     session.close()
 
-# # # with session as session:
-# # #     # 削除
-# # #     session.query(NotificationDetail).filter(NotificationDetail.detail_id == 3).delete()
-# # #     session.commit()
-# # #     print("削除完了")
+    # 削除
+with app.test_request_context():
+    dbmanager=DatabaseManager()
+    dbmanager.delete(NotificationStatus,filters={"notification_id":54})
+    print("削除完了")
 
 # # from Ganger.app.model.notification.notification_manager import NotificationManager
 # # notification_manager = NotificationManager()
@@ -103,8 +103,9 @@
 # # for notification in user_notifications:
 # #     print(notification)
 
-from Ganger.app.model.notification.notification_manager import NotificationManager
-notification_manager = NotificationManager()
+# with app.test_request_context():
+    # from Ganger.app.model.notification.notification_manager import NotificationManager
+    # notification_manager = NotificationManager()
 # try:
 #     # 通知を送信
 #     notification = notification_manager.create_full_notification(
@@ -119,16 +120,15 @@ notification_manager = NotificationManager()
 #     print(notification)
 # except Exception as e:
 #     print(f"エラーが発生しました: {e}")
-
-# try:
-#     # 通知を削除
-#     deleted_count = notification_manager.delete_notification(
-#         sender_id=1,
-#         recipient_id=2,
-#         type_name="comment",
-#         related_item_id=3,
-#         related_item_type="post"
-#     )
-#     print(f"{deleted_count} 件の通知を削除しました！")
-# except Exception as e:
-#     print(f"エラーが発生しました: {e}")
+    # try:
+    #     # 通知を削除
+    #     deleted_count = notification_manager.delete_notification(
+    #         sender_id=None,
+    #         recipient_id=None,
+    #         type_name="Productized",
+    #         related_item_id=4,
+    #         related_item_type="shop"
+    #     )
+    #     print(f"{deleted_count} 件の通知を削除しました！")
+    # except Exception as e:
+    #     print(f"エラーが発生しました: {e}")

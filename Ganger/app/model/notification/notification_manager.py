@@ -199,45 +199,43 @@ class NotificationManager(DatabaseManager):
             self.error_log_manager.add_error(None, str(e))
             raise
 
-    def delete_notification(self, sender_id, recipient_id, type_name,related_item_id, related_item_type,Session = None):
+    def delete_notification(self, related_item_id, related_item_type=None, type_name=None, sender_id=None, recipient_id=None, Session=None):
         """
         指定条件に基づいて通知を削除する
-
-        :param sender_id: 通知を送信したユーザーID
-        :param recipient_id: 通知を受信したユーザーID
-        :param type_name: 通知の種類名（例: "LIKE", "COMMENT"）
-        :param notification_type_id: 通知の種類ID
-        :param related_item_id: 通知に関連するアイテムのID（例: post_id）
-        :param related_item_type: 通知に関連するアイテムの種類（例: "post"）
-        :return: 削除された通知の数
         """
         try:
             Session = self.make_session(Session)
-            notification_type_id = self.get_or_create_notification_type(type_name,Session) # 通知タイプIDを取得
-            # NotificationDetailを検索
-            notification_detail = Session.query(NotificationDetail).filter_by(
-                sender_id=sender_id,
-                recipient_id=recipient_id,
-                notification_type_id=notification_type_id,
-                related_item_id=related_item_id,
-                related_item_type=related_item_type
-            ).first()
+            notification_type_id = self.get_or_create_notification_type(type_name, Session) if type_name else None
+
+            # 条件を辞書型で整理
+            filters = {
+                "sender_id": sender_id,
+                "recipient_id": recipient_id,
+                "notification_type_id": notification_type_id,
+                "related_item_id": related_item_id,
+                "related_item_type": related_item_type,
+            }
+
+            # build_query を使用してクエリを動的に構築
+            query = self.build_query(Session, NotificationDetail, filters)
+
+            # NotificationDetail を検索
+            notification_detail = query.first()
 
             if not notification_detail:
                 app.logger.info("No matching notification found.")
+                self.make_commit_or_flush(Session)
                 return 0  # 該当する通知が見つからない場合
 
-            # 該当するNotificationを削除
+            # 該当する Notification を削除
             notification_id = notification_detail.notification_id
-            deleted_count = self.delete(model=Notification, filters={"notification_id": notification_id},Session=Session)
-            # コミットして削除を確定
-            self.make_commit_or_flush(Session)
+            deleted_count = self.delete(model=Notification, filters={"notification_id": notification_id}, Session=Session)
 
+            self.make_commit_or_flush(Session)  # コミットして削除を確定
             app.logger.info(f"Notification with ID {notification_id} deleted.")
-            return   deleted_count# 削除成功のフラグとして1を返す
+            return deleted_count
 
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.info(f"Failed to delete notification: {e}")
-            self.error_log_manager.add_error(sender_id, str(e))
+            app.logger.error(f"Failed to delete notification: {e}")
             raise
