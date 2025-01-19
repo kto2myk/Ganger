@@ -220,7 +220,7 @@ body {
     <div class="swiper">
         <div class="swiper-wrapper">
             {% for product in products %}
-                <div class="swiper-slide"><a href=""><img src="{{ product['img_path'] }}" alt="商品画像"></a></div>
+                <div class="swiper-slide"><a href="{{ url_for('display_product', product_id=product['product_id']) }}"><img src="{{ product['img_path'] }}" alt="商品画像"></a></div>
             {% endfor %}        
         </div>
         <div class="swiper-pagination"></div>

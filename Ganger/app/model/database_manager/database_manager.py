@@ -171,7 +171,7 @@ class DatabaseManager(DatabaseConnector):
                     else:
                         app.logger.error(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
                         raise AttributeError(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
-            self.pop_from_stack()
+            self.pop_and_close(Session)
             return query.all()
         
         except SQLAlchemyError as e:
@@ -208,7 +208,7 @@ class DatabaseManager(DatabaseConnector):
                         raise AttributeError(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
 
             # 最初の一件を取得
-            self.pop_from_stack()
+            self.pop_and_close(Session)
             return query.first()
         except SQLAlchemyError as e:
             self.session_rollback(Session)

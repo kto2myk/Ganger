@@ -166,11 +166,8 @@ class ShopManager(DatabaseManager):
             for shop in results:
                 try:
                     shop_data = {
-                        "product_id": shop.product_id,
-                        "name": shop.name,
-                        "price": float(shop.price),
-                        "img_path":url_for("static", filename=f"images/post_images/{shop.post.images[0].img_path}"),
-                        "post_time": shop.post.post_time
+                        "product_id":Validator.encrypt(shop.product_id),
+                        "img_path":url_for("static", filename=f"images/post_images/{shop.post.images[0].img_path}")
                     }
                     formatted_data.append(shop_data)
                 except AttributeError as e:
@@ -182,4 +179,29 @@ class ShopManager(DatabaseManager):
         except Exception as e:
             app.logger.error(f"エラーが発生しました: {e}")
             self.session_rollback(Session)
+            return None
+        
+    def fetch_one_product_images(self,product_id,Session=None):
+        try:
+            product_id = Validator.decrypt(product_id)
+            Session = self.make_session(Session)
+            product = Session.query(Shop).options(joinedload(Shop.post).joinedload(Post.images)).filter(Shop.product_id==product_id).first()
+
+            formatted_product = {
+                "product_id":Validator.encrypt(product.product_id),
+                "post_id":Validator.encrypt(product.post.post_id),
+                "name":product.name,
+                "price":float(product.price),
+                "created_at":Validator.calculate_time_difference(product.created_at),
+                "images": [
+                        {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
+                        for image in product.post.images
+                        ] if product.post.images else []
+                    } if product else None
+            self.pop_and_close(Session)
+            return formatted_product
+        
+        except Exception as e:
+            self.session_rollback(Session)
+            app.logger.error(f"error発生:{e}")
             return None

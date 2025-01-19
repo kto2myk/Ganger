@@ -519,6 +519,18 @@ def shop_page():
 
     return render_template("shop_page.html", products=shop_data)      
 
+@app.route("/display_product/<product_id>")
+def display_product(product_id):
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    shop_manager = ShopManager()
+    product = shop_manager.fetch_one_product_images(product_id=product_id)
+
+    if product_id is None:
+        abort(404,description="商品が見つかりません")
+    
+    return render_template("display_product.html",product=product)
+            
+
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)
