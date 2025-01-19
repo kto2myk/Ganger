@@ -2,8 +2,10 @@ from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
 from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like
 from Ganger.app.model.validator.validate import Validator
+from sqlalchemy import desc
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from flask import current_app as app, session
+from flask import current_app as app, session,url_for
 
 
 
@@ -140,3 +142,44 @@ class ShopManager(DatabaseManager):
         except ValueError as e:
             self.session_rollback(Session)
             app.logger.warning(e)
+
+
+    def get_shop_with_images(self, limit=10,Session=None):
+        """Shopの情報と関連する投稿画像を投稿時間の降順で取得し、Jinja2で使用できる形で返す"""
+        try:
+            Session = self.make_session(Session)
+            results = (
+                Session.query(Shop)
+                .join(Post, Shop.post_id == Post.post_id)  # Postとの内部結合
+                .options(joinedload(Shop.post).joinedload(Post.images))  # リレーションをロード
+                .order_by(desc(Post.post_time))  # 投稿時間の降順（最新順）
+                .limit(limit)  # 取得数制限
+                .all()
+            )
+
+            if not results:
+                self.session_rollback(Session)
+                app.logger.warning("ショップデータが見つかりませんでした")
+                return None
+
+            formatted_data = []
+            for shop in results:
+                try:
+                    shop_data = {
+                        "product_id": shop.product_id,
+                        "name": shop.name,
+                        "price": float(shop.price),
+                        "img_path":url_for("static", filename=f"images/post_images/{shop.post.images[0].img_path}"),
+                        "post_time": shop.post.post_time
+                    }
+                    formatted_data.append(shop_data)
+                except AttributeError as e:
+                    app.logger.error(f"データ整形エラー: {e}")
+                    continue
+            self.pop_and_close(Session)
+            return formatted_data
+
+        except Exception as e:
+            app.logger.error(f"エラーが発生しました: {e}")
+            self.session_rollback(Session)
+            return None

@@ -1,4 +1,4 @@
-from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify # Flaskの各種機能をインポート
+from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify,abort # Flaskの各種機能をインポート
 from flask_wtf.csrf import CSRFProtect  # CSRF保護用
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
@@ -111,7 +111,7 @@ def home():
         count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
         return render_template("temp_layout.html", posts=formatted_posts,notification_count = count_notifications)
     except Exception as e:
-        flash("投稿データの取得に失敗しました。")
+        abort(404,description="投稿データの取得に失敗しました。")
         app.logger.error(f"Failed to fetch posts: {e}")
         return redirect(url_for("login"))
     
@@ -510,7 +510,14 @@ def make_post_into_product(post_id):
 
 @app.route("/shop_page")
 def shop_page():
-    return render_template("shop_page.html")
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    shop_manager = ShopManager()
+    shop_data = shop_manager.get_shop_with_images(limit=10)
+
+    if shop_data is None:
+        abort(404, description="ショップページが見つかりません")
+
+    return render_template("shop_page.html", products=shop_data)      
 
 if __name__ == "__main__":
     try:
