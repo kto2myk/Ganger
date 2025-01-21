@@ -43,24 +43,62 @@ header {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    z-index: 9999;
+    z-index: 9998;
     background-color: #fff;
-    border-bottom: solid 1px #999;
+    /* border-bottom: solid 1px #999; */
 }
 
-.header_logo {
-  margin: 0 right;
-  width: 100px;
-  height: 50px;
+#hidden {
+  width: 15dvh;
+}
+
+.couple_of_links {
+  display: flex;
+  margin: 0 auto;
+  width: 30%;
+  height: 100%;;
+}
+
+.couple_of_links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  height: 100%;
+  text-decoration: none;
+  color: black;
+  background-color: #fff;
+  border: solid 1px;
+  border-color: #999;
+  transition: all, 0.2s;
+}
+
+.couple_of_links a:hover {
+  background-color: #999;
+}
+
+#center_space {
+  width:5px;
+  height:100%;
+  border-bottom: solid 1px #999;
+  background-color: #999;
 }
 
 .replace_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 15dvh;
   height: 100%;
-  
+  text-decoration: none;
+  color: black;
   background-color: #fff;
-  border-width: 0px 1px 0px 1px;
-  border-color: #999;
+  border: solid 1px #999;
+  transition: all, 0.2s;
+}
+
+.replace_button:hover {
+  background-color: #a46a9a;
 }
 
 /* メインコンテナ */
@@ -78,14 +116,22 @@ header {
     height: 100dvh;
     width: 19vw;
     margin: 0 auto;
-    z-index: 9998;
+    z-index: 9999;
     border-right: solid 1px #999;
+    background-color: #fff;
     
     justify-content: space-between;
 }
 
+.header_logo {
+  margin: 0 right;
+  width: 100px;
+  height: 50px;
+}
+
+
 .side_bar ul {
-    margin-top: 20dvh;
+    margin-top: 17dvh;
     padding: 0;
     width: 100%;
     height: 70%;
@@ -107,6 +153,7 @@ header {
 }
 
 .side_bar_links button {
+  cursor: pointer;
   display: flex;
   text-align: left;
   align-items: center;
@@ -154,6 +201,11 @@ header {
 
 .side_bar_links:hover button {
   background-color: #ddd;
+}
+
+#nav_activated{
+  fill: #000;
+  stroke-width: 1;
 }
 
 /* ウィンドウ縮小時 */
@@ -267,6 +319,20 @@ header {
   border: none;
 }
 
+#add_post_button {
+  cursor: pointer;
+  width: 80px;
+  height: 80px;
+  border: 0;
+  border-radius: 50%;
+  background-color: #a46a9a;
+  transition: all 0.2s;
+}
+
+#add_post_button:hover {
+  filter: brightness(80%);
+}
+
 .svg-filled {
   fill: red;
 }
@@ -289,15 +355,23 @@ button.saved {
 .right_bar {
     position: fixed;
     right: 0dvh;
-    top: 20dvh;
+    top: 10dvh;
     height: 40dvh;
     width: 20dvw;
     margin: 0 auto;
-    /* border: solid 1px black; */
+}
+
+#search-container {
+  margin: 5%;
+  width: 90%;
 }
 
 #search-container div input {
-  padding-left: 10px;
+  width: 90%;
+  height: 5dvh;
+  background-color: #fff;
+  padding-left: 5%;
+  padding-right: 5%;
 }
 
 #search-box {
@@ -307,8 +381,12 @@ button.saved {
   border-radius: 5vh;
 }
 
-.right_bar ul {
-    margin-top: 70px;
+.trend_container {
+  margin: 5%;
+  width: 90%;
+  height: 50dvh;
+  border: solid 1px #999;
+  border-radius: 2%;
 }
 
 

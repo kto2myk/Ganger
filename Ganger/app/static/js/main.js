@@ -1,32 +1,44 @@
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.splide').forEach(function (carousel) {
+    new Splide(carousel).mount();
+    });
+});
 
-// $.ajax({
-//     type: 'GET', // HTTPリクエストメソッドの指定
-//     url: '../../view/app.py', // 送信先URLの指定
-//     async: true, // 非同期通信フラグの指定
-//     dataType: 'json', // 受信するデータタイプの指定
-//     timeout: 10000, // タイムアウト時間の指定
-//     data: {
-//       id: 1,
-//       name: 'brisk' // クエリパラメータの指定。サーバーに送信したいデータを指定
+
+// 検索ボックスの非表示に関するコメントアウト
+// const commentModal = document.getElementById('search-results-container');
+
+// window.addEventListener('click', (event) => {
+//     if (event.target === commentModal) {
+//         commentModal.style.display = 'none';
 //     }
-// })
-// .done(function(data) {
-//   // 通信が成功したときの処理
-// })
-// .fail(function() {
-//   // 通信が失敗したときの処理
-// });
-// .always(function() {
-//   // 通信が完了したときの処理
 // });
 
 
-// document.addEventListener("DOMContentLoaded", function () {
-//     const currentPath = window.location.pathname;
-//     const navLinks = document.querySelectorAll('.nav-link');
-//     navLinks.forEach(link => {
-//       if (link.getAttribute('href') === currentPath) {
-//         link.classList.add('active');
-//       }
-//     });
-//   });
+window.onload = function() {
+    const spinner = document.getElementById('loading');
+    spinner.classList.add('loaded');
+
+    // パスと対応するIDのマッピング
+    const pageToIdMap = {
+        "/home": "home",
+        "/search": "search",
+        "/notification": "notification",
+        "/settings": "settings",
+        "/massage": "massage",
+        "/profile": "profile",
+        "/create-design": "login"
+    };
+
+    // 現在のパスを取得
+    let currentUrl = location.pathname;
+
+    // マッピングに一致する要素があれば、fill を変更
+    for (let path in pageToIdMap) {
+        if (currentUrl.startsWith(path)) {
+            let id = document.getElementById(pageToIdMap[path]);
+            if (id) id.style.fill = "#000";
+            break;  // 一致が見つかったらループを終了
+        }
+    }
+};

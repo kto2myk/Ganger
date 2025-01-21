@@ -5,17 +5,18 @@
             id="search-box"
             placeholder="アカウントを検索..."
             autocomplete="off"
-            style="padding-right: 30px;"
         />
         <button id="clear-search-btn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px;">×</button>
     </div>
-    <div id="search-results" style="display: none; position: absolute; background: #fff; border: 1px solid #ccc; z-index: 1000; width: 100%;">
-        <ul id="search-candidates" style="list-style: none; margin: 0; padding: 0;"></ul>
-    </div>
-    <div id="search-history-container" style="display: none;">
-        <div id="search-history-empty" style="display: none;">検索してみましょう</div>
-        <div id="search-history-list"></div>
-        <button id="clear-history-btn" style="display: none;">すべて削除</button>
+    <div id="search-results-container">
+        <div id="search-results" style="display: none; position: absolute; background: #fff; border: 1px solid #ccc; z-index: 1000; width: 100%;">
+            <ul id="search-candidates" style="list-style: none; margin: 0; padding: 0;"></ul>
+        </div>
+        <div id="search-history-container" style="display: none;">
+            <div id="search-history-empty" style="display: none;">検索してみましょう</div>
+            <div id="search-history-list"></div>
+            <button id="clear-history-btn" style="display: none;">すべて削除</button>
+        </div>
     </div>
 </div>
 
