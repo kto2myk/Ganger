@@ -140,8 +140,9 @@
       {% endfor %}
     </div>
     <div class="product-info-section">
-      <h2 class="product-name">{{product['name']}}<i class="far fa-heart like"></i></h2>
-      <p class="product-price">¥{{ product['price'] }}税込）</p>
+      <h2 class="product-name">商品名{{product['name']}}<i class="far fa-heart like"></i></h2>
+      <p class="product-price">値段　￥{{ product['price'] }}</p>
+      <p>作成時間　{{ product['created_at'] }}</p>
       <div class="product-sizes">
         <span>サイズ：</span>
         <button class="size-option">S</button>
