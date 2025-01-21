@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カート内容</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+img {
+    max-width: 100px;
+    height: auto;
+}
+
+.remove-btn {
+    background-color: #ff6666;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.remove-btn:hover {
+    background-color: #cc0000;
+}
+
+.cart-summary {
+    margin-top: 20px;
+    text-align: right;
+    font-size: 1.2em;
+}
+
+.checkout-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.checkout-btn:hover {
+    background-color: #218838;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ショッピングカート</h1>
+    </header>
+    <main>
+        {% if cart_items %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>商品画像</th>
+                        <th>商品名</th>
+                        <th>価格</th>
+                        <th>数量</th>
+                        <th>合計</th>
+                        <th>削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>
+                            <img src="{{ item.image_path }}" alt="商品画像" width="100">
+                        </td>
+                        <td>{{ item.product_name }}</td>
+                        <td>￥{{ "{:,.2f}".format(item.price) }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>￥{{ "{:,.2f}".format(item.price * item.quantity) }}</td>
+                        <td>
+                            <form action="{# {{ url_for('remove_cart_item') }} #}" method="POST">
+                                <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                                <button type="submit" class="remove-btn">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="cart-summary">
+                <p>合計金額: ￥{{ "{:,.2f}".format(cart_items|sum(attribute='price') * cart_items|sum(attribute='quantity')) }}</p>
+                <a href="{# {{ url_for('checkout') }} #}" class="checkout-btn">購入手続きへ</a>
+            </div>
+        {% else %}
+            <p>カートには商品がありません。</p>
+            <a href="{{ url_for('shop_page') }}">買い物を続ける</a>
+        {% endif %}
+    </main>
+</body>
+</html>
