@@ -133,13 +133,15 @@
   <header>
     <h1>個別商品ページ</h1>
   </header>
-  <main class="product-page">
+  <main class="product-page" data-product-id="{{ product['product_id'] }}">
     <div class="product-image-section">
-      <img src="../static/images/post_images/1_3_2.png" alt="商品画像" class="main-image">
+      {% for img_path in product['images'] %}
+        <img src="{{ img_path['img_path'] }}" alt="商品画像" class="main-image">
+      {% endfor %}
     </div>
     <div class="product-info-section">
-      <h2 class="product-name">ハーフジップ　アメリカンフットボール <i class="far fa-heart like"></i></h2>
-      <p class="product-price">¥1,990（税込）</p>
+      <h2 class="product-name">{{product['name']}}<i class="far fa-heart like"></i></h2>
+      <p class="product-price">¥{{ product['price'] }}税込）</p>
       <div class="product-sizes">
         <span>サイズ：</span>
         <button class="size-option">S</button>
@@ -181,6 +183,35 @@
         quantityValue.textContent = current - 1;
       }
     });
-  </script>
+
+    // カートに追加ボタンの処理
+    document.querySelector('.add-to-cart').addEventListener('click', async function() {
+      const productId = document.querySelector('.product-page').dataset.productId;
+      const quantity = document.querySelector('.quantity-value').textContent;
+
+      const postData = {
+        product_id: productId,
+        quantity: quantity
+      };
+
+      try {
+        const response = await fetch('/add_cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(postData)
+        });
+
+        if (response.ok) {
+          alert('カートに追加されました！');
+          document.querySelector('.add-to-cart').textContent = 'カートに追加済み';
+        } else {
+          alert('カート追加に失敗しました。');
+        }
+      } catch (error) {
+        console.error('エラー:', error);
+        alert('通信エラーが発生しました。');
+      }
+    });
+</script>
 </body>
 </html>
