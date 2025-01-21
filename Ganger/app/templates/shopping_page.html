@@ -135,11 +135,12 @@
   </header>
   <main class="product-page">
     <div class="product-image-section">
-      <img src="../static/images/post_images/1_3_2.png" alt="商品画像" class="main-image">
+      <img src="{{ img_path['img_path'] }}" alt="{{ product['name'] }}" class="main-image">
     </div>
     <div class="product-info-section">
-      <h2 class="product-name">ハーフジップ　アメリカンフットボール <i class="far fa-heart like"></i></h2>
-      <p class="product-price">¥1,990（税込）</p>
+      <h2 class="product-name">商品名{{product['name']}}<i class="far fa-heart like"></i></h2>
+      <p class="product-price">値段　￥{{ product['price'] }}</p>
+      <p>作成時間　{{ product['created_at'] }}</p>
       <div class="product-sizes">
         <span>サイズ：</span>
         <button class="size-option">S</button>
