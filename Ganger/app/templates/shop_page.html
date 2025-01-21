@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ショップページ</title>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 </head>
@@ -174,11 +173,12 @@ body {
 }
 
 .swiper-slide img {
-      width: 450px;
-      height: 300px; /*画像用意したのちにけす*/
-      object-fit: cover; 
-      margin: 0 10px;
-    }
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
 
 
 .main_content{display: flex;}
@@ -216,11 +216,14 @@ body {
     </nav>
 
 <main id="content">
-
     <div class="swiper">
         <div class="swiper-wrapper">
             {% for product in products %}
-                <div class="swiper-slide"><a href="{{ url_for('display_product', product_id=product['product_id']) }}"><img src="{{ product['img_path'] }}" alt="商品画像"></a></div>
+                <div class="swiper-slide">
+                    <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                        <img src="{{ product['img_path'] }}" alt="商品画像">
+                    </a>
+                </div>
             {% endfor %}        
         </div>
         <div class="swiper-pagination"></div>
@@ -395,27 +398,40 @@ body {
     });
 
     /*スライドショー*/
-    const swiper = new Swiper('.swiper', {
-    loop: true,
-    autoplay: {
-      delay: 5000,
-      disableOnInteraction: false,
-    },
-    direction: 'horizontal',
-
-    slidesPerView: 3,  // 3枚表示
-    centeredSlides: true,  // 中央寄せ
-    spaceBetween: 0,  // スライド間の余白
-
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true,
-    },
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev',
-    },
-  });
+    document.addEventListener('DOMContentLoaded', function() {
+        const swiper = new Swiper('.swiper', {
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            direction: 'horizontal',
+            slidesPerView: 3,
+            centeredSlides: true,
+            spaceBetween: 10,  // スライド間の余白を少し追加
+            
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            
+            // レスポンシブ設定を追加
+            breakpoints: {
+                // 768px未満の場合
+                768: {
+                    slidesPerView: 1,
+                },
+                // 768px以上の場合
+                769: {
+                    slidesPerView: 3,
+                }
+            }
+        });
+    });
 </script>
 </body>
 </html>
