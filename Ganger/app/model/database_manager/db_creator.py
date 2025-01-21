@@ -15,7 +15,7 @@ class TableManager(DatabaseConnector):
         :param Base: SQLAlchemyのBaseクラス。全てのORMモデルがこのBaseを継承する。
         """
         try:
-            Base.metadata.create_all(self.engine)
+            Base.metadata.create_all(self.engine())
             print("Tables created successfully.")
         except SQLAlchemyError as e:
             print(f"Error while creating tables: {e}")
@@ -31,11 +31,11 @@ class TableManager(DatabaseConnector):
         """
         try:
             meta = MetaData()
-            meta.reflect(bind=self.engine)
+            meta.reflect(bind=self.engine())
             
             if table_name in meta.tables:
                 table = meta.tables[table_name]
-                table.drop(self.engine)
+                table.drop(self.engine())
                 print(f"Table '{table_name}' has been dropped.")
             else:
                 print(f"Table '{table_name}' does not exist.")
@@ -49,7 +49,7 @@ class TableManager(DatabaseConnector):
         :param Base: SQLAlchemyのBaseクラス。全てのORMモデルがこのBaseを継承する。
         """
         try:
-            Base.metadata.drop_all(self.engine)
+            Base.metadata.drop_all(self.engine())
             print("Tables dropped successfully.")
         except SQLAlchemyError as e:
             print(f"Error while dropping tables: {e}")
@@ -66,7 +66,7 @@ class TableManager(DatabaseConnector):
                 sql += " NOT NULL"
 
             # データベース接続でSQL文を実行
-            with self.engine.connect() as conn:
+            with self.engine().connect() as conn:
                 conn.execute(text(sql))
                 return f"カラム '{column_name}' をテーブル '{table_name}' に追加しました。"
 
@@ -82,3 +82,14 @@ if __name__ == "__main__":
 
     # テーブル作成
     table_manager.create_tables(Base)
+
+    conn = None
+    try:
+        conn = table_manager.engine().raw_connection()
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA foreign_keys;")
+        result = cursor.fetchone()
+        print("Foreign keys enabled:", result[0])  # 1 が返れば有効
+    finally:
+        if conn:
+            conn.close()

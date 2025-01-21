@@ -1,129 +1,186 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個別商品ページ</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f9f9f9;
-        }
-        .product-container {
-            display: flex;
-            width: 900px;
-            border: 1px solid #ddd;
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .product-image {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .product-image img {
-            width: 500px;
-            height: 600px;
-            object-fit: cover;
-            margin-bottom: 10px;
-        }
-        .product-image .product-name {
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-        }
-        .product-details {
-            flex: 1;
-            padding-left: 20px;
-        }
-        .product-details .price {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            height: 100px;
-        }
-        .product-details .size-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            height: 85px;
-        }
-        .size-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .size-option .size {
-            width: 100px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f3f3f3;
-            cursor: pointer;
-        }
-        .size-option .add-to-cart {
-            width: 120px;
-            height: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .size-option .like {
-            width: 25px;
-            height: 25px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #ddd;
-            border-radius: 50%;
-            background-color: #fff;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <title>商品ページ</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #f4f4f4;
+      padding: 10px 20px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .product-page {
+      display: flex;
+      max-width: 1200px;
+      margin: 20px auto;
+      gap: 20px;
+    }
+
+    .product-image-section {
+      flex: 1;
+    }
+
+    .main-image {
+      width: 100%;
+      max-width: 500px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .thumbnail-images img {
+      width: 80px;
+      height: 80px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    .product-info-section {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .product-name {
+      font-size: 24px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .product-name .like {
+      font-size: 20px;
+      color: #888;
+      cursor: pointer;
+    }
+
+    .product-name .like.liked {
+      color: #f00;
+    }
+
+    .product-price {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .quantity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .quantity button {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .quantity span {
+      font-size: 18px;
+    }
+
+    .product-colors, .product-sizes {
+      margin-bottom: 20px;
+    }
+
+    .size-option {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-right: 10px;
+      cursor: pointer;
+      background-color: #fff;
+    }
+
+    .size-option.selected {
+      background-color: #000;
+      color: #fff;
+    }
+
+    .add-to-cart, .add-to-favorites {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      background-color: #333;
+      color: #fff;
+    }
+
+    .add-to-favorites {
+      background-color: #f4f4f4;
+      color: #333;
+    }
+  </style>
 </head>
 <body>
-    <div class="product-container">
-        <div class="product-image">
-            <img src="../static/images/product_image.png" alt="商品画像">
-            <div class="product-name">商品名</div>
-        </div>
-        <div class="product-details">
-            <div class="price">¥10,000</div>
-            <div class="size-options">
-                <div class="size-option">
-                    <div class="size">S</div>
-                    <button class="add-to-cart">カートに入れる</button>
-                    <div class="like">♡</div>
-                </div>
-                <div class="size-option">
-                    <div class="size">M</div>
-                    <button class="add-to-cart">カートに入れる</button>
-                    <div class="like">♡</div>
-                </div>
-                <div class="size-option">
-                    <div class="size">L</div>
-                    <button class="add-to-cart">カートに入れる</button>
-                    <div class="like">♡</div>
-                </div>
-            </div>
-        </div>
+  <header>
+    <h1>個別商品ページ</h1>
+  </header>
+  <main class="product-page">
+    <div class="product-image-section">
+      <img src="../static/images/post_images/1_3_2.png" alt="商品画像" class="main-image">
     </div>
+    <div class="product-info-section">
+      <h2 class="product-name">ハーフジップ　アメリカンフットボール <i class="far fa-heart like"></i></h2>
+      <p class="product-price">¥1,990（税込）</p>
+      <div class="product-sizes">
+        <span>サイズ：</span>
+        <button class="size-option">S</button>
+        <button class="size-option">M</button>
+        <button class="size-option">L</button>
+      </div>
+      <div class="quantity">
+        <button class="decrease">-</button>
+        <span class="quantity-value">1</span>
+        <button class="increase">+</button>
+      </div>
+      <div class="product-actions">
+        <button class="add-to-cart">カートに入れる</button>
+      </div>
+    </div>
+  </main>
+  <script>
+    // いいねアイコンの動作
+    document.querySelector('.like').addEventListener('click', function() {
+      this.classList.toggle('liked');
+    });
+
+    // サイズ選択の動作
+    document.querySelectorAll('.size-option').forEach(button => {
+      button.addEventListener('click', function() {
+        document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+
+    // 購入数の増減
+    const quantityValue = document.querySelector('.quantity-value');
+    document.querySelector('.increase').addEventListener('click', () => {
+      quantityValue.textContent = parseInt(quantityValue.textContent) + 1;
+    });
+    document.querySelector('.decrease').addEventListener('click', () => {
+      const current = parseInt(quantityValue.textContent);
+      if (current > 1) {
+        quantityValue.textContent = current - 1;
+      }
+    });
+  </script>
 </body>
 </html>

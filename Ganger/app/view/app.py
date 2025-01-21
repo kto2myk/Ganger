@@ -1,4 +1,4 @@
-from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify # Flaskの各種機能をインポート
+from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify,abort # Flaskの各種機能をインポート
 from flask_wtf.csrf import CSRFProtect  # CSRF保護用
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
@@ -111,7 +111,7 @@ def home():
         count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
         return render_template("temp_layout.html", posts=formatted_posts,notification_count = count_notifications)
     except Exception as e:
-        flash("投稿データの取得に失敗しました。")
+        abort(404,description="投稿データの取得に失敗しました。")
         app.logger.error(f"Failed to fetch posts: {e}")
         return redirect(url_for("login"))
     
@@ -470,10 +470,66 @@ def save_post(post_id):
         app.logger.error(f"An error occurred in save_post: {e}")
         return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
     
+@app.route("/make_post_into_product/<post_id>", methods=["POST"])
+def make_post_into_product(post_id):
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    try:
+        # フォームデータの取得
+        post_id = Validator.decrypt(post_id)
+        selected_category = request.form.get('category')
+        price = request.form.get('price')
+        product_name = request.form.get('name')
+
+        # バリデーション
+        if not selected_category:
+            return jsonify({"status": False, "message": "カテゴリを選択してください。"}), 400
+        if not price or not price.isdigit() or int(price) <= 0:
+            return jsonify({"status": False, "message": "価格を正しく入力してください（正の整数）。"}), 400
+        if not product_name or len(product_name) < 3:
+            return jsonify({"status": False, "message": "商品名は3文字以上で入力してください。"}), 400
+
+        # 商品化処理
+        shop_manager = ShopManager()
+        result = shop_manager.create_product(
+            post_id=post_id,
+            price=int(price),
+            name=product_name,
+            category_name=selected_category
+        )
+
+        # 結果に基づいてレスポンスを生成
+        if result["status"]:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        app.logger.error(f"Error in make_post_into_product: {e}")
+        return jsonify({"status": False, "message": "内部エラーが発生しました。"}), 500
+
 
 @app.route("/shop_page")
 def shop_page():
-    return render_template("shop_page.html")
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    shop_manager = ShopManager()
+    shop_data = shop_manager.get_shop_with_images(limit=10)
+
+    if shop_data is None:
+        abort(404, description="ショップページが見つかりません")
+
+    return render_template("shop_page.html", products=shop_data)      
+
+@app.route("/display_product/<product_id>")
+def display_product(product_id):
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    shop_manager = ShopManager()
+    product = shop_manager.fetch_one_product_images(product_id=product_id)
+
+    if product_id is None:
+        abort(404,description="商品が見つかりません")
+    
+    return render_template("shoppping_page.html",product=product)
+            
 
 if __name__ == "__main__":
     try:

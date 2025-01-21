@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品詳細ページ</title>
+</head>
+<body>
+    <main>
+        <h1>商品詳細</h1>
+        <p>商品名{{product['name']}}</p>
+        <p> 値段　{{ product['price'] }}￥</p>
+        <p>作成時間　{{ product['created_at'] }}</p>
+        {% for img_path in product['images'] %}
+            <img src="{{ img_path['img_path'] }}" alt="{{ product['name'] }}">
+        {% endfor %}
+
+        <p><a href="#">カートに入れる{{ product['product_id'] }}</a></p>
+    </main>
+</body>
+</html>

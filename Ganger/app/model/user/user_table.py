@@ -15,14 +15,15 @@ class UserManager(DatabaseManager):
         super().__init__()
 
 
-    def create_user(self, username: str, email: str, password: str):
+    def create_user(self, username: str, email: str, password: str,Session=None):
         """
         ユーザー作成処理を行い、成功時にセッションを登録。
         """
         randomid = str(uuid.uuid4())[:8]
         user_id = f"{username}_{randomid}"
-
+        # Session = self.make_session(Session)
         try:
+            Session = self.make_session(Session)
             # Email形式の検証
             Validator.validate_email_format(email)
 
@@ -33,7 +34,7 @@ class UserManager(DatabaseManager):
                 "email": email,
                 "password": generate_password_hash(password)
             }
-            new_user = self.insert(User, user_data, unique_check={"email": email})
+            new_user = self.insert(User, user_data, unique_check={"email": email},Session=Session)
 
             if not new_user:
                 raise ValueError("このメールアドレスは既に使用されています。")
@@ -41,32 +42,38 @@ class UserManager(DatabaseManager):
             # セッション登録
             self.register_session(new_user)
 
+            self.make_commit_or_flush(Session)
             return True, new_user
 
         except ValueError as ve:
-            print(f"[ERROR] Validation error: {ve}")
+            self.session_rollback(Session)
+            app.logger.error(f"[ERROR] Validation error: {ve}")
             self.error_log_manager.add_error(None, str(ve))
             return False, str(ve)
         except Exception as e:
-            print(f"[ERROR] Unexpected error: {e}")
+            self.session_rollback(Session)
+            app.logger.error(f"[ERROR] Unexpected error: {e}")
             self.error_log_manager.add_error(None, str(e))
             return False, str(e)
 
-    def login(self, identifier: str, password: str):
+    def login(self, identifier: str, password: str,Session=None):
         """
         メールアドレスまたはユーザーIDでログイン。成功時にセッションを登録。
         """
         try:
+            Session = self.make_session(Session)
             # ユーザー検索
-            user = self.fetch_one(User, filters={"email": identifier}) or self.fetch_one(User, filters={"user_id": identifier})
+            user = self.fetch_one(User, filters={"email": identifier},Session=Session) or self.fetch_one(User, filters={"user_id": identifier},Session=Session)
             if not user or not check_password_hash(user.password, password):
                 raise Exception("ユーザー名またはパスワードが間違っています。")
             # セッション登録
             self.register_session(user)
 
+            self.pop_and_close(Session)
             return user, None
 
         except Exception as e:
+            self.session_rollback(Session)
             self.error_log_manager.add_error(None, str(e))
             return None, str(e)
 
@@ -106,25 +113,28 @@ class UserManager(DatabaseManager):
         else:
             session["profile_image"] = url_for("static", filename="images/profile_images/default.png")
 
-    def search_users(self, query):
+    def search_users(self, query,Session=None):
         """
         指定されたクエリに基づいてユーザーを検索し、結果を返す。
         """
         try:
-            with Session(self.engine) as session:
-                users = session.query(User).filter(
-                    or_(
-                        User.user_id.ilike(f"%{query}%"),
-                        User.username.ilike(f"%{query}%")
-                    )
-                ).limit(10).all()
-                return [{"user_id": user.user_id, "username": user.username, "id": Validator.encrypt(user.id)} for user in users]
+            Session = self.make_session(Session)
+            users = Session.query(User).filter(
+                or_(
+                    User.user_id.ilike(f"%{query}%"),
+                    User.username.ilike(f"%{query}%")
+                )
+            ).limit(10).all()
+
+            self.pop_and_close(Session)
+            return [{"user_id": user.user_id, "username": user.username, "id": Validator.encrypt(user.id)} for user in users]
         except SQLAlchemyError as e:
+            self.session_rollback(Session)
             app.logger.error(f"Failed to search users: {e}")
             raise
 
         
-    def get_user_profile_with_posts(self, user_id):
+    def get_user_profile_with_posts(self, user_id,Session=None):
         """
         指定されたユーザーIDのプロフィール情報と投稿データを取得。
 
@@ -140,46 +150,50 @@ class UserManager(DatabaseManager):
             # 暗号化されたユーザーIDを復号化
             decrypted_id = Validator.decrypt(user_id)
 
-            with Session(self.engine) as session:
-                # ユーザー情報を取得
-                user = session.query(User).filter_by(id=decrypted_id).one_or_none()
-                if not user:
-                    raise ValueError("ユーザーが見つかりません。")
+            Session = self.make_session(Session)
+            # ユーザー情報を取得
+            user = Session.query(User).filter_by(id=decrypted_id).one_or_none()
+            if not user:
+                raise ValueError("ユーザーが見つかりません。")
 
-                # 投稿データを取得（投稿時間降順）
-                posts = (
-                    session.query(Post)
-                    .filter(Post.user_id == decrypted_id, Post.reply_id == None)  # NULL判定を追加
-                    .options(joinedload(Post.images))  # 画像を一度に取得
-                    .order_by(Post.post_time.desc())  # 投稿時間で降順ソート
-                    .all()
-                )
+            # 投稿データを取得（投稿時間降順）
+            posts = (
+                Session.query(Post)
+                .filter(Post.user_id == decrypted_id, Post.reply_id == None)  # NULL判定を追加
+                .options(joinedload(Post.images))  # 画像を一度に取得
+                .order_by(Post.post_time.desc())  # 投稿時間で降順ソート
+                .all()
+            )
 
-                # 投稿情報を整形
-                formatted_posts = [
-                    {
-                        "post_id": Validator.encrypt(post.post_id),
-                        "first_image": (
-                            url_for("static", filename=f"images/post_images/{post.images[0].img_path}")
-                            if post.images else None  # 最初の画像のみ取得
-                        ),
-                    }
-                    for post in posts
-                ]
-
-                # プロフィール情報を整形
-                profile_data = {
-                    "id": Validator.encrypt(user.id),
-                    "user_id": user.user_id,
-                    "username": user.username,
-                    "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}"),
-                    "posts": formatted_posts,
+            # 投稿情報を整形
+            formatted_posts = [
+                {
+                    "post_id": Validator.encrypt(post.post_id),
+                    "first_image": (
+                        url_for("static", filename=f"images/post_images/{post.images[0].img_path}")
+                        if post.images else None  # 最初の画像のみ取得
+                    ),
                 }
+                for post in posts
+            ]
 
+            # プロフィール情報を整形
+            profile_data = {
+                "id": Validator.encrypt(user.id),
+                "user_id": user.user_id,
+                "username": user.username,
+                "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}"),
+                "posts": formatted_posts,
+            }
+        
+            self.pop_and_close(Session)
             return profile_data
+        
         except SQLAlchemyError as db_error:
+            self.session_rollback(Session)
             app.logger.error(f"Database error: {db_error}")
             raise
         except Exception as e:
+            self.session_rollback(Session)
             app.logger.error(f"Unexpected error: {e}")
             raise

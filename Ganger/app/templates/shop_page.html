@@ -219,15 +219,9 @@ body {
 
     <div class="swiper">
         <div class="swiper-wrapper">
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
-          <div class="swiper-slide"><a href=""><img src="../static/images/logo_images/Ganger.png"></a></div>
+            {% for product in products %}
+                <div class="swiper-slide"><a href="{{ url_for('display_product', product_id=product['product_id']) }}"><img src="{{ product['img_path'] }}" alt="商品画像"></a></div>
+            {% endfor %}        
         </div>
         <div class="swiper-pagination"></div>
         <div class="swiper-button-next"></div>
@@ -271,9 +265,9 @@ body {
                 </div>
             </div>
         </div>
-    </div>
-      
-</main> -->
+    </div> -->
+
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -54,13 +54,14 @@ class Post(Base):
     reply_id = Column(Integer, ForeignKey('posts.post_id', ondelete="SET NULL"), nullable=True) # 返信先の投稿ID
 
     # リレーション
+    shop = relationship("Shop", back_populates="post", uselist=False,cascade="all, delete-orphan")
     author = relationship("User", back_populates="posts") # Userとのリレーション
     images = relationship("Image", back_populates="post", cascade="all, delete-orphan") # Imageとのリレーション
     likes = relationship("Like", back_populates="post", cascade="all, delete-orphan") # Likeとのリレーション
     tags = relationship("TagPost", back_populates="post", cascade="all, delete-orphan") # TagPostとのリレーション
-    replies = relationship("Post", backref="parent", remote_side=[post_id]) # Postとのリレーション
-    reposts = relationship("Repost", back_populates="post") # Repostとのリレーション
-    saved_by_users= relationship("SavedPost", back_populates="post")  # SavedPostとのリレーション
+    replies = relationship("Post", backref="parent", remote_side=[post_id],cascade="all") # Postとのリレーション
+    reposts = relationship("Repost", back_populates="post",cascade="all, delete-orphan") # Repostとのリレーション
+    saved_by_users= relationship("SavedPost", back_populates="post",cascade="all, delete-orphan")  # SavedPostとのリレーション
 
 
     
@@ -203,8 +204,10 @@ class Shop(Base):
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete='CASCADE'), nullable=True)
     name = Column(String(45), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     # リレーション
+    post = relationship("Post", back_populates="shop", uselist=False )
     cart_items = relationship("CartItem", back_populates="shop", cascade="all, delete-orphan")
     categories = relationship("ProductCategory", back_populates="product", cascade="all, delete-orphan")
     sales_items = relationship("SalesItem", back_populates="shop", cascade="all, delete-orphan")
