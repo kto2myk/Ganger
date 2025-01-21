@@ -60,7 +60,8 @@
                     <button>
                       <svg data-icon-name="search" data-style="line" icon_origin_id="20598" 
                       viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="search" class="icon line" width="24" height="24">
-                        <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M17,10a7,7,0,1,1-7-7A7,7,0,0,1,17,10Zm4,11-6-6" id="primary"></path></svg>                        
+                        <path style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1;" d="M17,10a7,7,0,1,1-7-7A7,7,0,0,1,17,10Zm4,11-6-6" id="primary"></path>
+                      </svg>                        
                       <text>&emsp;検索</text>
                     </button>
                 </a>
@@ -151,10 +152,10 @@
     {% if posts %}
       <div class="contents">
         {% for post in posts %}
-          {% if post["repost_user"] %}
-            <a href="{{ url_for('my_profile',id = post['repost_user']['id']) }}">{{ post['repost_user']['username'] }}さんがリポストしました</a>
-          {% endif %}
           <div class="post_container">
+            {% if post["repost_user"] %}
+              <a class="reposted_massage" href="{{ url_for('my_profile',id = post['repost_user']['id']) }}">{{ post['repost_user']['username'] }}さんがリポストしました</a>
+            {% endif %}
             <div class="account_info">
               <a href="{{url_for('my_profile',id = post['id'])}}"><img src="{{ post['profile_image'] }}" alt="プロフィール画像"></a>
               <p>{{ post['username'] }}</p>
