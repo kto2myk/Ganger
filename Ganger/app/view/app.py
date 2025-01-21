@@ -528,7 +528,7 @@ def display_product(product_id):
     if product_id is None:
         abort(404,description="商品が見つかりません")
     
-    return render_template("display_product.html",product=product)
+    return render_template("shoppping_page.html",product=product)
             
 
 if __name__ == "__main__":
