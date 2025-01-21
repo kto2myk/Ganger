@@ -29,20 +29,47 @@
 
     .product-image-section {
       flex: 1;
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 500px;
+      aspect-ratio: 1;
+    }
+
+    .image-slider {
+      display: flex;
+      transition: transform 0.3s ease;
+      width: 100%;
+      height: 100%;
     }
 
     .main-image {
       width: 100%;
-      max-width: 500px;
-      display: block;
-      margin-bottom: 10px;
+      height: 100%;
+      object-fit: contain;
+      flex: 0 0 100%;
     }
 
-    .thumbnail-images img {
-      width: 80px;
-      height: 80px;
-      margin-right: 10px;
+    .slider-buttons {
+      position: absolute;
+      width: calc(100% - 20px);  
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .slider-button {
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      padding: 8px 12px;
       cursor: pointer;
+      border-radius: 50%;
+      pointer-events: auto;
+      z-index: 10;
     }
 
     .product-info-section {
@@ -135,9 +162,15 @@
   </header>
   <main class="product-page" data-product-id="{{ product['product_id'] }}">
     <div class="product-image-section">
-      {% for img_path in product['images'] %}
-        <img src="{{ img_path['img_path'] }}" alt="商品画像" class="main-image">
-      {% endfor %}
+      <div class="image-slider">
+        {% for img_path in product['images'] %}
+          <img src="{{ img_path['img_path'] }}" alt="商品画像" class="main-image">
+        {% endfor %}
+      </div>
+      <div class="slider-buttons">
+        <button class="slider-button prev">&lt;</button>
+        <button class="slider-button next">&gt;</button>
+      </div>
     </div>
     <div class="product-info-section">
       <h2 class="product-name">商品名{{product['name']}}<i class="far fa-heart like"></i></h2>
@@ -213,6 +246,27 @@
         alert('通信エラーが発生しました。');
       }
     });
-</script>
+
+    // 画像スライダーの実装
+    const imageSlider = document.querySelector('.image-slider');
+    const prevButton = document.querySelector('.slider-button.prev');
+    const nextButton = document.querySelector('.slider-button.next');
+    let currentIndex = 0;
+    const totalImages = document.querySelectorAll('.main-image').length;
+
+    function updateSlider() {
+      imageSlider.style.transform = `translateX(-${currentIndex * 100}%)`;
+    }
+
+    prevButton.addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + totalImages) % totalImages;
+      updateSlider();
+    });
+
+    nextButton.addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % totalImages;
+      updateSlider();
+    });
+  </script>
 </body>
 </html>
