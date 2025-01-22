@@ -14,6 +14,20 @@ document.addEventListener('DOMContentLoaded', function () {
 //     }
 // });
 
+function setFixedSize() {
+    let button = document.getElementById("post_button");
+
+    // 画面の幅と高さ（物理的なモニターサイズに基づく）
+    let screenWidth = screen.width;
+    let screenHeight = screen.height;
+
+    // ボタンサイズをモニターサイズの固定割合で設定（例: 画面幅の5%）
+    button.style.width = (screenWidth * 0.05) + "px";
+    button.style.height = (screenWidth * 0.05) + "px";
+}
+
+// 初回読み込み時に設定
+setFixedSize();
 
 window.onload = function() {
     const spinner = document.getElementById('loading');
@@ -37,7 +51,10 @@ window.onload = function() {
     for (let path in pageToIdMap) {
         if (currentUrl.startsWith(path)) {
             let id = document.getElementById(pageToIdMap[path]);
-            if (id) id.style.fill = "#000";
+            if (id) id.style.fill = "#a46a9a"
+                    id.style.stroke = "#a46a9a";
+                    id.style.text = "#a46a9a";
+
             break;  // 一致が見つかったらループを終了
         }
     }
