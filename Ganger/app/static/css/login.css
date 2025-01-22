@@ -1,1 +1,150 @@
-aaaaaaa
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+    background-image: url(../images/back_images/background.png);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.wrapper {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+    position: relative;
+}
+
+.wrapper .logo {
+    width: 100px;
+    height: 100px;
+    background-image: url(../images/back_images/logo.png);
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.wrapper .logo #login-text {
+    font-size: 1.5em;
+    color: black;
+    margin-top: 120px;
+    animation: fadeIn 1s ease-in-out forwards;
+    animation-delay: 1s;
+}
+
+h1 {
+    position: absolute;
+    width: 100%;
+    top: 20%;
+    left: 0;
+    text-align: center;
+    font-size: 2em;
+    line-height: 1.5;
+}
+
+h1 span {
+    display: inline-block;
+    animation: fadeInLeft 1s ease-in-out forwards;
+}
+
+h1 span:nth-child(1) { animation-delay: 0s; }
+h1 span:nth-child(2) { animation-delay: 0.1s; }
+h1 span:nth-child(3) { animation-delay: 0.2s; }
+h1 span:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+#login-text {
+    animation: fadeOut 1s ease-in-out forwards;
+    animation-delay: 2s;
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+    }
+}
+
+#ganger-text {
+    opacity: 0;
+    animation: fadeInUp 1s ease-in-out forwards;
+    animation-delay: 3s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.loginBox {
+    margin-top: 150px; /* 調整されたログインフォームの位置 */
+    width: 90%; /* 横幅を広げる */
+    max-width: 500px; /* 最大幅の制限 */
+    background-color: #F0F4F6;
+    border: 1px solid #BfD6E1;
+    border-radius: 10px; /* 少し丸みを強調 */
+    color: #444;
+    padding: 30px; /* 余白を増加 */
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* より目立つ影を追加 */
+}
+
+.loginInput {
+    width: calc(100% - 40px); /* 両端に20pxずつの空きを作る */
+    padding: 12px; /* 入力フィールドを少し大きく */
+    margin: 0 auto 15px auto; /* 上下のマージンを均等にし、中央揃え */
+    border: 1px solid #D2D9DC;
+    border-radius: 5px; /* 角を丸くする */
+    display: block; /* ブロック要素として扱う */
+}
+
+.loginInput:focus {
+    border-color: #B7D4EA;
+    outline: none;
+    box-shadow: 0 0 10px #B7D4EA;
+}
+
+.loginBtn {
+    background: linear-gradient(to bottom, #007BFF, #85CFEE);
+    border: 1px solid #98CCE7;
+    border-radius: 25px; /* 丸みを強調 */
+    color: #fff;
+    padding: 15px 60px; /* ボタンを大きく */
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 1em; /* テキストサイズを調整 */
+}
+
+.loginBtn:hover {
+    background: linear-gradient(to top, #007BFF, #85CFEE);
+}
+
+.forgetLink{
+    font-size: 12px;
+}
+
+.newset {
+    font-size: 16px;
+    padding-top: 12px;
+}
