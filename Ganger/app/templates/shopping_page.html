@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <title>商品ページ</title>
   <style>
@@ -197,7 +196,7 @@
     document.querySelector('.like').addEventListener('click', function() {
       this.classList.toggle('liked');
     });
-
+  
     // サイズ選択の動作
     document.querySelectorAll('.size-option').forEach(button => {
       button.addEventListener('click', function() {
@@ -205,7 +204,7 @@
         this.classList.add('selected');
       });
     });
-
+  
     // 購入数の増減
     const quantityValue = document.querySelector('.quantity-value');
     document.querySelector('.increase').addEventListener('click', () => {
@@ -217,36 +216,41 @@
         quantityValue.textContent = current - 1;
       }
     });
-
+  
     // カートに追加ボタンの処理
     document.querySelector('.add-to-cart').addEventListener('click', async function() {
+      const addToCartBtn = document.querySelector('.add-to-cart');
+      addToCartBtn.disabled = true;  // ボタンを無効化して二重送信防止
+  
       const productId = document.querySelector('.product-page').dataset.productId;
       const quantity = document.querySelector('.quantity-value').textContent;
-
+  
+      // POSTデータの作成（JSON形式）
       const postData = {
         product_id: productId,
-        quantity: quantity
+        quantity: parseInt(quantity)
       };
-
+  
       try {
         const response = await fetch('/add_cart', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(postData)
         });
-
+  
         if (response.ok) {
-          alert('カートに追加されました！');
-          document.querySelector('.add-to-cart').textContent = 'カートに追加済み';
+          window.location.href = '/after_add_cart';  // 成功時にページ遷移
         } else {
           alert('カート追加に失敗しました。');
+          addToCartBtn.disabled = false;  // 失敗時にボタンを再有効化
         }
       } catch (error) {
         console.error('エラー:', error);
         alert('通信エラーが発生しました。');
+        addToCartBtn.disabled = false;
       }
     });
-
+  
     // 画像スライダーの実装
     const imageSlider = document.querySelector('.image-slider');
     const prevButton = document.querySelector('.slider-button.prev');
@@ -268,5 +272,5 @@
       updateSlider();
     });
   </script>
-</body>
+  </body>
 </html>

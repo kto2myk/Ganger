@@ -530,6 +530,49 @@ def display_product(product_id):
     
     return render_template("shopping_page.html",product=product)
 
+@app.route('/add_cart', methods=['POST'])
+def add_to_cart():
+    try:
+        from Ganger.app.model.shop.shop_manager import ShopManager
+        shop_manager = ShopManager()
+        # リクエストのJSONデータを取得
+
+        data = request.get_json()
+        product_id = data.get('product_id')
+        quantity = int(data.get('quantity'))
+
+        # バリデーションチェック
+        if not product_id or quantity <= 0:
+            return jsonify({"message": "無効な入力です"}), 400
+
+        # 商品をカートに追加
+        result = shop_manager.add_cart_item(user_id=session.get('id'),product_id=product_id,quantity=quantity)
+        if result:
+            app.logger.info(f"商品 が {quantity} 個カートに追加されました。")
+            return jsonify({"message": "カートに追加されました"}), 200
+        else:
+            app.logger.error("カート追加に失敗しました")
+            return jsonify({"message": "カート追加に失敗しました"}), 400
+
+    except Exception as e:
+        return jsonify({"message": "エラーが発生しました", "error": str(e)}), 500
+    
+@app.route("/after_add_cart")
+def after_add_cart():
+    return render_template("after_add_cart.html")   
+
+@app.route("/display_cart")
+def display_cart():
+    user_id = session.get("id")  # セッションからユーザーIDを取得
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    shop_manager = ShopManager()
+
+    success, cart_items = shop_manager.fetch_cart_items(user_id)
+
+    if not success:
+        abort(500, discription = "カートの取得に失敗しました。")
+
+    return render_template("display_cart.html", cart_items=cart_items)    
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)

@@ -1,6 +1,6 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
-from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like
+from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like,Cart,CartItem
 from Ganger.app.model.validator.validate import Validator
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
@@ -205,3 +205,142 @@ class ShopManager(DatabaseManager):
             self.session_rollback(Session)
             app.logger.error(f"error発生:{e}")
             return None
+        
+    def add_cart_item(self, user_id, product_id, quantity,Session=None):
+        try:
+            user_id = Validator.decrypt(user_id)
+            product_id = Validator.decrypt(product_id)
+            Session = self.make_session(Session)
+
+            # 1. ユーザーのカートを取得（なければ新規作成）
+            cart = self.fetch_one(model=Cart, filters={"user_id":user_id},Session=Session)
+            if not cart:
+                cart = self.insert(model=Cart,data={"user_id":user_id},Session=Session)
+                Session.commit() # 新規カート作成後に即コミット
+                app.logger.info(f"commit, new cart created,user_id: {user_id}")
+
+            # 2. カート内の商品がすでに存在するか確認
+            cart_item = self.fetch_one(model=CartItem,filters={"cart_id":cart.cart_id,"product_id":product_id},Session=Session)
+
+            # 商品が既にカートにある場合、数量を増やす
+            if cart_item:
+                cart_item.quantity += quantity
+            else:
+                #商品がカートにない場合、新規追加
+                self.insert(model=CartItem,data={"cart_id":cart.cart_id,"product_id":product_id,"quantity":quantity},Session=Session)
+            # 3. 変更を保存
+            self.make_commit_or_flush(Session)
+            return {"status": "success", "message": "カートに商品を追加しました"}
+        
+        except SQLAlchemyError as e:
+            Session.rollback()  # エラー時にロールバック
+            app.logger.error(f"カートへの商品追加中にエラーが発生しました: {e}")
+            return None
+        
+    def delete_cart_items(self, user_id, product_ids,Session=None):
+        """
+        指定されたカートアイテムを削除し、すべて削除された場合にカートも削除する。
+
+        :param user_id: ユーザーID
+        :param cart_item_ids: 削除対象のカートアイテムIDのリスト
+        :return: 処理結果（成功/エラー）
+        """
+        try:
+            user_id = Validator.decrypt(user_id)
+            
+            Session = self.make_session(Session)
+            # ユーザーのカートを取得
+            cart = Session.query(Cart).filter_by(user_id=user_id).first()
+            if not cart:
+                app.logger.warning("カートが見つかりませんでした")
+                self.session_rollback(Session) #rollback
+                return None
+
+            # 単一値の場合、リストに変換
+            if isinstance(product_ids, int):
+                product_ids = [product_ids]
+            product_ids = map(Validator.decrypt, product_ids)  # 復号化
+
+
+            # 指定されたカートアイテムを削除
+            deleted_count = (
+                Session.query(CartItem)
+                .filter(CartItem.cart_id == cart.cart_id, CartItem.product_id.in_(product_ids))
+                .delete(synchronize_session=False)
+            )
+            Session.flush()
+            # 残りのカートアイテム数を確認
+            remaining_items = Session.query(CartItem).filter_by(cart_id=cart.cart_id).count()
+
+            if remaining_items == 0:
+                # すべての商品が削除された場合、カート自体を削除
+                self.delete(model=Cart,filters={"user_id": user_id},Session=Session)
+                self.make_commit_or_flush(Session)
+                return {"status": "success", "message": "カートが削除されました"}
+            self.make_commit_or_flush(Session)
+            return {"status": "success", "message": f"{deleted_count} アイテムが削除されました"}
+
+        except SQLAlchemyError as e:
+            app.logger.error(f"カートアイテム削除中にエラーが発生しました: {e}")
+            Session.rollback()
+            return None   
+        
+    def fetch_cart_items(self, user_id, Session=None):
+        """
+        指定されたユーザーIDに紐づくカートアイテムを取得し、辞書形式で返却する
+
+        :param user_id: ユーザーのID
+        :param Session: SQLAlchemyセッション（オプション）
+        :return: (成功フラグ, カートアイテムのリスト（辞書型）) or (False, None)
+        """
+        try:
+            Session = self.make_session(Session)
+            user_id = Validator.decrypt(user_id)
+            # ユーザーのカートを取得（リレーション不要）
+            cart = self.fetch_one(
+                model=Cart,
+                filters={"user_id": user_id},
+                Session=Session
+            )
+
+            if not cart:
+                self.pop_and_close(Session)
+                return False, None  # カートが存在しない場合
+
+            # カートアイテムを取得 (リレーションを一括ロード)
+            cart_items = (
+                Session.query(CartItem)
+                .filter(CartItem.cart_id == cart.cart_id)
+                .options(
+                    joinedload(CartItem.shop).joinedload(Shop.post).joinedload(Post.images)
+                )
+                .all()
+            )
+
+            if not cart_items:
+                self.pop_and_close(Session)
+                return True, []  # カートはあるが商品が入っていない
+
+            # 辞書型のデータ構造を作成
+            cart_data = [
+                {
+                    "cart_id": Validator.encrypt(item.cart_id),
+                    "product_id": Validator.encrypt(item.product_id),
+                    "post_id": Validator.encrypt(item.shop.post.post_id) if item.shop.post else None,
+                    "product_name": item.shop.name,
+                    "price": float(item.shop.price),
+                    "quantity": item.quantity,
+                    "image_path": url_for("static", filename=f"images/post_images/{item.shop.post.images[0].img_path}")
+                                if item.shop.post and item.shop.post.images else None,
+                    "added_at": item.added_at.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                for item in cart_items
+            ]
+
+            self.pop_and_close(Session)
+            return True, cart_data
+
+        except SQLAlchemyError as e:
+            self.session_rollback(Session)
+            app.logger.error(f"カートアイテム取得エラー: {e}")
+            return False, None
