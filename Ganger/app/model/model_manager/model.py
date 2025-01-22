@@ -1,7 +1,11 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Numeric, Date, UniqueConstraint, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Numeric, Enum, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, relationship
+from datetime import datetime
+import pytz
 
-class Base(DeclarativeBase):
+JST = pytz.timezone('Asia/Tokyo')
+
+class Base(DeclarativeBase):    
     pass
 
 
@@ -14,7 +18,7 @@ class User(Base):
     username = Column(String(16), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
-    create_time = Column(DateTime, default=func.now())
+    create_time = Column(DateTime, default=lambda: datetime.now(JST))
     real_name = Column(String(45))
     address = Column(String(60))
     bio = Column(String(160)) # プロフィール文
@@ -50,7 +54,7 @@ class Post(Base):
     post_id = Column(Integer, primary_key=True) # 投稿ID
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False) # 投稿者のユーザーID
     body_text = Column(Text, nullable=False) # 投稿本文
-    post_time = Column(DateTime, default=func.now()) # 投稿日時
+    post_time = Column(DateTime, default=lambda: datetime.now(JST)) # 投稿日時
     reply_id = Column(Integer, ForeignKey('posts.post_id', ondelete="SET NULL"), nullable=True) # 返信先の投稿ID
 
     # リレーション
@@ -223,7 +227,7 @@ class Cart(Base):
 
     cart_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=lambda: datetime.now(JST))
 
     user = relationship("User", back_populates="cart")
     cart_items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
@@ -240,7 +244,7 @@ class CartItem(Base):
     cart_id = Column(Integer, ForeignKey('carts.cart_id', ondelete="CASCADE"), nullable=False)
     product_id = Column(Integer, ForeignKey('shops.product_id', ondelete="CASCADE"), nullable=False)
     quantity = Column(Integer, nullable=False)
-    added_at = Column(DateTime, default=func.now())
+    added_at = Column(DateTime, default=lambda: datetime.now(JST))
 
     cart = relationship("Cart", back_populates="cart_items")
     shop = relationship("Shop", back_populates="cart_items")
@@ -249,23 +253,23 @@ class CartItem(Base):
         return f"<CartItem(item_id={self.item_id}, cart_id={self.cart_id}, product_id={self.product_id}, quantity={self.quantity})>"
 
 
-# Saleテーブル
 class Sale(Base):
     __tablename__ = 'sales'
 
     sale_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
     total_amount = Column(Numeric(10, 2), nullable=False)
-    date = Column(DateTime, default=func.now())
+    date = Column(DateTime, default=lambda: datetime.now(JST))
+    payment_method = Column(String(50), nullable=False)
+    payment_status = Column(Enum('unpaid', 'paid', 'failed', name="payment_status"), default='unpaid')
 
     user = relationship("User", back_populates="sales")
     items = relationship("SalesItem", back_populates="sale", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Sale(sale_id={self.sale_id}, user_id={self.user_id}, total_amount={self.total_amount})>"
+        return f"<Sale(sale_id={self.sale_id}, user_id={self.user_id}, total_amount={self.total_amount}, status={self.status})>"
 
 
-# SalesItemテーブル
 class SalesItem(Base):
     __tablename__ = 'sales_items'
 
@@ -274,6 +278,8 @@ class SalesItem(Base):
     product_id = Column(Integer, ForeignKey('shops.product_id', ondelete="CASCADE"), nullable=False)
     quantity = Column(Integer, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    discount = Column(Numeric(10, 2), default=0.00, nullable=False)
+    subtotal = Column(Numeric(10, 2), nullable=False)
 
     sale = relationship("Sale", back_populates="items")
     shop = relationship("Shop", back_populates="sales_items")
@@ -281,13 +287,12 @@ class SalesItem(Base):
     def __repr__(self):
         return f"<SalesItem(sale_item_id={self.sale_item_id}, sale_id={self.sale_id}, product_id={self.product_id}, quantity={self.quantity})>"
 
-
 # MessageRoomテーブル
 class MessageRoom(Base):
     __tablename__ = 'message_rooms'
 
     room_id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=lambda: datetime.now(JST))
 
     room_members = relationship("RoomMember", back_populates="room", cascade="all, delete-orphan")
     messages = relationship("Message", back_populates="room", cascade="all, delete-orphan")
@@ -319,7 +324,7 @@ class Message(Base):
     sender_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     content = Column(Text, nullable=False)
-    sent_time = Column(DateTime, default=func.now())
+    sent_time = Column(DateTime, default=lambda: datetime.now(JST))
 
     # リレーション
     room = relationship("MessageRoom", back_populates="messages")
@@ -356,7 +361,7 @@ class Notification(Base):
     notification_type_id = Column(Integer, ForeignKey('notification_types.notification_type_id', ondelete='CASCADE'), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     contents = Column(Text, nullable=False)
-    sent_time = Column(DateTime, default=func.now())
+    sent_time = Column(DateTime, default=lambda: datetime.now(JST))
 
     # リレーション
     user = relationship("User", back_populates="notifications")
@@ -409,7 +414,7 @@ class NotificationDetail(Base):
     notification_type_id = Column(Integer, ForeignKey('notification_types.notification_type_id', ondelete='CASCADE'), nullable=False)
     related_item_id = Column(Integer, nullable=True)  # 関連項目（例: PostID, CartID）
     related_item_type = Column(String(50), nullable=True)  # 関連項目の種類（例: "post", "cart"）
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=lambda: datetime.now(JST))
 
     # リレーション
     notification = relationship("Notification", back_populates="details")
