@@ -181,8 +181,97 @@ body {
 
 
 
-.main_content{display: flex;}
-.shop_select{display: flex;}
+.main_content{
+    display: flex;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.serch_item { grid-area: 1 / 1 / 6 / 2; }
+    .populer_item { grid-area: 1 / 2 / 6 / 5; }
+    .div3 { grid-area: 1 / 5 / 6 / 6; }
+
+.shop_select{
+    display: flex;
+    padding: 0 0 25px 0;
+    gap: 30px;
+    overflow-x: auto;
+    padding: 10px;
+}
+
+.shop_select > div {
+    width: 170px;
+    height: 335px;
+    flex-shrink: 0;
+}
+
+.shop_select img {
+    width: 170px;
+    height: 200px;
+    object-fit: contain;
+}
+
+.shop_select h5,
+.shop_select p,
+.shop_select h4 {
+    margin: 0;
+    text-align: left;
+    padding: 15px 15px 0 15px;
+}
+
+.shop_select a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.product-name {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.product-price {
+    color: #333;
+    font-weight: bold;
+}
+
+.main_content {
+    margin: 35px 10px 0px 10px;
+    padding: 40px 0px 30px 0px;
+}
+
+.search_item {
+    width: 180px;
+}
+
+/* 検索項目が横並びになるように調整 */
+.search_item select,
+.search_item input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 検索ボタンのスタイリング */
+.search_item button {
+    width: 100%;
+    padding: 8px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search_item button:hover {
+    background-color: #45a049;
+}
 </style>
 
 
@@ -231,44 +320,132 @@ body {
         <div class="swiper-button-prev"></div>
     </div>
 
-    <!-- <div class="main_content">
+    <div class="main_content">
 
-        <div>
+        <div class="serch_item">
             <h2>探す</h2>
             <ul>
                 <li>
-                    <a href=""><p>ブランド</p></a>
-                    <a href=""><p>ショップ</p></a>
+                    <a href=""><p>製作者</p></a>
+                    <a href=""><p>ジャンル</p></a>
                     <a href=""><p>ランキング</p></a>
                     <a href=""><p>古着</p></a>
                 </li>
             </ul>
         </div>
             
-        <div>
+        <div class="populer_item">
             <h2>人気アイテム</h2>
             <div class="shop_select">
-                <div>
-                    <a href=""><img src="../static/images/logo_images/Ganger.png" alt=""></a>
-                    <h4>ZARA</h4>
-                    <p>ワンピース</p>
-                    <h3>￥11,759</h3>
+                <div class="goods">
+                    <!-- {% for product in products %}
+                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                            <img src="{{ product['img_path'] }}" alt="商品画像">
+                            <h4 class="product-name">{{ product['name'] }}</h4>
+                            <h3 class="product-price">￥{{ product['price'] }}</h3>
+                        </a>
+                    {% endfor %} -->
+                    <div>
+                        <img src="../static/images/logo_images/Ganger.png" alt="">
+                    </div>
+                    <div>
+                        <h5>製作者</h5>
+                    </div>
+                    <div>
+                        <p>ジャンル</p>
+                    </div>
+                    <div>
+                        <h4>値段</h4>
+                    </div>
                 </div>
-                <div>
-                    <a href=""><img src="../static/images/logo_images/Ganger.png" alt=""></a>
-                    <h4>ZARA</h4>
-                    <p>ワンピース</p>
-                    <h3>￥11,759</h3>
+                <div class="goods">
+                    <!-- {% for product in products %}
+                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                            <img src="{{ product['img_path'] }}" alt="商品画像">
+                            <h4 class="product-name">{{ product['name'] }}</h4>
+                            <h3 class="product-price">￥{{ product['price'] }}</h3>
+                        </a>
+                    {% endfor %} -->
+                    <div>
+                        <img src="../static/images/logo_images/Ganger.png" alt="">
+                    </div>
+                    <div>
+                        <h5>製作者</h5>
+                    </div>
+                    <div>
+                        <p>ジャンル</p>
+                    </div>
+                    <div>
+                        <h4>値段</h4>
+                    </div>
                 </div>
-                <div>
-                    <a href=""><img src="../static/imgaes/logo_images/Ganger.png" alt=""></a>
-                    <h4>ZARA</h4>
-                    <p>ワンピース</p>
-                    <h3>￥11,759</h3>
+                <div class="goods">
+                    <!-- {% for product in products %}
+                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                            <img src="{{ product['img_path'] }}" alt="商品画像">
+                            <h4 class="product-name">{{ product['name'] }}</h4>
+                            <h3 class="product-price">￥{{ product['price'] }}</h3>
+                        </a>
+                    {% endfor %} -->
+                    <div>
+                        <img src="../static/images/logo_images/Ganger.png" alt="">
+                    </div>
+                    <div>
+                        <h5>製作者</h5>
+                    </div>
+                    <div>
+                        <p>ジャンル</p>
+                    </div>
+                    <div>
+                        <h4>値段</h4>
+                    </div>
+                </div>
+                <div class="goods">
+                    <!-- {% for product in products %}
+                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                            <img src="{{ product['img_path'] }}" alt="商品画像">
+                            <h4 class="product-name">{{ product['name'] }}</h4>
+                            <h3 class="product-price">￥{{ product['price'] }}</h3>
+                        </a>
+                    {% endfor %} -->
+                    <div>
+                        <img src="../static/images/logo_images/Ganger.png" alt="">
+                    </div>
+                    <div>
+                        <h5>製作者</h5>
+                    </div>
+                    <div>
+                        <p>ジャンル</p>
+                    </div>
+                    <div>
+                        <h4>値段</h4>
+                    </div>
+                </div>
+                <div class="goods">
+                    <!-- {% for product in products %}
+                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                            <img src="{{ product['img_path'] }}" alt="商品画像">
+                            <h4 class="product-name">{{ product['name'] }}</h4>
+                            <h3 class="product-price">￥{{ product['price'] }}</h3>
+                        </a>
+                    {% endfor %} -->
+                    <div>
+                        <img src="../static/images/logo_images/Ganger.png" alt="">
+                    </div>
+                    <div>
+                        <h5>製作者</h5>
+                    </div>
+                    <div>
+                        <p>ジャンル</p>
+                    </div>
+                    <div>
+                        <h4>￥値段</h4>
+                    </div>
                 </div>
             </div>
         </div>
-    </div> -->
+        <div class="div3"></div>
+    </div>
 
 </main>
 
