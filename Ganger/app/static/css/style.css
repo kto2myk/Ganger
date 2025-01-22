@@ -42,21 +42,20 @@ header {
     height: 7dvh;
     width: 100%;
     display: flex;
-    justify-content: space-between;
     z-index: 9998;
     background-color: #fff;
-    /* border-bottom: solid 1px #999; */
+    /* border-bottom: solid 1px #ddd; */
 }
 
 #hidden {
-  width: 15dvh;
+  width: 19vw;
 }
 
 .couple_of_links {
   display: flex;
-  margin: 0 auto;
-  width: 30%;
-  height: 100%;;
+  margin: 0;
+  width: 60dvw;
+  height: 100%;
 }
 
 .couple_of_links a {
@@ -69,13 +68,14 @@ header {
   color: black;
   background-color: #fff;
   border: solid 1px;
-  border-color: #999;
+  border-color: #ddd;
   transition: all, 0.2s;
 }
 
 .couple_of_links a:hover {
-  background-color: #999;
+  background-color: #ddd;
 }
+
 .replace_button {
   display: inline-flex;
   align-items: center;
@@ -85,7 +85,7 @@ header {
   text-decoration: none;
   color: black;
   background-color: #fff;
-  border: solid 1px #999;
+  border: solid 1px #ddd;
   transition: all, 0.2s;
 }
 
@@ -109,7 +109,7 @@ header {
     width: 19vw;
     margin: 0 auto;
     z-index: 9999;
-    border-right: solid 1px #999;
+    border-right: solid 1px #ddd;
     background-color: #fff;
     
     justify-content: space-between;
@@ -196,7 +196,7 @@ header {
 }
 
 #nav_activated{
-  fill: #000;
+  fill: #a46a9a;
   stroke-width: 1;
 }
 
@@ -241,6 +241,7 @@ header {
     padding-left: 19vw;
     height: auto;
     width: 60dvw;
+    background-color: #fafafa;
     /* border: solid 1px #999; */
 }
 
@@ -257,7 +258,7 @@ header {
     margin: 0 auto;
     padding-top: 5dvh;
     padding-bottom: 5dvh;
-    border-bottom: solid 1px #999;
+    border-bottom: solid 1px #ddd;
 }
 
 .account_info {
@@ -286,8 +287,9 @@ header {
     width: 100%;
     height: auto;
     margin: auto;
-    border: solid 1px #999;
+    border: solid 1px #ddd;
     border-radius: 2%;
+    background-color: #fff;
 }
 
 .splide__slide img {
@@ -349,7 +351,7 @@ button.saved {
     right: 0dvh;
     top: 10dvh;
     height: 40dvh;
-    width: 20dvw;
+    width: 19dvw;
     margin: 0 auto;
 }
 
@@ -369,7 +371,7 @@ button.saved {
 #search-box {
   height: 3vh;
   background-color: #eee;
-  border: solid 1px #999;
+  border: solid 1px #ddd;
   border-radius: 5vh;
 }
 
@@ -377,7 +379,7 @@ button.saved {
   margin: 5%;
   width: 90%;
   height: 50dvh;
-  border: solid 1px #999;
+  border: solid 1px #ddd;
   border-radius: 2%;
 }
 
@@ -397,9 +399,9 @@ button.saved {
     display: none;
   }
 
-  #post_button {
+  /* #post_button {
     display: none;
-  }
+  } */
 }
 
 .footer_container {
