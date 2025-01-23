@@ -2,6 +2,32 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.splide').forEach(function (carousel) {
     new Splide(carousel).mount();
     });
+
+    let currentUrl = location.pathname;
+            
+    // URLに応じた対象IDと新しいIDをマッピング
+    const idMapping = {
+        "/home": { oldId: "home", newId: "nav-active" },
+        "/search": { oldId: "search", newId: "nav-active" },
+        "/notification": { oldId: "notification", newId: "nav-active" },
+        "/settings": { oldId: "settings", newId: "nav-active" },
+        "/message": { oldId: "message", newId: "nav-active" },
+        "/profile": { oldId: "profile", newId: "nav-active" },
+        "/design": { oldId: "design", newId: "nav-active" }
+    };
+
+    // 対応するページが存在すれば、IDを変更
+    if (idMapping[currentUrl]) {
+        let element = document.getElementById(idMapping[currentUrl].oldId);
+        if (element) {
+            element.id = idMapping[currentUrl].newId;
+            console.log(`IDが "${idMapping[currentUrl].oldId}" から "${element.id}" に変更されました`);
+        } else {
+            console.warn(`要素 "${idMapping[currentUrl].oldId}" が見つかりません`);
+        }
+    } else {
+        console.warn("対応するページがありません");
+    }
 });
 
 
@@ -32,30 +58,4 @@ setFixedSize();
 window.onload = function() {
     const spinner = document.getElementById('loading');
     spinner.classList.add('loaded');
-
-    // パスと対応するIDのマッピング
-    const pageToIdMap = {
-        "/home": "home",
-        "/search": "search",
-        "/notification": "notification",
-        "/settings": "settings",
-        "/massage": "massage",
-        "/profile": "profile",
-        "/create-design": "login"
-    };
-
-    // 現在のパスを取得
-    let currentUrl = location.pathname;
-
-    // マッピングに一致する要素があれば、fill を変更
-    for (let path in pageToIdMap) {
-        if (currentUrl.startsWith(path)) {
-            let id = document.getElementById(pageToIdMap[path]);
-            if (id) id.style.fill = "#a46a9a"
-                    id.style.stroke = "#a46a9a";
-                    id.style.text = "#a46a9a";
-
-            break;  // 一致が見つかったらループを終了
-        }
-    }
 };

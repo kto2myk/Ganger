@@ -76,12 +76,20 @@ header {
   background-color: #ddd;
 }
 
+.link_to_shopsite {
+  margin: 0;
+  width: 20vw;
+  position: relative;
+}
+
 .replace_button {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 15dvh;
-  height: 100%;
+  height: 100%;;
+  position: absolute;
+  right: 0;
   text-decoration: none;
   color: black;
   background-color: #fff;
@@ -173,7 +181,7 @@ header {
 
 ::before{
   content: attr(data-count);
-  color: red;
+  color: #a46a9a;
   position: absolute;
   font: 600 14px/1 sans-serif;
   font-variant-numeric: tabular-nums;
@@ -195,9 +203,15 @@ header {
   background-color: #ddd;
 }
 
-#nav_activated{
+#home {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#nav-active {
   fill: #a46a9a;
-  stroke-width: 1;
+  stroke: #a46a9a;
+  color: #a46a9a;
+  stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5
 }
 
 /* ウィンドウ縮小時 */
