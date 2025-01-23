@@ -1,5 +1,5 @@
 let loading = false;
-let hasMoreData = True;
+let hasMoreData = true;
 let offset = 0;
 const limit = 10;
 let totalPost = 0;
@@ -21,15 +21,17 @@ async function loadMoreData() {
     document.getElementById("loading").style.display = "block";
 
     try {
-        let response = await fetch(`/fetch_post?offset=${offset}?limit=${limit}`);
+        let response = await fetch(`/fetch_post?offset=${offset}&limit=${limit}`);
         let result = await response.json();
 
         if (response.ok) {
             totalPost = result.total;
+            console.log(`合計投稿数: ${totalPost}`);
             result.items.forEach(item => {
                 let div = document.createElement("div");
                 div.classList.add("item");
-                div.textContent = item.content;
+                div.textContent = `Post: ${item}`;
+                console.log(`Post: ${item}`);
                 document.getElementById("content").appendChild(div);
             });
             offset += limit;

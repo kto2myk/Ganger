@@ -120,13 +120,13 @@ def fetch_post():
     try:        
         test_post = [x for x in range(1,100)]
 
-        offset = request.args.get("offset", 0)
-        limit = request.args.get("limit", 10) + offset
+        offset = int(request.args.get("offset", 0))
+        limit = int(request.args.get("limit", 10)) + offset
         sliced_post = test_post[offset:limit]
         has_more = len(test_post) > limit
-        return jsonify({"items":test_post},{"total":len(test_post)},{"has_more":has_more}200)
+        return jsonify({"items":sliced_post,"total":len(test_post),"has_more":has_more}), 200
     except Exception as e:
-        return jsonify({"error":str(e)},500)
+        return jsonify({"error":str(e)}), 500
 
 @app.route('/password-reset', methods=['GET', 'POST'])
 def password_reset():
