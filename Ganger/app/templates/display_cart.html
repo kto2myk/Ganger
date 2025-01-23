@@ -74,9 +74,11 @@ img {
     </header>
     <main>
         {% if cart_items %}
+        <form action="{#{{ url_for('checkout') }}#}" method="POST">
             <table>
                 <thead>
                     <tr>
+                        <th>選択</th>
                         <th>商品画像</th>
                         <th>商品名</th>
                         <th>価格</th>
@@ -89,6 +91,9 @@ img {
                     {% for item in cart_items %}
                     <tr>
                         <td>
+                            <input type="checkbox" name="selected_products" value="{{ item.product_id }}">
+                        </td>
+                        <td>
                             <img src="{{ item.image_path }}" alt="商品画像" width="100">
                         </td>
                         <td>{{ item.product_name }}</td>
@@ -96,7 +101,7 @@ img {
                         <td>{{ item.quantity }}</td>
                         <td>￥{{ "{:,.2f}".format(item.price * item.quantity) }}</td>
                         <td>
-                            <form action="{# {{ url_for('remove_cart_item') }} #}" method="POST">
+                            <form action="{#{{ url_for('remove_cart_item') }}#}" method="POST">
                                 <input type="hidden" name="product_id" value="{{ item.product_id }}">
                                 <button type="submit" class="remove-btn">削除</button>
                             </form>
@@ -107,9 +112,9 @@ img {
             </table>
             <div class="cart-summary">
                 <p>合計金額: ￥{{ "{:,.2f}".format(cart_items|sum(attribute='price') * cart_items|sum(attribute='quantity')) }}</p>
-                <a href="{# {{ url_for('checkout') }} #}" class="checkout-btn">購入手続きへ</a>
+                <button type="submit" class="checkout-btn">購入手続きへ</button>
             </div>
-        {% else %}
+        </form>        {% else %}
             <p>カートには商品がありません。</p>
             <a href="{{ url_for('shop_page') }}">買い物を続ける</a>
         {% endif %}

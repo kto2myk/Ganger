@@ -573,6 +573,11 @@ def display_cart():
         abort(500, discription = "カートの取得に失敗しました。")
 
     return render_template("display_cart.html", cart_items=cart_items)    
+
+
+# @app.route("/checkout", methods=["GET","POST"])
+# def check_out():
+    
 if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=80, debug=True)
