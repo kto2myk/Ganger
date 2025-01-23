@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% for items in history %}
+        {{ items['payment_method'] }}
+        
+        {% for item in items %}
+            {{ item['name'] }}
+            {{ item['price'] }}
+            {{ item['quantity'] }}
+            {{ item['total'] }}
+</body>
+</html>

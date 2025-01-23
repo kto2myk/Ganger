@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Numeric, Enum, UniqueConstraint, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Numeric, Float,Enum, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, relationship
 from datetime import datetime
 import pytz
@@ -208,6 +208,7 @@ class Shop(Base):
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete='CASCADE'), nullable=True)
     name = Column(String(45), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    discount = Column(Float, default=0.0)  # 割引カラムを追加
     created_at = Column(DateTime, default=func.now(), nullable=False)
 
     # リレーション

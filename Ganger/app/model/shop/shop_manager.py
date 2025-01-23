@@ -247,7 +247,7 @@ class ShopManager(DatabaseManager):
         :return: 処理結果（成功/エラー）
         """
         try:
-            user_id = Validator.decrypt(user_id)
+            # user_id = Validator.decrypt(user_id)
             
             Session = self.make_session(Session)
             # ユーザーのカートを取得
@@ -260,7 +260,7 @@ class ShopManager(DatabaseManager):
             # 単一値の場合、リストに変換
             if isinstance(product_ids, int):
                 product_ids = [product_ids]
-            product_ids = map(Validator.decrypt, product_ids)  # 復号化
+            # product_ids = map(Validator.decrypt, product_ids)  # 復号化
 
 
             # 指定されたカートアイテムを削除
@@ -418,6 +418,7 @@ class ShopManager(DatabaseManager):
             sale = self.insert(model=Sale,data=sale_data,Session=Session)
             if not sale:
                 self.session_rollback(Session)
+                app.logger.error("Sale record creation failed")
                 return {"success": False, "message": "購入処理中にエラーが発生しました。"}
             
             # 4. 子レコード（SalesItem）の作成（共通処理）
@@ -428,7 +429,6 @@ class ShopManager(DatabaseManager):
                     "product_id": item.product_id,
                     "quantity": item.quantity,
                     "price": float(item.shop.price),
-                    "discount": float(item.shop.discount),
                     "subtotal": float(Validator.calc_subtotal(
                         price=item.shop.price, 
                         quantity=item.quantity, 
@@ -442,18 +442,21 @@ class ShopManager(DatabaseManager):
                 app.logger.info("sale_items completely created")
 
             except SQLAlchemyError as e:
-                app.logger.error(e)
                 self.session_rollback(Session)
+                app.logger.error(e)
+                return {"success": False, "message": "購入処理中にエラーが発生しました。"}
 
             # 5. カートアイテムの削除
             delete_result = self.delete_cart_items(user_id=user_id, product_ids=[item.product_id for item in cart_items], Session=Session)
 
             if not delete_result or delete_result["status"] != "success":
                 self.session_rollback(Session)
+                app.logger.error("Failed to delete cart items")
                 raise Exception("カートアイテムの削除に失敗しました")
             
             # 6. トランザクションの確定
             self.make_commit_or_flush(Session)
+            app.logger.info("購入が完了しました")
             return {"success": True, "message": "購入が完了しました。", "sale_id": sale['sale_id']}
         
         except SQLAlchemyError as e:
@@ -463,3 +466,57 @@ class ShopManager(DatabaseManager):
         except Exception as e:
             self.session_rollback(Session)
             return {"success": False, "message": f"予期しないエラー: {str(e)}"}
+
+
+    def fetch_sales_history(self, user_id, limit=10,Session=None):
+        """
+        ユーザーの購入履歴を取得する
+
+        :param user_id: ユーザーID
+        :param limit: 取得数の上限
+        :param Session: SQLAlchemyセッション（オプション）
+        :return: 購入履歴のリスト（辞書型） or None
+        """
+        try:
+            Session = self.make_session(Session)
+            user_id = Validator.decrypt(user_id)
+            sales = (
+                Session.query(Sale)
+                .filter_by(user_id=user_id).options(joinedload(Sale.items).joinedload(SalesItem.shop).joinedload(Shop.post).joinedload(Post.images))
+                .order_by(desc(Sale.date))
+                .limit(limit)
+                .all()
+            )
+
+            if not sales:
+                self.session_rollback(Session)
+                return {"status": False, "message": "購入履歴はありません。"}
+
+            # 購入履歴を整形
+            sales_data = [
+                {
+                    "sale_id": Validator.encrypt(sale.sale_id),
+                    "total_amount": float(sale.total_amount),
+                    "payment_method": sale.payment_method,
+                    "payment_status": sale.payment_status,
+                    "created_at": sale.date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "items": [
+                        {   "item_id": Validator.encrypt(item.sale_item_id),
+                            "product_id": Validator.encrypt(item.product_id),
+                            "product_name": item.shop.name,
+                            "quantity": item.quantity,
+                            "price": float(item.price),
+                            "subtotal": float(item.subtotal)
+                        }
+                        for item in sale.sales_items
+                    ]
+                }
+                for sale in sales
+            ]
+            self.pop_and_close(Session)
+            return sales_data
+
+        except SQLAlchemyError as e:
+            self.session_rollback(Session)
+            app.logger.error(f"購入履歴取得中にエラーが発生しました: {e}")
+            return None

@@ -587,8 +587,40 @@ def display_cart():
     return render_template("display_cart.html", cart_items=cart_items)    
 
 
-# @app.route("/checkout", methods=["GET","POST"])
-# def check_out():
+@app.route("/checkout", methods=["GET","POST"])
+def check_out():
+    from Ganger.app.model.shop.shop_manager import ShopManager
+    shop_manager = ShopManager()
+    try:
+        if request.method == "POST":
+            user_id = Validator.decrypt(session.get("id"))
+            #payment_method = request.form.get("payment_method") credit card
+            check_out_items = map(Validator.decrypt,request.form.getlist("selected_products"))
+            result = shop_manager.check_out(selected_cart_item_ids=check_out_items,user_id=user_id,payment_method="credit card")
+            if result['success']:
+                return redirect(url_for("complete_checkout"))
+            else:
+                abort(400,description="チェックアウトに失敗しました")
+        else:
+            return redirect("home")  ### ここは後で変更する
+    except Exception as e:
+        app.logger.error(f"エラー: {e}")
+        return abort(500,description="チェックアウトに失敗しました")
+    
+@app.route("/complete_checkout")
+def complete_checkout():
+    try:
+        from Ganger.app.model.shop.shop_manager import ShopManager
+        shop_manager = ShopManager()
+        user_id = session.get("id")
+        result = shop_manager.fetch_sales_history(user_id=user_id)
+        if not result:
+            return render_template("complete_checkout.html",history = None)
+        return render_template("complete_checkout.html",history = result)
+
+    except Exception as e:
+        app.logger.error(f"エラー: {e}")
+        return abort(500,description="サーバーエラーが発生しました")
     
 if __name__ == "__main__":
     try:

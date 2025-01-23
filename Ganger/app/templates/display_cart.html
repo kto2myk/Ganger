@@ -74,7 +74,7 @@ img {
     </header>
     <main>
         {% if cart_items %}
-        <form action="{#{{ url_for('checkout') }}#}" method="POST">
+        <form action="{{ url_for('check_out') }}" method="POST">
             <table>
                 <thead>
                     <tr>
