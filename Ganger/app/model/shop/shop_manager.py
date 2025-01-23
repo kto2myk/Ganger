@@ -1,10 +1,11 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
-from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like,Cart,CartItem
+from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like,Cart,CartItem,Sale,SalesItem
 from Ganger.app.model.validator.validate import Validator
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
+from decimal import Decimal
 from flask import current_app as app, session,url_for
 
 
@@ -339,8 +340,126 @@ class ShopManager(DatabaseManager):
 
             self.pop_and_close(Session)
             return True, cart_data
-
+        
         except SQLAlchemyError as e:
             self.session_rollback(Session)
             app.logger.error(f"カートアイテム取得エラー: {e}")
             return False, None
+
+    def update_cart_quantity(self, user_id, product_id, new_quantity):
+        """
+        カート内の商品数量を更新
+
+        :param user_id: ユーザーID
+        :param product_id: 商品ID
+        :param new_quantity: 新しい数量
+        :return: 更新結果（成功/失敗）
+        """
+        try:
+            Session = self.make_session()
+            cart_item = Session.query(CartItem).filter_by(user_id=user_id, product_id=product_id).first()
+
+            if cart_item:
+                cart_item.quantity = new_quantity
+                Session.commit()
+                return {"success": True, "message": "カートの数量が更新されました"}
+            else:
+                return {"success": False, "message": "商品がカートに見つかりません"}
+        except Exception as e:
+            Session.rollback()
+            return {"success": False, "message": f"エラー: {str(e)}"}
+
+
+    def check_out(self, selected_cart_item_ids, user_id, payment_method,Session=None):
+        """
+        選択されたカートアイテムIDの商品のみ購入処理を行う
+
+        Args:
+            selected_cart_item_ids (list): 選択されたカートアイテムIDのリスト
+            user_id (int): ユーザーID
+            payment_method (str): 選択された決済方法（例: 'credit_card', 'paypal'）
+
+        Returns:
+            dict: 購入結果（成功/失敗）
+        """
+        try:
+            Session = self.make_session()
+            
+            # 1. 選択されたカートアイテムの取得
+            cart_items = Session.query(CartItem).options(
+                joinedload(CartItem.shop)
+            ).filter(CartItem.item_id.in_(selected_cart_item_ids)).all()
+
+            if not cart_items:
+                self.session_rollback(Session)
+                message = "選択された商品が見つかりません。"
+                app.logger.warning(message) # ログ出力
+                return {"success": False, "message":message}
+
+            # 2. クエリ結果が単一かリストかを動的に判定しつつ、トータルの合算を計算
+            total_amount = (
+                (single_item := cart_items[0]) and 
+                (Validator.calc_subtotal(price= single_item.shop.price,quantity=single_item.quantity,discount=single_item.shop.discount))
+                if len(cart_items) == 1 
+                else sum(
+                    (Validator.calc_subtotal(price=item.shop.price,quantity=item.quantity,discount=item.shop.discount))
+                    for item in cart_items
+                )
+            )
+
+            # 3. Sale レコードの作成（親テーブル）
+            sale_data={
+                "user_id":user_id,
+                "total_amount":total_amount,
+                "payment_method":payment_method,
+                "payment_status":'unpaid',
+                }
+
+            sale = self.insert(model=Sale,data=sale_data,Session=Session)
+            if not sale:
+                self.session_rollback(Session)
+                return {"success": False, "message": "購入処理中にエラーが発生しました。"}
+            
+            # 4. 子レコード（SalesItem）の作成（共通処理）
+            try:
+                sales_items_data = [
+                {
+                    "sale_id": sale['sale_id'],
+                    "product_id": item.product_id,
+                    "quantity": item.quantity,
+                    "price": float(item.shop.price),
+                    "discount": float(item.shop.discount),
+                    "subtotal": float(Validator.calc_subtotal(
+                        price=item.shop.price, 
+                        quantity=item.quantity, 
+                        discount=item.shop.discount
+                    ))
+                }
+                for item in cart_items
+            ]
+                
+                Session.bulk_insert_mappings(SalesItem, sales_items_data)
+                app.logger.info("sale_items completely created")
+
+            except SQLAlchemyError as e:
+                app.logger.error(e)
+                self.session_rollback(Session)
+
+            # 5. カートアイテムの削除
+            delete_result = self.delete_cart_items(user_id=user_id, product_ids=[item.product_id for item in cart_items], Session=Session)
+
+            if not delete_result or delete_result["status"] != "success":
+                self.session_rollback(Session)
+                raise Exception("カートアイテムの削除に失敗しました")
+            
+            # 6. トランザクションの確定
+            self.make_commit_or_flush(Session)
+            return {"success": True, "message": "購入が完了しました。", "sale_id": sale['sale_id']}
+        
+        except SQLAlchemyError as e:
+            self.session_rollback(Session)
+            return {"success": False, "message": f"購入処理中にエラーが発生しました: {str(e)}"}
+
+        except Exception as e:
+            self.session_rollback(Session)
+            return {"success": False, "message": f"予期しないエラー: {str(e)}"}

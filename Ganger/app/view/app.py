@@ -115,6 +115,18 @@ def home():
         app.logger.error(f"Failed to fetch posts: {e}")
         return redirect(url_for("login"))
     
+@app.route("/fetch_post", methods=["GET"])
+def fetch_post():
+    try:        
+        test_post = [x for x in range(1,100)]
+
+        offset = request.args.get("offset", 0)
+        limit = request.args.get("limit", 10) + offset
+        sliced_post = test_post[offset:limit]
+        has_more = len(test_post) > limit
+        return jsonify({"items":test_post},{"total":len(test_post)},{"has_more":has_more}200)
+    except Exception as e:
+        return jsonify({"error":str(e)},500)
 
 @app.route('/password-reset', methods=['GET', 'POST'])
 def password_reset():
