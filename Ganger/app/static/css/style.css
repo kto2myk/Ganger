@@ -76,27 +76,6 @@ header {
   background-color: #ddd;
 }
 
-.link_to_shopsite {
-  margin: 0;
-  width: 20vw;
-  position: relative;
-}
-
-.replace_button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 15dvh;
-  height: 100%;;
-  position: absolute;
-  right: 0;
-  text-decoration: none;
-  color: black;
-  background-color: #fff;
-  border: solid 1px #ddd;
-  transition: all, 0.2s;
-}
-
 .replace_button:hover {
   background-color: #a46a9a;
 }
@@ -129,9 +108,27 @@ header {
   height: 50px;
 }
 
+.link_to_shopsite {
+  margin: 0;
+  width: 20vw;
+  height: 5vh;
+}
+
+.replace_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15dvh;
+  height: 100%;
+  text-decoration: none;
+  color: black;
+  background-color: #fff;
+  border: solid 1px #ddd;
+  transition: all, 0.2s;
+}
 
 .side_bar ul {
-    margin-top: 17dvh;
+    margin-top: 13dvh;
     padding: 0;
     width: 100%;
     height: 70%;
@@ -204,6 +201,34 @@ header {
 }
 
 #home {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#search {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#notification {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#settings {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#message {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#cart {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#profile {
+  fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
+}
+
+#design {
   fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
 }
 
@@ -362,15 +387,16 @@ button.saved {
 
 .right_bar {
     position: fixed;
+    z-index: 9999;
     right: 0dvh;
-    top: 10dvh;
+    top: 0dvh;
     height: 40dvh;
     width: 19dvw;
     margin: 0 auto;
 }
 
 #search-container {
-  margin: 5%;
+  margin: 2%;
   width: 90%;
 }
 
@@ -390,7 +416,7 @@ button.saved {
 }
 
 .trend_container {
-  margin: 5%;
+  margin: 2%;
   width: 90%;
   height: 50dvh;
   border: solid 1px #ddd;
