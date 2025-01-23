@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     # TableManagerインスタンスを作成
     table_manager = TableManager()
-
+    # table_manager.drop_table(table_name="sales_items")
     # テーブル作成
     table_manager.create_tables(Base)
 

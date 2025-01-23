@@ -168,3 +168,22 @@ class Validator:
     def to_json(obj):
         import json
         return json.dumps(obj)
+    
+@staticmethod
+def calc_subtotal(price, quantity, discount):
+    from decimal import Decimal
+
+    # 安全な型変換と検証
+    try:
+        price = Decimal(price)
+        quantity = int(quantity)
+        discount = Decimal(discount)
+
+        if quantity < 0 or price < 0 or discount < 0:
+            raise ValueError("価格、数量、割引は正の値である必要があります")
+
+        return price * quantity - Decimal(quantity * discount)
+
+    except (ValueError, TypeError) as e:
+        print(f"エラー: {e}")
+        raise  # エラーを再度スロー
