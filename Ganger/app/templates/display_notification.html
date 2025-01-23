@@ -1,27 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifications</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .notification {
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            background-color: #f9f9f9;
-        }
-        .notification.read {
-            background-color: #e9e9e9;
-        }
-    </style>
-</head>
-<body>
+{% extends "extends/extends_base.html" %}
+{% block title %}Notifications/Ganger{% endblock %}
+{% block content %}
+<div class="contents">
     <h1>Notifications</h1>
     {% if notifications %}
         {% for notification in notifications %}
@@ -54,5 +34,5 @@
     {% else %}
         <p>通知はありません。</p>
     {% endif %}
-</body>
-</html>
+</div>
+{% endblock %}

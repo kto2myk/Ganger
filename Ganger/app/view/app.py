@@ -109,7 +109,7 @@ def home():
         formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id)
         # 未読通知の数を取得
         count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
-        return render_template("temp_layout.html", posts=formatted_posts,notification_count = count_notifications)
+        return render_template("home.html", posts=formatted_posts,notification_count = count_notifications)
     except Exception as e:
         abort(404,description="投稿データの取得に失敗しました。")
         app.logger.error(f"Failed to fetch posts: {e}")

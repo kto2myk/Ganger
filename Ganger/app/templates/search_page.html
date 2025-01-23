@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>検索結果</title>
-    <link rel="stylesheet" href="../static/css/style.css">
-</head>
-<body>
+{% extends "extends/extends_base.html" %}
+{% block content %}
+<div class="contents">
     {% include 'components/component_search.html' %}
 
     <div id="search-tabs">
@@ -59,7 +53,6 @@
             <h1>検索してみましょう。</h1>
         {% endif %}
     </div>
-        
+</div>
     <script src="{{ url_for('static', filename='js/SearchPage.js') }}"></script>
-</body>
-</html>
+{% endblock %}

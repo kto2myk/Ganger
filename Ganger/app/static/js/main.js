@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     let currentUrl = location.pathname;
+
+    console.log(`現在のURL: ${currentUrl}`);
             
     // URLに応じた対象IDと新しいIDをマッピング
     const idMapping = {
@@ -12,22 +14,22 @@ document.addEventListener('DOMContentLoaded', function () {
         "/notification": { oldId: "notification", newId: "nav-active" },
         "/settings": { oldId: "settings", newId: "nav-active" },
         "/message": { oldId: "message", newId: "nav-active" },
-        "/profile": { oldId: "profile", newId: "nav-active" },
+        "/cart": { oldId: "cart", newId: "nav-active" },
+        "/my_profile": { oldId: "profile", newId: "nav-active" },
         "/design": { oldId: "design", newId: "nav-active" }
     };
 
     // 対応するページが存在すれば、IDを変更
-    if (idMapping[currentUrl]) {
-        let element = document.getElementById(idMapping[currentUrl].oldId);
-        if (element) {
-            element.id = idMapping[currentUrl].newId;
-            console.log(`IDが "${idMapping[currentUrl].oldId}" から "${element.id}" に変更されました`);
-        } else {
-            console.warn(`要素 "${idMapping[currentUrl].oldId}" が見つかりません`);
-        }
-    } else {
-        console.warn("対応するページがありません");
-    }
+    for (let key in idMapping) {
+        if (currentUrl.startsWith(key)) {
+            console.log(`URL: ${currentUrl}`);
+            let element = document.getElementById(idMapping[key].oldId);
+
+            if (element) {
+                element.id = idMapping[key].newId;
+            };
+        };
+    };
 });
 
 
@@ -45,7 +47,6 @@ function setFixedSize() {
 
     // 画面の幅と高さ（物理的なモニターサイズに基づく）
     let screenWidth = screen.width;
-    let screenHeight = screen.height;
 
     // ボタンサイズをモニターサイズの固定割合で設定（例: 画面幅の5%）
     button.style.width = (screenWidth * 0.05) + "px";
@@ -53,9 +54,9 @@ function setFixedSize() {
 }
 
 // 初回読み込み時に設定
-setFixedSize();
 
 window.onload = function() {
     const spinner = document.getElementById('loading');
     spinner.classList.add('loaded');
+    setFixedSize();
 };
