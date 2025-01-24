@@ -217,9 +217,9 @@ class ShopManager(DatabaseManager):
             cart = self.fetch_one(model=Cart, filters={"user_id":user_id},Session=Session)
             if not cart:
                 cart = self.insert(model=Cart,data={"user_id":user_id},Session=Session)
-                Session.commit() # 新規カート作成後に即コミット
-                app.logger.info(f"commit, new cart created,user_id: {user_id}")
-
+                app.logger.info(f"new cart created,user_id: {user_id}")
+                cart = self.fetch_one(model=Cart, filters={"user_id":user_id},Session=Session)
+                
             # 2. カート内の商品がすでに存在するか確認
             cart_item = self.fetch_one(model=CartItem,filters={"cart_id":cart.cart_id,"product_id":product_id},Session=Session)
 
@@ -234,9 +234,12 @@ class ShopManager(DatabaseManager):
             return {"status": "success", "message": "カートに商品を追加しました"}
         
         except SQLAlchemyError as e:
-            Session.rollback()  # エラー時にロールバック
+            Session.rollback(Session)  # エラー時にロールバック
             app.logger.error(f"カートへの商品追加中にエラーが発生しました: {e}")
             return None
+        except Exception as e:
+            Session.rollback(Session)
+            app.logger.error(f"予期しないエラー: {e}")
         
     def delete_cart_items(self, user_id, product_ids,Session=None):
         """
