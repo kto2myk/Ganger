@@ -261,5 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
     });
 });

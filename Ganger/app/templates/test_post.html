@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規投稿作成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #f8d3e0;
+            padding: 20px;
+            border-radius: 10px;
+            width: 600px;
+            text-align: center;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #4e2a51;
+        }
+
+        .upload-area {
+            border: 2px dashed #4e2a51;
+            padding: 20px;
+            margin-top: 20px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #4e2a51;
+            font-size: 18px;
+        }
+        .btn {
+            background-color: #794e76;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .preview-container {
+            display: none;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            height: 400px;
+        }
+
+        .preview-slider {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .preview-image {
+            flex: 0 0 100%;
+            height: 400px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .prev-btn {
+            left: 10px;
+        }
+
+        .next-btn {
+            right: 10px;
+        }
+
+        .indicator {
+            text-align: center;
+            margin-top: 10px;
+            color: #4e2a51;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="openModal" class="btn">投稿を作成</button>
+
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <h2>新規投稿を作成</h2>
+            <div id="uploadArea" class="upload-area">ここに写真や動画をドラッグ</div>
+            <button id="selectFile" class="btn">コンピューターから選択</button>
+            <div id="previewContainer" class="preview-container">
+                <button id="prevBtn" class="nav-btn prev-btn">&#10094;</button>
+                <div id="previewSlider" class="preview-slider"></div>
+                <button id="nextBtn" class="nav-btn next-btn">&#10095;</button>
+            </div>
+            <div id="indicator" class="indicator"></div>
+            <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        </div>
+    </div>
+
+    <script>
+        let currentIndex = 0;
+        let totalImages = 0;
+
+        document.getElementById('openModal').addEventListener('click', () => {
+            document.getElementById('postModal').style.display = 'flex';
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('postModal').style.display = 'none';
+            document.getElementById('previewSlider').innerHTML = '';
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('uploadArea').style.display = 'flex';
+            document.getElementById('selectFile').style.display = 'block';
+            document.getElementById('indicator').innerHTML = '';
+            currentIndex = 0;
+        });
+
+        document.getElementById('selectFile').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            handleFiles(event.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 6) {
+                alert('最大6枚までアップロードできます');
+                return;
+            }
+            document.getElementById('uploadArea').style.display = 'none';
+            document.getElementById('selectFile').style.display = 'none';
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('previewSlider').innerHTML = '';
+            totalImages = files.length;
+
+            for (const file of files) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('preview-image');
+                    document.getElementById('previewSlider').appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+            updateSlider();
+        }
+
+        function updateSlider() {
+            document.getElementById('previewSlider').style.transform = `translateX(-${currentIndex * 100}%)`;
+            updateIndicator();
+        }
+
+        function updateIndicator() {
+            document.getElementById('indicator').innerHTML = `${currentIndex + 1} / ${totalImages}`;
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateSlider();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentIndex < totalImages - 1) {
+                currentIndex++;
+                updateSlider();
+            }
+        });
+    </script>
+</body>
+</html>
