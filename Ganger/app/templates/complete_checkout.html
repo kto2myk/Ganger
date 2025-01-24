@@ -3,16 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Purchase History</title>
 </head>
 <body>
-    {% for items in history %}
-        {{ items['payment_method'] }}
-        
-        {% for item in items %}
-            {{ item['name'] }}
-            {{ item['price'] }}
-            {{ item['quantity'] }}
-            {{ item['total'] }}
+    <h1>購入履歴</h1>
+    {% for sale in history %}
+        <h2>支払い方法: {{ sale['payment_method'] }}</h2>
+        <p>合計金額: ¥{{ sale['total_amount'] }}</p>
+        <p>支払いステータス: {{ sale['payment_status'] }}</p>
+        <p>購入日: {{ sale['created_at'] }}</p>
+
+        <h3>購入アイテム</h3>
+        <ul>
+            {% for item in sale['items'] %}
+                <li>
+                    <strong>商品名:</strong> {{ item['product_name'] }} <br>
+                    <strong>価格:</strong> ¥{{ item['price'] }} <br>
+                    <strong>数量:</strong> {{ item['quantity'] }} <br>
+                    <strong>小計:</strong> ¥{{ item['subtotal'] }} <br>
+
+                    {% if item['image_url'] %}
+                        <img src="{{ item['image_url'] }}" alt="{{ item['product_name'] }}" width="150">
+                    {% else %}
+                        <p>画像がありません</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+        <hr>
+    {% endfor %}
 </body>
 </html>

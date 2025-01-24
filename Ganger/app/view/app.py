@@ -417,7 +417,6 @@ def notifications():
     notification_manager = NotificationManager()
     try:
         notifications = notification_manager.get_notifications_for_user(session["id"])
-        app.logger.info(f"Notifications: {notifications}")
     except Exception as e:
         app.logger.error(f"Failed to fetch notifications: {e}")
         flash("通知の取得中にエラーが発生しました。")
@@ -582,7 +581,7 @@ def display_cart():
     success, cart_items = shop_manager.fetch_cart_items(user_id)
 
     if not success:
-        abort(500, discription = "カートの取得に失敗しました。")
+        abort(500, description = "カートの取得に失敗しました。")
 
     return render_template("display_cart.html", cart_items=cart_items)    
 
@@ -621,6 +620,10 @@ def complete_checkout():
     except Exception as e:
         app.logger.error(f"エラー: {e}")
         return abort(500,description="サーバーエラーが発生しました")
+    
+@app.route("/test")
+def test():
+    return render_template("test.html")
     
 if __name__ == "__main__":
     try:

@@ -297,35 +297,33 @@ class ShopManager(DatabaseManager):
         try:
             Session = self.make_session(Session)
             user_id = Validator.decrypt(user_id)
-            # ユーザーのカートを取得（リレーション不要）
-            cart = self.fetch_one(
-                model=Cart,
-                filters={"user_id": user_id},
-                Session=Session
+
+            # ユーザーのカートを取得し、一括ロードを適用
+            cart = (
+                Session.query(Cart)
+                .filter(Cart.user_id == user_id)
+                .options(
+                    joinedload(Cart.cart_items)
+                    .joinedload(CartItem.shop)
+                    .joinedload(Shop.post)
+                    .joinedload(Post.images)
+                )
+                .first()
             )
 
             if not cart:
-                self.pop_and_close(Session)
-                return False, None  # カートが存在しない場合
+                self.session_rollback(Session)
+                return True, []  # カートが存在しない場合
 
-            # カートアイテムを取得 (リレーションを一括ロード)
-            cart_items = (
-                Session.query(CartItem)
-                .filter(CartItem.cart_id == cart.cart_id)
-                .options(
-                    joinedload(CartItem.shop).joinedload(Shop.post).joinedload(Post.images)
-                )
-                .all()
-            )
-
-            if not cart_items:
-                self.pop_and_close(Session)
+            if not cart.cart_items:
+                self.session_rollback(Session)
                 return True, []  # カートはあるが商品が入っていない
 
-            # 辞書型のデータ構造を作成
+            # カートデータの整形
             cart_data = [
                 {
                     "cart_id": Validator.encrypt(item.cart_id),
+                    "item_id": Validator.encrypt(item.item_id), # カートアイテムID
                     "product_id": Validator.encrypt(item.product_id),
                     "post_id": Validator.encrypt(item.shop.post.post_id) if item.shop.post else None,
                     "product_name": item.shop.name,
@@ -335,12 +333,12 @@ class ShopManager(DatabaseManager):
                                 if item.shop.post and item.shop.post.images else None,
                     "added_at": item.added_at.strftime("%Y-%m-%d %H:%M:%S")
                 }
-                for item in cart_items
+                for item in cart.cart_items
             ]
 
             self.pop_and_close(Session)
             return True, cart_data
-        
+
         except SQLAlchemyError as e:
             self.session_rollback(Session)
             app.logger.error(f"カートアイテム取得エラー: {e}")
@@ -501,14 +499,16 @@ class ShopManager(DatabaseManager):
                     "payment_status": sale.payment_status,
                     "created_at": sale.date.strftime("%Y-%m-%d %H:%M:%S"),
                     "items": [
-                        {   "item_id": Validator.encrypt(item.sale_item_id),
+                        {
+                            "item_id": Validator.encrypt(item.sale_item_id),
                             "product_id": Validator.encrypt(item.product_id),
                             "product_name": item.shop.name,
                             "quantity": item.quantity,
                             "price": float(item.price),
-                            "subtotal": float(item.subtotal)
-                        }
-                        for item in sale.sales_items
+                            "subtotal": float(item.subtotal),
+                            "image_url": url_for('static', filename=f"images/post_images/{item.shop.post.images[0].img_path}") 
+                            if item.shop.post.images else None}
+                        for item in sale.items
                     ]
                 }
                 for sale in sales
