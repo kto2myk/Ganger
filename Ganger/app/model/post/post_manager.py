@@ -233,88 +233,134 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Error in get_post_details: {e}")
             raise
 
-    def search_tags(self, query,Session=None):
-
+    def search_tags(self, query, Session=None):
         try:
             Session = self.make_session(Session)
-            # タグの検索
+
+            # タグの検索（部分一致）
             tags = Session.query(TagMaster).filter(
                 TagMaster.tag_text.ilike(f"%{query}%")
             ).all()
 
             print(f"Query: {query}, Tags Found: {[tag.tag_text for tag in tags]}")  # デバッグログ
 
+            results = []
             if tags:
-                tag_ids = [tag.tag_id for tag in tags]
-                # タグに紐づくPOSTを取得
-                posts = Session.query(Post).join(TagPost).filter(
-                    TagPost.tag_id.in_(tag_ids)
-                ).all()
+                for tag in tags:
+                    # タグに紐づく投稿数をカウント
+                    post_count = Session.query(Post).join(TagPost).filter(
+                        TagPost.tag_id == tag.tag_id
+                    ).count()
 
-                # 結果をフォーマット
-                results = []
-                for post in posts:
-                    # POSTに関連する最初の画像を取得
-                    first_image = Session.query(Image).filter(
-                        Image.post_id == post.post_id
-                    ).order_by(Image.img_order).first()  # 画像の順序を考慮
+                    # タグに紐づく投稿を最大30件取得
+                    posts = (
+                        Session.query(Post)
+                        .join(TagPost)
+                        .filter(TagPost.tag_id == tag.tag_id)
+                        .limit(30)
+                        .all()
+                    )
+
+                    formatted_posts = []
+                    for post in posts:
+                        # 各投稿の最初の画像を取得（存在すれば）
+                        first_image = (
+                            Session.query(Image)
+                            .filter(Image.post_id == post.post_id)
+                            .order_by(Image.img_order)
+                            .first()
+                        )
+
+                        formatted_posts.append({
+                            "post_id": Validator.encrypt(post.post_id),
+                            "body_text": post.body_text,
+                            "post_time": Validator.calculate_time_difference(post.post_time),
+                            "image_url": url_for('static', filename=f"images/post_images/{first_image.img_path}") if first_image else None
+                        })
 
                     results.append({
-                        "post_id": Validator.encrypt(post.post_id),
-                        "body_text": post.body_text,
-                        "post_time": post.post_time,
-                        "tag_texts": [tag.tag_text for tag in tags if tag.tag_id in [tp.tag_id for tp in post.tags]],  # POSTのタグ名
-                        "image_url": url_for('static', filename=f"images/post_images/{first_image.img_path}") if first_image else None
+                        "tag_text": tag.tag_text,  # タグ名
+                        "post_count": post_count,  # タグに紐づく投稿数
+                        "posts": formatted_posts  # 投稿リスト（最大30件）
                     })
-                self.pop_and_close(Session)
-                return results
-            return []
+
+            self.pop_and_close(Session)
+            return results
+
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(f"error in search Tags:{e}")
-    
+            app.logger.error(f"Error in search_tags: {e}")
+            return []    
 
-    def search_categories(self, query,Session=None):
+    def search_categories(self, query, Session=None):
         try:
             Session = self.make_session(Session)
-            # カテゴリーの検索
-            categories = Session.query(CategoryMaster).filter(
-                CategoryMaster.category_name.ilike(f"%{query}%")
-            ).all()
 
-            if categories:
-                category_ids = [category.category_id for category in categories]
-                
-                # カテゴリーに紐づく商品を取得
-                products = Session.query(Shop).join(ProductCategory).filter(
-                    ProductCategory.category_id.in_(category_ids)
-                ).all()
+            # 1. カテゴリー名を部分一致検索し、候補リストを取得
+            categories = (
+                Session.query(CategoryMaster)
+                .filter(CategoryMaster.category_name.ilike(f"%{query}%"))
+                .all()
+            )
 
-                # 商品に紐づくPOSTを取得
-                post_ids = [product.post_id for product in products if product.post_id]
-                posts = Session.query(Post).filter(Post.post_id.in_(post_ids)).all()
+            if not categories:
+                app.logger.info(f"No categories found for query: {query}")
+                return []
 
-                # 結果をフォーマット
-                results = []
-                for post in posts:
-                    # POSTに関連する最初の画像を取得
-                    first_image = Session.query(Image).filter(
-                        Image.post_id == post.post_id
-                    ).order_by(Image.img_order).first()  # 画像の順序を考慮
+            # カテゴリー名のみの結果リスト
+            category_results = [{"category_name": category.category_name, "post_count": 0, "posts": []} for category in categories]
 
-                    results.append({
-                        "post_id": Validator.encrypt(post.post_id),
-                        "body_text": post.body_text,
-                        "post_time": post.post_time,
-                        "category_names": [category.category_name for category in categories if category.category_id in [pc.category_id for pc in post.categories]],  # POSTのカテゴリ名
-                        "image": first_image.img_path if first_image else None  # 最初の画像
-                    })
-                self.pop_and_close(Session)
-                return results
-            return []
+            category_ids = [category.category_id for category in categories]
+            app.logger.info(f"Category IDs found: {category_ids}")
+
+            # 2. カテゴリーに紐づく投稿を画像とともに一括取得
+            results = (
+                Session.query(
+                    CategoryMaster.category_name,
+                    Shop.product_id,
+                    Post.post_id,
+                    Post.body_text,
+                    Post.post_time,
+                    Image.img_path
+                )
+                .join(ProductCategory, CategoryMaster.category_id == ProductCategory.category_id)
+                .join(Shop, Shop.product_id == ProductCategory.product_id)
+                .join(Post, Post.post_id == Shop.post_id)
+                .outerjoin(Image, Image.post_id == Post.post_id)  # 画像がない場合も考慮
+                .filter(CategoryMaster.category_id.in_(category_ids))
+                .order_by(Image.img_order)
+                .all()
+            )
+
+            app.logger.info(f"Total posts retrieved: {len(results)}")
+
+            # 投稿データの整形
+            post_data = {}
+            for category_name, product_id,post_id, body_text, post_time, img_path  in results:
+                if post_id not in post_data:
+                    post_data[post_id] = {
+                        "post_id": Validator.encrypt(post_id),
+                        "product_id": Validator.encrypt(product_id),
+                        "body_text": body_text,
+                        "post_time": Validator.calculate_time_difference(post_time),
+                        "category_name": category_name,
+                        "image_url": url_for('static', filename=f"images/post_images/{img_path}") if img_path else None
+                    }                    
+
+            # カテゴリー結果に紐づく投稿を挿入
+            for category in category_results:
+                category["posts"] = [post for post in post_data.values() if post["category_name"] == category["category_name"]]
+                category["post_count"] = len(category["posts"])
+
+            self.pop_and_close(Session)
+            app.logger.info(f"Final formatted results: {len(category_results)} categories")
+
+            return category_results
+
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(f"error in  search Category:{e}")
+            app.logger.error(f"Error in search_categories: {e}")
+            return []
         
     def add_tag_to_post(self, tag_text, post_id,Session=None):
         try:

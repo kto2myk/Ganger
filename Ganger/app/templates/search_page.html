@@ -18,7 +18,8 @@
                     <ul>
                         {% for user in results.users %}
                         <a href="{{ url_for('my_profile',id = user.id) }}">
-                            <li>{{ user.username }} ({{ user.user_id }})</li></a>
+                            <li>{{ user.username }} ({{ user.user_id }})</li>
+                        </a>
                         {% endfor %}
                     </ul>
                 {% else %}
@@ -29,9 +30,22 @@
                 {% if results.tags %}
                     <ul>
                         {% for tag in results.tags %}
-                        <a href="{{ url_for('display_post',post_id = tag.post_id) }}">
-                            <img src="{{ tag.image_url }}" alt="">
-                        </a>
+                            <li>
+                                <h3>{{ tag.tag_text }} ({{ tag.post_count }}件)</h3>
+                                {% if tag.posts %}
+                                    <ul>
+                                        {% for post in tag.posts %}
+                                            <ol>
+                                                <a href="{{ url_for('display_post', post_id=post.post_id) }}">
+                                                    <img src="{{ post.image_url }}" alt="投稿画像">
+                                                </a>
+                                            </ol>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p>このタグには投稿がありません。</p>
+                                {% endif %}
+                            </li>
                         {% endfor %}
                     </ul>
                 {% else %}
@@ -42,12 +56,38 @@
                 {% if results.categories %}
                     <ul>
                         {% for category in results.categories %}
-                            <li>カテゴリID: {{ category.category_id }} (商品ID: {{ category.product_id }})</li>
+                            <li>
+                                <h3>{{ category.category_name }}</h3>
+                                <p>投稿数: {{ category.post_count }}</p>
+                                {% if category.posts %}
+                                    <ul>
+                                        {% for post in category.posts %}
+                                            <ol>
+                                                <div style="display: flex; align-items: center; gap: 15px;">
+                                                    <a href=" {{ url_for('display_product', product_id=post.product_id) }}">
+                                                        {% if post.image_url %}
+                                                            <img src="{{ post.image_url }}" alt="投稿画像" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px;">
+                                                        {% else %}
+                                                            <div style="width: 100px; height: 100px; background: #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                                                画像なし
+                                                            </div>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </ol>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p>このカテゴリに関連する投稿はありません。</p>
+                                {% endif %}
+                            </li>
                         {% endfor %}
                     </ul>
                 {% else %}
                     <p>該当するカテゴリは見つかりませんでした。</p>
                 {% endif %}
+            {% else %}
+                <p>適切なタブを選択してください。</p>
             {% endif %}
         {% else %}
             <h1>検索してみましょう。</h1>

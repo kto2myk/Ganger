@@ -150,72 +150,68 @@ class SearchComponent {
     
         console.log("Current Tab:", this.currentTab, "Candidates:", candidates); // デバッグログ
     
+         // 件数 (post_count) の多い順にソート
+        candidates.sort((a, b) => (b.post_count || 0) - (a.post_count || 0));
+
         // 候補リストを生成
         this.searchCandidates.innerHTML = candidates.length
             ? candidates.map(item => {
-                let displayText = "不明な項目"; // 表示テキストのデフォルト値
-                let dataId = "不明なID";       // data-id のデフォルト値
-
+                let displayText = "不明な項目";  // 表示テキストのデフォルト値
+                let dataId = "不明なID";          // data-id のデフォルト値
+                let countText = item.post_count ? ` (${item.post_count}件)` : "";  // カウントテキスト
+    
                 if (this.currentTab === "USER") {
-                    // ユーザータブの表示フォーマット
-                    const userId = item.user_id || "不明なユーザー"; // ユーザーID
-                    const userName = item.username || "";           // ユーザー名
-                    dataId = item.id || "不明なID";                 // 暗号化されたID
-                    // ユーザーIDと名前を表示
-                    return `<li data-id="${dataId}">${userId} (${userName})</li>`;
+                    const userId = item.user_id || "不明なユーザー";
+                    const userName = item.username || "";
+                    dataId = item.id || "不明なID";
+                    displayText = `${userId} (${userName})`;
                 } else if (this.currentTab === "TAG") {
-                    // タグタブの表示フォーマット
-                    displayText = item.tag_texts?.[0] || "不明なタグ"; // タグ名
-                    dataId = item.post_id || "不明なID";               // POST ID
+                    displayText = item.tag_text || "不明なタグ";
+                    dataId = item.post_id || "不明なID";
                 } else if (this.currentTab === "CATEGORY") {
-                    // カテゴリタブの表示フォーマット
-                    displayText = item.category_name || "不明なカテゴリ"; // カテゴリ名
-                    dataId = item.category_id || "不明なID";               // カテゴリ ID
+                    displayText = item.category_name || "不明なカテゴリ";
+                    dataId = item.category_id || "不明なID";
                 }
-
-                // タグ・カテゴリ共通の表示フォーマット
-                return `<li data-id="${dataId}">${displayText}</li>`;
+    
+                // data-query属性に件数なしのタグ名をセットし、リスト要素を作成
+                return `<li data-id="${dataId}" data-query="${displayText}">${displayText}${countText}</li>`;
             }).join("")
             : "<li>候補がありません</li>";
     
-        // 候補リストを表示
         this.searchResults.style.display = "block";
-    
-        // 候補クリック時のリスナーを設定
         this.attachCandidateClickListeners();
     }
-                
+
     attachCandidateClickListeners() {
         this.searchCandidates.querySelectorAll("li").forEach((candidate) => {
             candidate.addEventListener("click", () => {
                 const id = candidate.getAttribute("data-id"); // 候補のIDを取得
-                const query = candidate.textContent.trim();  // 候補の表示テキストを取得
-    
+                const rawQuery = candidate.getAttribute("data-query");  // 件数なしのクエリを取得
+                const cleanQuery = rawQuery.trim();  // 余分な空白を削除
+
                 if (this.currentTab === "USER") {
-                    // ユーザーの場合: IDを基にプロフィールページへ
                     if (id) {
                         window.location.href = `/my_profile/${id}`;
                     }
                 } else if (this.currentTab === "TAG" || this.currentTab === "CATEGORY") {
-                    // タグまたはカテゴリの場合: 表示テキストを検索クエリとして使用
-                    if (query) {
-                        this.saveToSearchHistory(query); // 必要であれば履歴に保存
-                        window.location.href = `/search?query=${encodeURIComponent(query)}&tab=${this.currentTab}`;
+                    if (cleanQuery) {
+                        this.saveToSearchHistory(cleanQuery);  // 履歴保存時も件数なし
+                        window.location.href = `/search?query=${encodeURIComponent(cleanQuery)}&tab=${this.currentTab}`;
                     }
                 }
             });
         });
-    }
-        
+    }        
+
     saveToSearchHistory(query) {
-        if (!this.searchHistory.includes(query) && query.trim() !== "") {
-            this.searchHistory.push(query);
+        const cleanQuery = query.replace(/\s\(\d+件\)$/, ""); // 件数 (X件) を削除
+        if (!this.searchHistory.includes(cleanQuery) && cleanQuery.trim() !== "") {
+            this.searchHistory.push(cleanQuery);
             localStorage.setItem("searchHistory", JSON.stringify(this.searchHistory));
             this.updateSearchHistory();
         }
     }
-}
-
+    }
 document.addEventListener("DOMContentLoaded", () => {
     window.searchComponent = new SearchComponent("search-container", {
         apiEndpoint: "/search" // 統一エンドポイント
