@@ -187,3 +187,20 @@ class Validator:
         except (ValueError, TypeError) as e:
             print(f"エラー: {e}")
             raise  # エラーを再度スロー
+
+    @staticmethod
+    def ensure_list(value):
+        """
+        単一値かリストかを判定し、常にリストとして返す
+
+        Args:
+            value (any): チェック対象の値（単一の値またはリスト）
+
+        Returns:
+            list: 常にリスト形式で返却
+        """
+        if value is None:
+            return []
+        if isinstance(value, (list, tuple, set)):
+            return list(value)  # タプルやセットをリストに変換
+        return [value]  # 単一値をリスト化

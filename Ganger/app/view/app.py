@@ -204,55 +204,35 @@ def my_profile(id):
         app.logger.error(f"Unexpected error: {e}")
         return ("ユーザーデータの取得に失敗しました。")
 
-@app.route('/create_post', methods=['POST'])
+@app.route('/create_post', methods=['POST', 'GET'])
 def create_post():
-    """
-    新しい投稿を作成するエンドポイント
-    """
-    # セッションからユーザーIDを取得
-    user_id = session['id']
-    title = request.form.get('title')
-    description = request.form.get('description', "")  # 任意のフィールド
+    if request.method == 'GET':
+        return render_template('create_post.html')
+    else:
+        try:
+            from Ganger.app.model.post.post_manager import PostManager
+            # フォームデータの取得
+            content = request.form.get('content')
+            tags = request.form.get('tags', None)  # タグが無い場合は空文字
+            
+            # タグの整形（カンマ区切りのタグをリスト化）
+            tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
 
-    if not title:
-        error = "タイトルは必須です。"
-        flash(error, "error")
-        app.logger.error(f"Post creation failed: {error}")
-        return redirect(url_for('post_page'))
+            # 画像ファイルの取得（空の場合は空リスト）
+            images = request.files.getlist('images') if 'images' in request.files else []
 
-    # 投稿データ
-    post_data = {
-        "user_id": user_id,
-        "title": title,
-        "description": description
-    }
+            # 投稿処理を呼び出し
+            post_manager = PostManager()
+            result = post_manager.create_post(content=content, image_files=images, tags=tag_list)
 
-    # 画像ファイルの処理
-    if 'images' not in request.files:
-        flash("画像ファイルを選択してください。", "error")
-        return redirect(url_for('post_page'))
+            if result["success"]:
+                return redirect(url_for('home'))
+            else:
+                return jsonify(result), 400
 
-    image_files = request.files.getlist('images')
-
-    if len(image_files) > 6:
-        error = "画像は最大6枚までアップロード可能です。"
-        flash(error,"error")
-        app.logger.error(f"Post creation failed: {error}")
-        return redirect(url_for('post_page'))
-
-    # PostManagerを使用して投稿作成
-    from Ganger.app.model.post.post_manager import PostManager
-    post_manager = PostManager()
-    result = post_manager.create_post(post_data, image_files)
-
-    if "error" in result:
-        error = result["error"]
-        flash(error, "error")
-        app.logger.error(f"Post creation failed: {error}")
-        return redirect(url_for('post_page'))
-
-    flash("投稿が作成されました！", "success")
-    return redirect(url_for('home'))
+        except Exception as e:
+            app.logger.error(f"Unexpected error in endpoint: {e}")
+            return jsonify({"success": False, "error": "Internal Server Error"}), 500
 
 @app.route('/create_design')
 def create_design():

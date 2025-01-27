@@ -1,6 +1,7 @@
 import os
+import uuid
 from sqlalchemy.sql import select
-from sqlalchemy.orm  import Session, joinedload
+from sqlalchemy.orm  import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
@@ -15,55 +16,59 @@ class PostManager(DatabaseManager):
         self.__notification_manager = NotificationManager()
 
     def is_allowed_extension(self, filename):
-        """
-        ファイルの拡張子が許可されているか確認
-        """
+        """ ファイルの拡張子が許可されているか確認 """
         allowed_extensions = {".png", ".jpg", ".jpeg", ".gif"}
         ext = os.path.splitext(filename)[1].lower()
         return ext in allowed_extensions
 
     def generate_filename(self, user_id, post_id, img_order, ext):
-        """
-        ファイル名を生成する
-        :param user_id: ユーザーID
-        :param post_id: 投稿ID
-        :param img_order: 画像順序
-        :param ext: ファイル拡張子
-        :return: 生成されたファイル名
-        """
-        return f"{user_id}_{post_id}_{img_order}{ext}"
+        """ 一意のファイル名を生成する """
+        unique_id = uuid.uuid4().hex  # UUIDを使用して衝突を回避
+        return f"{user_id}_{post_id}_{img_order}_{unique_id}{ext}"
 
     def save_file(self, file, file_path):
-        """
-        ファイルを指定のパスに保存する
-        """
+        """ ファイルを指定のパスに保存する """
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         file.save(file_path)
 
-    def create_post(self, post_data, image_files,Session=None):
-        """
-        投稿データを作成し、関連する画像を保存する
+    def delete_files(self, file_list):
+        """ エラー発生時に保存したファイルを削除 """
+        for file_path in file_list:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+                
+    def create_post(self, content, image_files, tags, Session=None):
+        """ 
+        投稿データを作成し、関連する画像とタグを保存する 
         """
         upload_folder = "Ganger/app/static/images/post_images"
         try:
             Session = self.make_session(Session)
+            user_id =  Validator.decrypt(session['id'])
+            # 投稿データを作成
+            post_data = {
+                "user_id": user_id,
+                "body_text": content
+            }
 
             # 投稿データをDBに挿入
-            post_result = self.insert(model=Post, data=post_data,Session=Session)
+            post_result = self.insert(model=Post, data=post_data, Session=Session)
             if not post_result:
                 app.logger.error("Failed to create post.")
-                return {"error": "Failed to create post."}
+                self.session_rollback(Session)
+                return {"success": False, "error": "Failed to create post."}
 
             post_id = post_result["post_id"]
-            user_id = post_data["user_id"]
             saved_images = []
+            temp_file_paths = []
 
-            for index, file in enumerate(image_files, start=1):
-                # ファイル名を安全化し、拡張子を確認
+            # 画像処理
+            
+            for index, file in enumerate(Validator.ensure_list(image_files), start=1):
                 original_filename = secure_filename(file.filename)
                 if not self.is_allowed_extension(original_filename):
-                    app.logger.error(f"File type not allowed: {original_filename}")
-                    return {"error": f"File type not allowed: {original_filename}"}
+                    raise ValueError(f"File type not allowed: {original_filename}")
 
                 ext = os.path.splitext(original_filename)[1].lower()
                 filename = self.generate_filename(user_id, post_id, index, ext)
@@ -75,27 +80,46 @@ class PostManager(DatabaseManager):
                     "img_path": filename,  # DBにはファイル名のみを登録
                     "img_order": index
                 }
-                image_result = self.insert(model=Image, data=image_data,Session=Session)
+                image_result = self.insert(model=Image, data=image_data, Session=Session)
                 if not image_result:
-                    app.logger.error(f"Failed to register image in DB: {filename}")
-                    return {"error": f"Failed to register image in DB: {filename}"}
+                    raise ValueError(f"Failed to register image in DB: {filename}")
 
-                # ファイルを保存
                 self.save_file(file, file_path)
                 saved_images.append(filename)
+                temp_file_paths.append(file_path)
+
+            # タグ処理（複数タグ対応）
+            if tags:
+                for tag_text in Validator.ensure_list(tags):
+                    self.add_tag_to_post(tag_text.strip(), post_id, Session=Session)
 
             self.make_commit_or_flush(Session)
+
             return {
+                "success": True,
                 "post": post_result,
-                "images": saved_images
+                "images": saved_images,
+                "tags": tags
             }
-        
+
+        except ValueError as e:
+            self.session_rollback(Session)
+            self.delete_files(temp_file_paths)
+            app.logger.error(f"Validation error: {e}")
+            return {"success": False, "error": str(e)}
+
         except SQLAlchemyError as e:
             self.session_rollback(Session)
-            self.error_log_manager.add_error(None, str(e))
-            app.logger.error(f"Failed to create post: {e}")
-            return {"error": str(e)}
+            self.delete_files(temp_file_paths)
+            app.logger.error(f"Database error: {e}")
+            return {"success": False, "error": "Database error occurred"}
 
+        except Exception as e:
+            self.session_rollback(Session)
+            self.delete_files(temp_file_paths)
+            app.logger.error(f"Unexpected error: {e}")
+            return {"success": False, "error": "An unexpected error occurred"}
+    
     def get_filtered_posts_with_reposts(self, filters, current_user_id,Session=None):
         """
         指定されたユーザーIDを基に投稿とリポスト元の投稿を取得し、いいねと保存に登録されていない投稿のみを返す。
@@ -362,19 +386,20 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Error in search_categories: {e}")
             return []
         
-    def add_tag_to_post(self, tag_text, post_id,Session=None):
+    def add_tag_to_post(self, tag_text, post_id, Session=None):
+        """ 投稿にタグを追加する処理 """
         try:
             Session = self.make_session(Session)
-            # タグが既存か確認
-            tag_data = {"tag_text": tag_text}
-            tag = self.insert(model=TagMaster, data=tag_data, unique_check={"tag_text": tag_text},Session=Session)
+            # タグが既存か確認、なければ作成
+            tag_data = {"tag_text": tag_text.lower().strip(" ")}  # 小文字に変換して空白を削除
+            tag = self.insert(model=TagMaster, data=tag_data, unique_check={"tag_text": tag_text}, Session=Session)
             
             if not tag:  # タグが既存の場合、取得
-                tag = self.fetch_one(model=TagMaster, filters={"tag_text": tag_text},Session=Session)
-            
-            # タグポスト関係を作成
+                tag = self.fetch_one(model=TagMaster, filters={"tag_text": tag_text}, Session=Session)
+                tag = {"tag_id": tag.tag_id,}
+            # タグと投稿の関連付け
             tag_post_data = {"tag_id": tag["tag_id"], "post_id": post_id}
-            self.insert(model=TagPost, data=tag_post_data, unique_check=tag_post_data,Session=Session)
+            self.insert(model=TagPost, data=tag_post_data, unique_check=tag_post_data, Session=Session)
 
             self.make_commit_or_flush(Session)
             app.logger.info(f"タグ '{tag_text}' が投稿 {post_id} に追加されました。")

@@ -53,7 +53,7 @@ class Post(Base):
 
     post_id = Column(Integer, primary_key=True) # 投稿ID
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False) # 投稿者のユーザーID
-    body_text = Column(Text, nullable=False) # 投稿本文
+    body_text = Column(Text, nullable=True) # 投稿本文
     post_time = Column(DateTime, default=lambda: datetime.now(JST)) # 投稿日時
     reply_id = Column(Integer, ForeignKey('posts.post_id', ondelete="SET NULL"), nullable=True) # 返信先の投稿ID
 
