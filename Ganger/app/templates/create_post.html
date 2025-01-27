@@ -10,14 +10,12 @@
         <h1>新しい投稿を作成</h1>
     </header>
     <main>
-        <form action="/create_post" method="post" enctype="multipart/form-data" onsubmit="return validateImages()">
+        <form id="post-form" enctype="multipart/form-data">
             <div>
                 <label for="content">内容:</label>
-                <textarea id="content" name="content" rows="5"></textarea>
-            </div>
-            <div>
-                <label for="tags">タグ (カンマ区切り):</label>
-                <input type="text" id="tags" name="tags">
+                <textarea id="content" name="content" rows="5" required></textarea>
+                <ul id="tag-suggestions" style="display: none; border: 1px solid #ccc; padding: 5px; position: absolute; background: #fff;"></ul>
+                <input type="hidden" id="tag-list" name="tags">
             </div>
             <div>
                 <label for="images">画像をアップロード (最大6枚):</label>
@@ -34,22 +32,26 @@
     </main>
 
     <script>
-        document.getElementById('images').addEventListener('change', function() {
-            const imageInput = document.getElementById('images');
-            const errorMessage = document.getElementById('image-error');
-            const previewContainer = document.getElementById('image-preview');
+        const contentInput = document.getElementById('content');
+        const suggestionsList = document.getElementById('tag-suggestions');
+        const tagListInput = document.getElementById('tag-list');
+        const imageInput = document.getElementById('images');
+        const previewContainer = document.getElementById('image-preview');
+        const imageError = document.getElementById('image-error');
+        
+        let tagFetchTimeout = null;
 
-            // 画像数の確認
+        // 画像のプレビューとバリデーション
+        imageInput.addEventListener('change', function() {
             if (imageInput.files.length > 6) {
-                errorMessage.style.display = 'block';
-                imageInput.value = '';  // 画像選択をリセット
-                previewContainer.innerHTML = '';  // プレビューをクリア
+                imageError.style.display = 'block';
+                imageInput.value = '';
+                previewContainer.innerHTML = '';
                 return;
             } else {
-                errorMessage.style.display = 'none';
+                imageError.style.display = 'none';
             }
 
-            // 画像プレビューの表示
             previewContainer.innerHTML = '';
             Array.from(imageInput.files).forEach((file, index) => {
                 const reader = new FileReader();
@@ -62,14 +64,113 @@
             });
         });
 
-        function validateImages() {
-            const imageInput = document.getElementById('images');
-            if (imageInput.files.length > 6) {
-                document.getElementById('image-error').style.display = 'block';
-                return false;
+        contentInput.addEventListener('input', function() {
+            extractTags();
+            const cursorPosition = contentInput.selectionStart;
+            const text = contentInput.value.slice(0, cursorPosition);
+            const tagMatches = text.match(/(?:^|\s)(#\w+)$/);
+
+            if (tagMatches) {
+                const tagQuery = tagMatches[1].slice(1);
+
+                if (tagQuery.length > 0) {
+                    clearTimeout(tagFetchTimeout);
+                    tagFetchTimeout = setTimeout(() => {
+                        fetch(`/search?query=${encodeURIComponent(tagQuery)}&tab=TAG`, {
+                            headers: { 'Accept': 'application/json' }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            showTagSuggestions(data.tags);
+                        })
+                        .catch(error => console.error('タグ検索エラー:', error));
+                    }, 300);
+                } else {
+                    suggestionsList.style.display = 'none';
+                }
+            } else {
+                suggestionsList.style.display = 'none';
             }
-            return true;
+        });
+
+        function showTagSuggestions(tags) {
+            if (tags.length === 0) {
+                suggestionsList.style.display = 'none';
+                return;
+            }
+
+            suggestionsList.innerHTML = '';
+            tags.forEach(tag => {
+                const item = document.createElement('li');
+                item.textContent = `#${tag.tag_text}`;
+                item.style.cursor = 'pointer';
+
+                item.addEventListener('click', () => {
+                    insertTag(tag.tag_text);
+                });
+
+                suggestionsList.appendChild(item);
+            });
+
+            const rect = contentInput.getBoundingClientRect();
+            suggestionsList.style.top = `${rect.bottom + window.scrollY}px`;
+            suggestionsList.style.left = `${rect.left + window.scrollX}px`;
+            suggestionsList.style.display = 'block';
         }
-    </script>
+
+        function insertTag(tag) {
+            const cursorPosition = contentInput.selectionStart;
+            const textBeforeCursor = contentInput.value.slice(0, cursorPosition);
+            const textAfterCursor = contentInput.value.slice(cursorPosition);
+            const lastHashIndex = textBeforeCursor.lastIndexOf('#');
+
+            if (lastHashIndex !== -1) {
+                contentInput.value = textBeforeCursor.slice(0, lastHashIndex + 1) + tag + ' ' + textAfterCursor;
+            } else {
+                contentInput.value += `#${tag} `;
+            }
+
+            contentInput.focus();
+            suggestionsList.style.display = 'none';
+            extractTags();
+        }
+
+        function extractTags() {
+            const content = contentInput.value;
+            const tags = content.match(/(?:^|\s)(#\w+)/g) || [];
+            const cleanTags = tags.map(tag => tag.trim().replace('#', ''));
+            tagListInput.value = cleanTags.join(',');
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!suggestionsList.contains(event.target) && event.target !== contentInput) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+
+        // 投稿フォーム送信処理
+        document.getElementById('post-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/create_post', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('投稿が成功しました！');
+                    window.location.href = '/home';  // 成功時にHOMEページへリダイレクト
+                } else {
+                    alert('投稿に失敗しました: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('投稿エラー:', error);
+                alert('サーバーエラーが発生しました。');
+            });
+        });    
+</script>
 </body>
 </html>

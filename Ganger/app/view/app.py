@@ -213,20 +213,25 @@ def create_post():
             from Ganger.app.model.post.post_manager import PostManager
             # フォームデータの取得
             content = request.form.get('content')
-            tags = request.form.get('tags', None)  # タグが無い場合は空文字
+            tags = request.form.get('tags', "")  # タグが無い場合は空文字
             
             # タグの整形（カンマ区切りのタグをリスト化）
-            tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
+            tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()] if tags else []
 
             # 画像ファイルの取得（空の場合は空リスト）
             images = request.files.getlist('images') if 'images' in request.files else []
-
+            if len(images) > 6:
+                return jsonify({"success": False, "error": "You can upload a maximum of 6 images"}), 400
+            
             # 投稿処理を呼び出し
             post_manager = PostManager()
-            result = post_manager.create_post(content=content, image_files=images, tags=tag_list)
+            result = post_manager.create_post(
+                content=content,
+                image_files=images, 
+                tags=tag_list)
 
             if result["success"]:
-                return redirect(url_for('home'))
+                return jsonify({"success": True, "message": "Post created successfully"}), 200            
             else:
                 return jsonify(result), 400
 
