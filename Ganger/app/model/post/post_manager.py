@@ -391,7 +391,7 @@ class PostManager(DatabaseManager):
         try:
             Session = self.make_session(Session)
             # タグが既存か確認、なければ作成
-            tag_data = {"tag_text": tag_text.lower().strip(" ")}  # 小文字に変換して空白を削除
+            tag_data = {"tag_text": tag_text}
             tag = self.insert(model=TagMaster, data=tag_data, unique_check={"tag_text": tag_text}, Session=Session)
             
             if not tag:  # タグが既存の場合、取得
