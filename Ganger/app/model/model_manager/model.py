@@ -79,9 +79,11 @@ class Follow(Base):
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
     follow_user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)
+
+
     user = relationship("User", foreign_keys=[user_id], back_populates="followers")
     followed_user = relationship("User", foreign_keys=[follow_user_id], back_populates="following")
-    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     def __repr__(self):
         return f"<Follow(user_id={self.user_id}, follow_user_id={self.follow_user_id})>"
@@ -93,7 +95,7 @@ class Repost(Base):
 
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete="CASCADE"), primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)
 
     post = relationship("Post", back_populates="reposts")
     user = relationship("User", back_populates="reposts")
@@ -108,7 +110,7 @@ class Block(Base):
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
     blocked_user = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)
 
     blocker = relationship("User", foreign_keys=[user_id], back_populates="blocked_users")
     blocked = relationship("User", foreign_keys=[blocked_user], back_populates="blocked_by")
@@ -141,7 +143,7 @@ class Like(Base):
 
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete="CASCADE"), primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), primary_key=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)
 
     post = relationship("Post", back_populates="likes")
     user = relationship("User", back_populates="likes")
@@ -209,7 +211,7 @@ class Shop(Base):
     name = Column(String(45), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
     discount = Column(Float, default=0.0)  # 割引カラムを追加
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)
 
     # リレーション
     post = relationship("Post", back_populates="shop", uselist=False )
@@ -434,7 +436,7 @@ class SavedPost(Base):
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     post_id = Column(Integer, ForeignKey('posts.post_id', ondelete='CASCADE'), primary_key=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)  # 保存日時を追加
+    created_at = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)  # 保存日時を追加
 
     user = relationship("User", back_populates="saved_posts")
     post = relationship("Post", back_populates="saved_by_users")
@@ -445,7 +447,7 @@ class SavedProduct(Base):
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     product_id = Column(Integer, ForeignKey('shops.product_id', ondelete='CASCADE'), primary_key=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)  # 保存日時を追加
+    created_at = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)  # 保存日時を追加
 
     user = relationship("User", back_populates="saved_products")
     shop = relationship("Shop", back_populates="saved_by_users")

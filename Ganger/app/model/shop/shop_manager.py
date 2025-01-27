@@ -523,3 +523,74 @@ class ShopManager(DatabaseManager):
             self.session_rollback(Session)
             app.logger.error(f"購入履歴取得中にエラーが発生しました: {e}")
             return None
+        
+
+    def search_categories(self, query, Session=None):
+        try:
+            Session = self.make_session(Session)
+
+            # 1. カテゴリー名を部分一致検索し、候補リストを取得
+            categories = (
+                Session.query(CategoryMaster)
+                .filter(CategoryMaster.category_name.ilike(f"%{query}%"))
+                .all()
+            )
+
+            if not categories:
+                app.logger.info(f"No categories found for query: {query}")
+                return []
+
+            # カテゴリー名のみの結果リスト
+            category_results = [{"category_name": category.category_name, "post_count": 0, "posts": []} for category in categories]
+
+            category_ids = [category.category_id for category in categories]
+            app.logger.info(f"Category IDs found: {category_ids}")
+
+            # 2. カテゴリーに紐づく投稿を画像とともに一括取得
+            results = (
+                Session.query(
+                    CategoryMaster.category_name,
+                    Shop.product_id,
+                    Post.post_id,
+                    Post.body_text,
+                    Post.post_time,
+                    Image.img_path
+                )
+                .join(ProductCategory, CategoryMaster.category_id == ProductCategory.category_id)
+                .join(Shop, Shop.product_id == ProductCategory.product_id)
+                .join(Post, Post.post_id == Shop.post_id)
+                .outerjoin(Image, Image.post_id == Post.post_id)  # 画像がない場合も考慮
+                .filter(CategoryMaster.category_id.in_(category_ids))
+                .order_by(Image.img_order)
+                .all()
+            )
+
+            app.logger.info(f"Total posts retrieved: {len(results)}")
+
+            # 投稿データの整形
+            post_data = {}
+            for category_name, product_id,post_id, body_text, post_time, img_path  in results:
+                if post_id not in post_data:
+                    post_data[post_id] = {
+                        "post_id": Validator.encrypt(post_id),
+                        "product_id": Validator.encrypt(product_id),
+                        "body_text": body_text,
+                        "post_time": Validator.calculate_time_difference(post_time),
+                        "category_name": category_name,
+                        "image_url": url_for('static', filename=f"images/post_images/{img_path}") if img_path else None
+                    }                    
+
+            # カテゴリー結果に紐づく投稿を挿入
+            for category in category_results:
+                category["posts"] = [post for post in post_data.values() if post["category_name"] == category["category_name"]]
+                category["post_count"] = len(category["posts"])
+
+            self.pop_and_close(Session)
+            app.logger.info(f"Final formatted results: {len(category_results)} categories")
+
+            return category_results
+
+        except Exception as e:
+            self.session_rollback(Session)
+            app.logger.error(f"Error in search_categories: {e}")
+            return []

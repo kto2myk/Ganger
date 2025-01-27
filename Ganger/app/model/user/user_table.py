@@ -1,5 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash # パスワードハッシュ化用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベース操作用
+from Ganger.app.model.model_manager.model import User,Post,Follow,Block
 from flask import session, url_for  # セッション管理、画像パス生成用
 from Ganger.app.model.validator.validate import Validator # バリデーション用
 from Ganger.app.model.model_manager.model import User # ユーザーテーブル
@@ -144,8 +145,6 @@ class UserManager(DatabaseManager):
         Returns:
             dict: プロフィール情報と投稿データのリスト。
         """
-        from Ganger.app.model.model_manager.model import User, Post
-
         try:
             # 暗号化されたユーザーIDを復号化
             decrypted_id = Validator.decrypt(user_id)
@@ -179,6 +178,7 @@ class UserManager(DatabaseManager):
 
             # プロフィール情報を整形
             profile_data = {
+                "is_me":True if session.get('id') == user_id else None,
                 "id": Validator.encrypt(user.id),
                 "user_id": user.user_id,
                 "username": user.username,
@@ -196,4 +196,39 @@ class UserManager(DatabaseManager):
         except Exception as e:
             self.session_rollback(Session)
             app.logger.error(f"Unexpected error: {e}")
+            raise
+
+    def toggle_follow(self, followed_user_id,Session=None):
+        """
+        フォロー機能を切り替えるメソッド
+
+        :param follow_user_id: フォロー対象のユーザーID
+        :param sender_id: フォローを行うユーザーID
+        :return: 処理結果を表す辞書
+        """
+        try:
+            followed_user_id = Validator.decrypt(followed_user_id)
+            sender_id = Validator.decrypt(session.get('id'))
+            Session = self.make_session(Session)
+            data = {'follow_user_id':followed_user_id , 'user_id': sender_id}
+            existing_follow = self.fetch_one(model=Follow, filters=data, Session=Session)
+
+            if existing_follow:
+                # フォローが存在する場合は削除
+                self.delete(model=Follow, filters=data, Session=Session)
+                app.logger.info(f"Follow removed: followed_user={sender_id}, user_id={sender_id}")
+                result = {"status": "unfollowed"}
+            else:
+                # フォローが存在しない場合は作成
+                self.insert(model=Follow, data=data, Session=Session)
+                app.logger.info(f"Follow added: followed_user={followed_user_id}, user_id={sender_id}")
+                result = {"status": "followed"}
+
+            self.make_commit_or_flush(Session)
+            return result
+
+        except Exception as e:
+            self.session_rollback(Session)
+            app.logger.error(f"Failed to toggle follow: {e}")
+            self.error_log_manager.add_error(sender_id, str(e))
             raise

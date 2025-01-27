@@ -2,9 +2,15 @@
 {% block title %}profile/Ganger{% endblock %}
 {% block content %}
     <div class="contents">
+        {% if not profile.is_me %}
+            <div class="follow-button" data-user-id="{{ profile.id }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            </div>
+        {% endif %}
+
         <div class="account_info">
             <h1>{{ profile.username }} のプロフィール</h1>
-            <img src="{{ profile.profile_image }}" alt="プロフィール画像">
+            <img src="{{ profile.profile_image }}" alt="プロフィール画像" height="1">
         </div>
         <div class="post_container">
             <h2>投稿一覧</h2>
@@ -28,4 +34,63 @@
             </ul>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    // APIリクエスト処理
+    async function handleFollowRequest(userId) {
+        const url = `/follow/${userId}`;
+        try {
+            const response = await fetch(url, { method: 'POST' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        } catch (error) {
+            console.error(`Error following user ${userId}:`, error);
+            alert('フォロー操作に失敗しました。');
+            return null;
+        }
+    }
+
+    // ボタンの状態を更新
+    function updateFollowButton(button, isFollowing) {
+        const svgContainer = button.querySelector('svg');
+        if (isFollowing) {
+            // フォロー中のアイコンに変更（マイナスアイコン）
+            svgContainer.innerHTML =`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-minus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg>`;
+
+            button.classList.add('following');
+        } else {
+            // フォローしていないアイコンに変更（プラスアイコン）
+            svgContainer.innerHTML =`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>`;
+
+            button.classList.remove('following');
+        }
+    }
+
+    // フォローボタンのクリックイベント設定
+    document.querySelectorAll('.follow-button').forEach(button => {
+        button.addEventListener('click', async () => {
+            if (button.disabled) return; // ボタンの連打防止
+            button.disabled = true;
+            const userId = button.dataset.userId;
+
+            try {
+                const result = await handleFollowRequest(userId);
+                if (result.status === 'followed') {
+                    updateFollowButton(button, true);
+                } else if (result.status === 'unfollowed') {
+                    updateFollowButton(button, false);
+                }
+            } catch (error) {
+                console.error(`Error handling follow for user ${userId}:`, error);
+            } finally {
+                button.disabled = false;
+            }
+        });
+    });
+});
+
+    </script>
 {% endblock %}

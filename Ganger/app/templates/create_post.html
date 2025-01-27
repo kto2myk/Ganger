@@ -94,12 +94,18 @@
         });
 
         function showTagSuggestions(tags) {
+            suggestionsList.innerHTML = '';
+
             if (tags.length === 0) {
-                suggestionsList.style.display = 'none';
+                const noTagItem = document.createElement('li');
+                noTagItem.textContent = "まだタグが存在していません。";
+                noTagItem.style.color = 'gray';
+                noTagItem.style.cursor = 'default';
+                suggestionsList.appendChild(noTagItem);
+                suggestionsList.style.display = 'block';
                 return;
             }
-
-            suggestionsList.innerHTML = '';
+            
             tags.forEach(tag => {
                 const item = document.createElement('li');
                 item.textContent = `#${tag.tag_text}`;

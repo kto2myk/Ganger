@@ -187,6 +187,24 @@ def toggle_like(post_id,):
         app.logger.error(f"Error toggling like: {e}")
         return jsonify({'error': 'Server error'}), 500
 
+@app.route('/follow/<string:follow_user_id>', methods=['POST'])
+def toggle_follow(follow_user_id):
+    try:
+        from Ganger.app.model.user.user_table import UserManager
+
+        if not follow_user_id:
+            app.logger.error("Missing required IDs for authentication.")
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        follow_manager = UserManager()
+        result = follow_manager.toggle_follow(followed_user_id=follow_user_id)
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        app.logger.error(f"Error toggling follow: {e}")
+        return jsonify({'error': 'Server error'}), 500
+    
 @app.route("/my_profile/<id>", methods=["GET"])
 def my_profile(id):
     from Ganger.app.model.user.user_table import UserManager
@@ -339,19 +357,21 @@ def search():
         results = {"users": [], "tags": [], "categories": []}
 
         if query:
+            from Ganger.app.model.shop.shop_manager import ShopManager
             from Ganger.app.model.post.post_manager import PostManager
             from Ganger.app.model.user.user_table import UserManager
 
-            post_manager = PostManager()
-            user_manager = UserManager()
 
             # タブに基づいた処理
             if tab == "USER":
+                user_manager = UserManager()
                 results['users'] = user_manager.search_users(query)
             elif tab == "TAG":
+                post_manager = PostManager()
                 results['tags'] = post_manager.search_tags(query)
             elif tab == "CATEGORY":
-                results['categories'] = post_manager.search_categories(query)
+                shop_manager = ShopManager()
+                results['categories'] = shop_manager.search_categories(query)
 
         # ログ出力
         app.logger.info(f"Search completed: query={query}, tab={tab}, results={results}")
