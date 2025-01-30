@@ -33,6 +33,21 @@
 }
 
 
+/* ヘッダー */
+header {
+    position: fixed;
+    display: flex;
+    height: 7dvh;
+    width: 100%;
+    display: flex;
+    z-index: 9998;
+    background-color: #fff;
+    /* border-bottom: solid 1px #ddd; */
+}
+
+#hidden {
+    width: 19vw;
+}
 /* おすすめandフォロー切り替えボタン */
 .couple_of_links {
     display: flex;
@@ -92,7 +107,7 @@
 
 .account_info {
     width: 100%;
-    height: 100%;
+    height: 7dvh;
     display: flex;
     text-align: left;
 }
@@ -114,7 +129,7 @@
 
 .image_area {
     width: 100%;
-    height: auto;
+    height: 55vh;
     margin: auto;
     border: solid 1px #ddd;
     border-radius: 2%;
