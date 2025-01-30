@@ -6,46 +6,84 @@
 {% endblock %}
 {% block content %}
     <div class="contents">
-        {% if not profile.is_me %}
-            <div class="follow-button"data-user-id="{{ profile.id }}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        <!-- ブロックしている場合 -->
+        {% if profile.is_block %}
+            <div class="account_info">
+                <img src="{{ profile.profile_image }}" alt="プロフィール画像" height="1">
+                <h1>{{ profile.username }}</h1>
+            </div>
+            <div class="post_container">
+                <div class = "block-user">
+                    <a href="{{url_for('toggle_block', user_id=profile.id)}}">
+                        <button>
+                            <p>ブロックを解除する</p>
+                        </button>
+                    </a>
+                </div>
+            </div>
+        <!-- ブロックされてる場合 -->
+        {% elif profile.is_blocked %}
+            <div class="account_info">
+                <img src="{{ profile.profile_image }}" alt="プロフィール画像" height="1">
+                <h1>{{ profile.username }}</h1>
+            </div>
+            <div class="post_container">
+                <p>投稿を取得できません</p>
+            </div>
+            {% if not profile.is_me %}
+            <button id="follow-button">
+                <div class="follow-button"data-user-id="{{ profile.id }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                </div>
+            </button>
+            {% endif %}
+            <script>
+                let followButton = document.getElementById("follow-button")
+                if (followButton){
+                    followButton.disabled = true
+                }
+            </script>
+        <!-- ブロックしていなかった場合 -->
+        {% else %}
+            {% if not profile.is_me %}
+                <button id="follow-button">
+                    <div class="follow-button"data-user-id="{{ profile.id }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                    </div>
+                </button>
+                
+                <div class = "block-user">
+                    <a href="{{url_for('toggle_block', user_id=profile.id)}}">ブロックする</a>
+                </div>
+            {% endif %}
+
+            <div class="account_info">
+                <img src="{{ profile.profile_image }}" alt="プロフィール画像" height="1">
+                <h1>{{ profile.username }}</h1>
+            </div>
+            <div class="post_container">
+                <h2>投稿一覧</h2>
+
+                <ul>
+                    {% if profile.posts %}
+                        {% for post in profile.posts %}
+                            <li>
+                                <div class="image_area">
+                                    {% if post.first_image %}
+                                        <a href="{{ url_for('display_post', post_id=post.post_id) }}">
+                                        <img src="{{ post.first_image }}" alt="投稿画像">
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <p>まだ投稿がありません。</p>
+                    {% endif %} 
+                </ul>
             </div>
         {% endif %}
-        <div class = "block-user">
-            <a href="{{url_for('toggle_block', user_id=profile.id)}}">
-                <button >
-                    <p>ブロックする</p>
-                </button>
-            </a>
-        </div>
-
-        <div class="account_info">
-            <img src="{{ profile.profile_image }}" alt="プロフィール画像" height="1">
-            <h1>{{ profile.username }}</h1>
-        </div>
-        <div class="post_container">
-            <h2>投稿一覧</h2>
-
-            <ul>
-                {% if profile.posts %}
-                    {% for post in profile.posts %}
-                        <li>
-                            <div class="image_area">
-                                {% if post.first_image %}
-                                    <a href="{{ url_for('display_post', post_id=post.post_id) }}">
-                                    <img src="{{ post.first_image }}" alt="投稿画像">
-                                    </a>
-                                {% endif %}
-                            </div>
-                        </li>
-                    {% endfor %}
-                {% else %}
-                    <p>まだ投稿がありません。</p>
-                {% endif %} 
-            </ul>
-        </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
     // APIリクエスト処理

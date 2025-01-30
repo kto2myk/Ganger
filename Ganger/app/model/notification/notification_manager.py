@@ -1,4 +1,5 @@
 from sqlalchemy.orm import joinedload
+from sqlalchemy import or_,and_
 from sqlalchemy.exc import SQLAlchemyError
 from Ganger.app.model.model_manager.model import Notification
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
@@ -239,3 +240,29 @@ class NotificationManager(DatabaseManager):
             self.session_rollback(Session)
             app.logger.error(f"Failed to delete notification: {e}")
             raise
+
+    def delete_notifications(self, user_id, blocked_user_id,Session=None):
+        """
+        (user_id, blocked_user_id) または (blocked_user_id, user_id) のペアに該当する
+        NotificationDetail の notification_id を持つ Notification を削除
+        """
+        try:
+            Session = self.make_session(Session)
+            #NotificationDetail から該当する notification_id を取得
+            notification_ids_subquery = Session.query(NotificationDetail.notification_id).filter(
+                or_(
+                    and_(NotificationDetail.sender_id == user_id, NotificationDetail.recipient_id == blocked_user_id),
+                    and_(NotificationDetail.sender_id == blocked_user_id, NotificationDetail.recipient_id == user_id)
+                )
+            ).subquery()
+
+            #Notification テーブルから該当する通知を削除
+            Session.query(Notification).filter(
+                Notification.notification_id.in_(notification_ids_subquery)
+            ).delete(synchronize_session=False)
+
+            self.make_commit_or_flush(Session)
+
+        except Exception as e:
+            self.session_rollback(Session)
+            app.logger.error(e)

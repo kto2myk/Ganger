@@ -1,11 +1,12 @@
 from werkzeug.security import generate_password_hash, check_password_hash # パスワードハッシュ化用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベース操作用
-from Ganger.app.model.model_manager.model import User,Post,Follow,Block
+from Ganger.app.model.notification.notification_manager import NotificationManager
+from Ganger.app.model.model_manager.model import User,Post,Follow,Block,Repost,CartItem,Shop,Like,SavedPost,SavedProduct
 from flask import session, url_for  # セッション管理、画像パス生成用
 from Ganger.app.model.validator.validate import Validator # バリデーション用
 from Ganger.app.model.model_manager.model import User # ユーザーテーブル
 from sqlalchemy.orm import Session, joinedload# セッション管理、リレーション取得用
-from sqlalchemy import or_,func,case # OR検索用
+from sqlalchemy import or_,and_,func,case,exists # OR検索用
 from sqlalchemy.exc import SQLAlchemyError # データベースエラー用
 import uuid # ランダムID生成用
 from flask import current_app as app # ログ出力用
@@ -156,25 +157,38 @@ class UserManager(DatabaseManager):
             if not user:
                 raise ValueError("ユーザーが見つかりません。")
 
-            is_block = Session.query(session.query(Block)
+            is_block= Session.query(Session.query(Block)
                 .filter_by(user_id=user_id, blocked_user=decrypted_id)
                 .exists()).scalar()
-            
+            is_blocked = Session.query(Session.query(Block)
+                .filter_by(user_id=decrypted_id, blocked_user=user_id)
+                .exists()).scalar()
             # ブロックしている場合はブロック情報のみ返す
-            if is_block:
+            if is_block or is_blocked:
                 profile_data = {
-                    is_block:True
+                    "is_block":is_block,
+                    "is_blocked":is_blocked,
+                    "id": Validator.encrypt(user.id),
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}"),
                 }
                 self.pop_and_close(Session)
                 return profile_data
             
-            # 投稿データを取得（投稿時間降順）
-            follower_count, following_count, is_follow = session.query(
-                func.count(case((Follow.follow_user_id == decrypted_id, 1))),
-                func.count(case((Follow.user_id == decrypted_id, 1))),
-                func.count(case((Follow.user_id == user_id, Follow.follow_user_id == decrypted_id, 1)))
-            ).one()            
-        
+            result_follow = Session.query(
+                func.count(case((Follow.follow_user_id == decrypted_id, 1), else_=0)),  # フォロワー数
+                func.count(case((Follow.user_id == decrypted_id, 1), else_=0)),  # フォロー数
+                func.count(case((and_(Follow.user_id == user_id, Follow.follow_user_id == decrypted_id), 1), else_=0))  # 自分が相手をフォローしているか
+            ).first()
+
+            # データがない場合のデフォルト値を設定
+            if result_follow is None:
+                result_follow = (0, 0, 0)
+
+            # タプルのアンパック
+            follower_count, following_count, is_follow = result_follow 
+
             posts = (
                 Session.query(Post)
                 .filter(Post.user_id == decrypted_id, Post.reply_id == None) # NULL判定を追加
@@ -231,7 +245,7 @@ class UserManager(DatabaseManager):
         try:
             followed_user_id = Validator.decrypt(followed_user_id)
             sender_id = Validator.decrypt(session.get('id'))
-            Session = self.make_session(Session)
+            Session = self.make_session(Session) #Session maker
             data = {'follow_user_id':followed_user_id , 'user_id': sender_id}
             existing_follow = self.fetch_one(model=Follow, filters=data, Session=Session)
 
@@ -258,7 +272,6 @@ class UserManager(DatabaseManager):
     
     def toggle_block(self,blocked_user_id,Session=None):
         """ ユーザーのブロック・ブロック解除を切り替える """
-
         try:
             user_id = Validator.decrypt(session.get('id'))
             blocked_user_id = Validator.decrypt(blocked_user_id)
@@ -273,9 +286,12 @@ class UserManager(DatabaseManager):
                 app.logger.info("ブロックを解除しました")
                 return {"message": "ブロックを解除しました", "status": "unblocked"}
             else:
-                data={'user_id':user_id,'blocked_user':blocked_user_id}
-                # ブロックしていない場合 → 新たにブロック
-                new_block = self.insert(model=Block,data=data,Session=Session)
+
+                # ブロックを追加
+                data = {'user_id': user_id, 'blocked_user': blocked_user_id}
+                new_block = self.insert(model=Block, data=data, Session=Session)
+                self.delete_related_data(user_id=user_id, blocked_user_id=blocked_user_id, Session=Session)
+
                 self.make_commit_or_flush(Session)
                 app.logger.info("ユーザーをブロックしました", new_block)
                 return {"message": "ユーザーをブロックしました", "status": "blocked"}
@@ -283,3 +299,67 @@ class UserManager(DatabaseManager):
         except SQLAlchemyError as e:
             self.session_rollback(Session)  # 例外発生時にロールバック
             return {"error": f"処理中にエラーが発生しました: {str(e)}"}        
+        
+
+    def delete_related_data(self,user_id, blocked_user_id,Session=None):
+        """
+        ブロック時に関連データをすべて削除する（手動で削除）
+        """
+        try:
+            notification_manager = NotificationManager()
+            Session = self.make_session(Session)
+            #  フォロー解除（相互フォローも含めて削除）
+            Session.query(Follow).filter(
+                or_(
+                    and_(Follow.user_id == user_id, Follow.follow_user_id == blocked_user_id),
+                    and_(Follow.user_id == blocked_user_id, Follow.follow_user_id == user_id)
+                )
+            ).delete(synchronize_session=False)
+
+            #  Repost削除（親の投稿が相手のものか確認）
+            Session.query(Repost).filter(
+                Repost.user_id == user_id,
+                Repost.post.has(Post.user_id == blocked_user_id)
+            ).delete(synchronize_session=False)
+
+            #  Like削除（親の投稿が相手のものか確認）
+            Session.query(Like).filter(
+                Like.user_id == user_id,
+                Like.post.has(Post.user_id == blocked_user_id)
+            ).delete(synchronize_session=False)
+
+            #  SavedPost削除（保存した投稿が相手のものなら削除）
+            Session.query(SavedPost).filter(
+                SavedPost.user_id == user_id,
+                SavedPost.post.has(Post.user_id == blocked_user_id)
+            ).delete(synchronize_session=False)
+
+            #  SavedProduct削除（保存した商品が相手のものなら削除）
+            Session.query(SavedProduct).filter(
+                SavedProduct.user_id == user_id,
+                SavedProduct.shop.has(Shop.post.has(Post.user_id == blocked_user_id))
+            ).delete(synchronize_session=False)
+
+
+            #投稿削除（ブロックされた相手の投稿のリプライを削除）
+            Session.query(Post).filter(
+                exists().where(
+                    and_(
+                        Post.post_id == Post.reply_id,  # 返信先の投稿ID
+                        or_(
+                            Post.user_id == user_id,  # 自分の投稿への返信
+                            Post.user_id == blocked_user_id  # 相手の投稿への返信
+                        )
+                    )
+                )
+            ).delete(synchronize_session=False)
+
+            notification_manager.delete_notifications(user_id=user_id,blocked_user_id=blocked_user_id,Session=Session)
+
+            self.make_commit_or_flush(Session)
+            return True
+        
+        except Exception as e:
+            self.session_rollback(Session)
+            app.logger.error(e)
+            raise e
