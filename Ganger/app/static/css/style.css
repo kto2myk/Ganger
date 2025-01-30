@@ -4,38 +4,8 @@ html, body {
     font-size: 16px;
 }
 
-#loading {
-    width: 100vw;
-    height: 100vh;
-    transition: all 1.5s;
-    /* background-color: #fff; */
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 10000;
-  }
-  .spinner {
-    width: auto;
-    height: auto;
-    margin-top: 300px;
-    margin-left: 800px;
-  }
-  /* ローディングアニメーション */
-  @keyframes sk-scaleout {
-    0% {
-      transform: scale(0);
-    } 100% {
-      transform: scale(1.0);
-      opacity: 0;
-    }
-  }
 
-  .loaded {
-    opacity: 0;
-    visibility: hidden;
-  }
-  
-
+/* ヘッダー */
 header {
     position: fixed;
     display: flex;
@@ -51,34 +21,7 @@ header {
   width: 19vw;
 }
 
-.couple_of_links {
-  display: flex;
-  margin: 0;
-  width: 60dvw;
-  height: 100%;
-}
 
-.couple_of_links a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 50%;
-  height: 100%;
-  text-decoration: none;
-  color: black;
-  background-color: #fff;
-  border: solid 1px;
-  border-color: #ddd;
-  transition: all, 0.2s;
-}
-
-.couple_of_links a:hover {
-  background-color: #ddd;
-}
-
-.replace_button:hover {
-  background-color: #a46a9a;
-}
 
 /* メインコンテナ */
 .main_container {
@@ -176,6 +119,7 @@ header {
   height: 50%;
 } */
 
+/* 通知ボタン上の件数表示 */
 ::before{
   content: attr(data-count);
   color: #a46a9a;
@@ -200,6 +144,8 @@ header {
   background-color: #ddd;
 }
 
+
+/* 現在ページのアイコンの色変更 */
 #home {
   fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;
 }
@@ -274,176 +220,7 @@ header {
   }
 }
 
-/* 投稿表示エリア */ 
-.contents {
-    padding-top: 15dvh;
-    padding-left: 19vw;
-    height: auto;
-    width: 60dvw;
-    background-color: #fafafa;
-    /* border: solid 1px #999; */
-}
-
-.reposted_massage {
-  width: 100%;
-  height: 100%;
-  text-decoration: none;
-  color: #777;
-}
-
-.post_container {
-    width: 50vh;
-    height: 100%;
-    margin: 0 auto;
-    padding-top: 5dvh;
-    padding-bottom: 5dvh;
-    border-bottom: solid 1px #ddd;
-}
-
-.account_info {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    text-align: left;
-}
-
-.account_info a {
-    margin: 1%;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    justify-content: left;
-    background-color: #FFF;
-}
-
-.account_info img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-}
-
-.image_area {
-    width: 100%;
-    height: auto;
-    margin: auto;
-    border: solid 1px #ddd;
-    border-radius: 2%;
-    background-color: #fff;
-}
-
-.splide__slide img {
-    width: 100%;
-    height: 55vh;
-    object-fit: contain;
-  }
-
-.post_buttons {
-  cursor: pointer;
-  width:40%;
-  display: flex;
-  justify-content: space-between;
-  padding-top: 3%;
-}
-
-.extension_button {
-  padding: 0;
-  width: 16px;
-  background-color: transparent;
-  border: none;
-}
-
-#add_post_button {
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 50%;
-  background-color: #a46a9a;
-  transition: all 0.2s;
-}
-
-#add_post_button:hover {
-  filter: brightness(80%);
-}
-
-.svg-filled {
-  fill: red;
-}
-
-  @media (max-width: 1200px) {
-    .contents {
-      width: 80dvw;
-      padding-left: 10vh;
-    }
-  }
-
-  /* 保存済みボタンのスタイル */
-button.saved {
-  /* background-color: #007bff; */
-  color: #007bff;
-  /* border: 1px solid #007bff; */
-}
-
-
-.right_bar {
-    position: fixed;
-    z-index: 9999;
-    right: 0dvh;
-    top: 0dvh;
-    height: 40dvh;
-    width: 19dvw;
-    margin: 0 auto;
-}
-
-#search-container {
-  margin: 2%;
-  width: 90%;
-}
-
-#search-container div input {
-  width: 90%;
-  height: 5dvh;
-  background-color: #fff;
-  padding-left: 5%;
-  padding-right: 5%;
-}
-
-#search-box {
-  height: 3vh;
-  background-color: #eee;
-  border: solid 1px #ddd;
-  border-radius: 5vh;
-}
-
-.trend_container {
-  margin: 2%;
-  width: 90%;
-  height: 50dvh;
-  border: solid 1px #ddd;
-  border-radius: 2%;
-}
-
-
-.right_bar ol {
-  /* margin-top: 2.5%;
-  margin-bottom: 2.5%;
-  margin-left: 5%;
-  margin-right: 5%;
-  padding: 0;
-  height: 20%; */
-  text-align: left;
-}
-
-@media (max-width: 1000px) {
-  .right_bar {
-    display: none;
-  }
-
-  /* #post_button {
-    display: none;
-  } */
-}
-
+/* フッター */
 .footer_container {
     display: flex;
     width: 100%;

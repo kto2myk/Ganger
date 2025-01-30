@@ -8,18 +8,16 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="../../static/css/style.css">
     <link rel="stylesheet" href="../../static/css/splide.min.css">
-    <link rel="stylesheet" href="../../static/css/cssanimation.min.css">
+    <!-- <link rel="stylesheet" href="../../static/css/cssanimation.min.css"> -->
     <link rel="stylesheet" href="../../static/css/modal.css">
     <script src="../../static/js/node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
-    <script src="../../static/js/ajax.js"></script>
+    {% block head %}{% endblock %}
     <script src="../../static/js/buttons_change.js"></script>
 
 </head>
 <body>
-    <div id="loading">
-        <div class="cssanimation leFadeInLeft sequence"> Example </div>
-    </div>
 
+    {% block loading %}{% endblock %}
     {% block header %}{% endblock %}
 
 <!-- サイドバー -->
