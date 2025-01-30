@@ -1,5 +1,10 @@
 {% extends "extends/extends_base.html" %}
 {% block title %}home/Ganger{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="../static/css/home.css">
+  <script src="../static/js/ajax.js"></script>
+{% endblock %}
+{% include 'components/component_loading.html' %}
 {% block header %}
   {% include 'components/component_header.html' %}
 {% endblock %}
