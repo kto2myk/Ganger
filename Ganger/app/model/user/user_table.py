@@ -5,7 +5,7 @@ from flask import session, url_for  # セッション管理、画像パス生成
 from Ganger.app.model.validator.validate import Validator # バリデーション用
 from Ganger.app.model.model_manager.model import User # ユーザーテーブル
 from sqlalchemy.orm import Session, joinedload# セッション管理、リレーション取得用
-from sqlalchemy import or_ # OR検索用
+from sqlalchemy import or_,func,case # OR検索用
 from sqlalchemy.exc import SQLAlchemyError # データベースエラー用
 import uuid # ランダムID生成用
 from flask import current_app as app # ログ出力用
@@ -148,6 +148,7 @@ class UserManager(DatabaseManager):
         try:
             # 暗号化されたユーザーIDを復号化
             decrypted_id = Validator.decrypt(user_id)
+            user_id   = Validator.decrypt(session.get('id'))
 
             Session = self.make_session(Session)
             # ユーザー情報を取得
@@ -155,15 +156,32 @@ class UserManager(DatabaseManager):
             if not user:
                 raise ValueError("ユーザーが見つかりません。")
 
+            is_block = Session.query(session.query(Block)
+                .filter_by(user_id=user_id, blocked_user=decrypted_id)
+                .exists()).scalar()
+            
+            # ブロックしている場合はブロック情報のみ返す
+            if is_block:
+                profile_data = {
+                    is_block:True
+                }
+                self.pop_and_close(Session)
+                return profile_data
+            
             # 投稿データを取得（投稿時間降順）
+            follower_count, following_count, is_follow = session.query(
+                func.count(case((Follow.follow_user_id == decrypted_id, 1))),
+                func.count(case((Follow.user_id == decrypted_id, 1))),
+                func.count(case((Follow.user_id == user_id, Follow.follow_user_id == decrypted_id, 1)))
+            ).one()            
+        
             posts = (
                 Session.query(Post)
-                .filter(Post.user_id == decrypted_id, Post.reply_id == None)  # NULL判定を追加
+                .filter(Post.user_id == decrypted_id, Post.reply_id == None) # NULL判定を追加
                 .options(joinedload(Post.images))  # 画像を一度に取得
                 .order_by(Post.post_time.desc())  # 投稿時間で降順ソート
                 .all()
             )
-
             # 投稿情報を整形
             formatted_posts = [
                 {
@@ -178,7 +196,11 @@ class UserManager(DatabaseManager):
 
             # プロフィール情報を整形
             profile_data = {
-                "is_me":True if session.get('id') == user_id else None,
+                "is_me":decrypted_id == user_id,
+                "is_block":False,
+                "follower_count":follower_count,
+                "following_count":following_count,
+                "is_follow":is_follow > 0,
                 "id": Validator.encrypt(user.id),
                 "user_id": user.user_id,
                 "username": user.username,
@@ -232,3 +254,32 @@ class UserManager(DatabaseManager):
             app.logger.error(f"Failed to toggle follow: {e}")
             self.error_log_manager.add_error(sender_id, str(e))
             raise
+
+    
+    def toggle_block(self,blocked_user_id,Session=None):
+        """ ユーザーのブロック・ブロック解除を切り替える """
+
+        try:
+            user_id = Validator.decrypt(session.get('id'))
+            blocked_user_id = Validator.decrypt(blocked_user_id)
+            Session=self.make_session(Session)
+            # 既にブロックしているか確認
+            existing_block = Session.query(Block).filter_by(user_id=user_id, blocked_user=blocked_user_id).first()
+            
+            if existing_block:
+                # すでにブロックしている場合 → ブロック解除
+                Session.delete(existing_block)
+                self.make_commit_or_flush(Session)
+                app.logger.info("ブロックを解除しました")
+                return {"message": "ブロックを解除しました", "status": "unblocked"}
+            else:
+                data={'user_id':user_id,'blocked_user':blocked_user_id}
+                # ブロックしていない場合 → 新たにブロック
+                new_block = self.insert(model=Block,data=data,Session=Session)
+                self.make_commit_or_flush(Session)
+                app.logger.info("ユーザーをブロックしました", new_block)
+                return {"message": "ユーザーをブロックしました", "status": "blocked"}
+
+        except SQLAlchemyError as e:
+            self.session_rollback(Session)  # 例外発生時にロールバック
+            return {"error": f"処理中にエラーが発生しました: {str(e)}"}        
