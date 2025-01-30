@@ -1,26 +1,8 @@
 html, body {
     margin: 0;
-    width: 99dvw;
+    width: 100dvw;
     font-size: 16px;
 }
-
-
-/* ヘッダー */
-header {
-    position: fixed;
-    display: flex;
-    height: 7dvh;
-    width: 100%;
-    display: flex;
-    z-index: 9998;
-    background-color: #fff;
-    /* border-bottom: solid 1px #ddd; */
-}
-
-#hidden {
-  width: 19vw;
-}
-
 
 
 /* メインコンテナ */

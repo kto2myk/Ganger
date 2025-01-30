@@ -1,4 +1,9 @@
 {% extends "extends/extends_base.html" %}
+{% block title %}Search/Ganger{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="../static/css/search.css">
+<!-- <script src="../static/js/ajax.js"></script> -->
+{% endblock %}
 {% block content %}
 <div class="contents">
     {% include 'components/component_search.html' %}
@@ -92,6 +97,12 @@
         {% else %}
             <h1>検索してみましょう。</h1>
         {% endif %}
+    </div>
+    <div class="trend">
+        {% include 'components/component_trend.html' %}
+    </div>
+    <div class="right_bar">
+        {% include 'components/component_recommended.html' %}
     </div>
 </div>
     <script src="{{ url_for('static', filename='js/SearchPage.js') }}"></script>
