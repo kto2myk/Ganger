@@ -2,6 +2,7 @@ html, body {
     margin: 0;
     width: 100dvw;
     font-size: 16px;
+    overflow-x: hidden;
 }
 
 
@@ -102,7 +103,7 @@ html, body {
 } */
 
 /* 通知ボタン上の件数表示 */
-::before{
+#notification::before{
   content: attr(data-count);
   color: #a46a9a;
   position: absolute;
