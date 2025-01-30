@@ -221,6 +221,21 @@ def my_profile(id):
     except Exception as e:
         app.logger.error(f"Unexpected error: {e}")
         return ("ユーザーデータの取得に失敗しました。")
+    
+@app.route("/toggle_block/<string:user_id>")
+def toggle_block(user_id):
+    from Ganger.app.model.user.user_table import UserManager
+    try:
+        user_manager = UserManager()
+        result  =user_manager.toggle_block(blocked_user_id=user_id)
+        
+        if result.get('error'):
+            return abort(400,description=result.get('error'))
+
+        return redirect(url_for("my_profile",id=user_id))
+    except Exception as e:
+        app.logger.error(f"Error toggling block: {e}")
+        return abort(500,description='Server error')
 
 @app.route('/create_post', methods=['POST', 'GET'])
 def create_post():
