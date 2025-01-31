@@ -29,32 +29,65 @@ html, body {
 }
 
 .header_logo{
-  width: 70px;
-  height: 70px;
-}
-
-.replace_button {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   width: 100%;
-  height: 100%;
-  text-decoration: none;
+  height: 100px;
+  transition: 0.3s;
+}
+
+.shop_button {
+  position: absolute;
+  left: 10px;
+  top: 40px;
+  width: 50px;
+  height: auto;
+  z-index: 10000;
   background-color: #000;
-  border: solid 1px #ddd;
   border-radius: 50%;
+  opacity: 0.7;
+  transition: all, 0.2s ease;
 }
 
-
-.replace_button img {
+.shop_button img {
   width: 100%;
   height: 100%;
-  transition: all, 0.2s;
 }
 
-.replace_button img:hover {
+.header_logo:hover .shop_button {
+  background-color: #a46a9a;
+  opacity: 1;
+  width: 80px;
+  left: 80px;
+  top: 10px;
+  z-index: 10001;
+}
+
+.sns_button {
+  position: absolute;
+  left: 60px;
+  top: 10px;
+  width: 140px;
+  height: auto;
+  z-index: 10001;
+  opacity: 1;
+  transition: all, 0.2s ease;
+}
+
+.sns_button img {
+  width: auto;
+  height: 100%;
+}
+
+.header_logo:hover .sns_button {
+  opacity: 0.7;
+  width: 100px;
+  left: 10px;
+  top: 50px;
+  z-index: 10000;
   opacity: 0.7;
 }
+
 .side_bar ul {
     margin-top: 13dvh;
     padding: 0;

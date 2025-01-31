@@ -4,6 +4,25 @@ let offset = 0;
 const limit = 10;
 let totalPost = 0;
 
+// postデータ取得関数   ※未テストのためコメントアウト
+// function getPostData() {
+//     fetch('/fetch_post')
+//         .then(response => response.json())
+//         .then(data => {
+//             console.log(data);
+//             data.forEach(item => {
+//                 let div = document.createElement("div");
+//                 div.classList.add("item");
+//                 div.textContent = `Post: ${item}`;
+//                 console.log(`Post: ${item}`);
+//                 document.getElementById("content").appendChild(div);
+//             });
+//         })
+//         .catch(error => {
+//             console.error("データの取得に失敗しました:", error);
+//         });
+// }
+
 
 // スクロールが一番下に到達したかを判定する関数
 function isBottomReached() {

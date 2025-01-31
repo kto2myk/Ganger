@@ -74,10 +74,6 @@ header {
     background-color: #ddd;
 }
 
-.replace_button:hover {
-    background-color: #a46a9a;
-}
-
 
 /* 投稿表示エリア */ 
 .contents {
@@ -189,7 +185,13 @@ button.saved {
   /* border: 1px solid #007bff; */
 }
 
+#no_result {
+    text-align: center;
+    margin-top: 30dvh;
+    font-size: 2.5em;
+}
 
+/* 右のバー */
 .right_bar {
     position: fixed;
     z-index: 9999;
