@@ -5,7 +5,7 @@ from sqlalchemy.orm  import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost,SavedPost
+from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost,SavedPost,Block
 from Ganger.app.model.notification.notification_manager import NotificationManager
 from flask import current_app as app, session, url_for
 from Ganger.app.model.validator import Validator
@@ -138,16 +138,20 @@ class PostManager(DatabaseManager):
             if not user_id:
                 raise ValueError("user_idフィルターが指定されていません。")
 
-            # サブクエリでログインユーザーの「いいね」と「保存」を取得
+            # サブクエリでログインユーザーの「いいね」と「保存」,[ブロックされている or しているユーザー ]を取得
             liked_posts_subquery = Session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
             saved_posts_subquery = Session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
+            blocked_users_subquery = Session.query(Block.blocked_user).filter(Block.user_id == current_user_id).subquery()
+            blocked_by_subquery = Session.query(Block.user_id).filter(Block.blocked_user == current_user_id).subquery()
 
             # 指定されたユーザーのオリジナル投稿を取得
             user_posts_query = Session.query(Post).filter(
                 Post.user_id == user_id,
                 Post.reply_id == None,  # リプライでない
-                Post.post_id.notin_(select(liked_posts_subquery)),
-                Post.post_id.notin_(select(saved_posts_subquery))
+                ~Post.post_id.in_(select(liked_posts_subquery)),
+                ~Post.post_id.in_(select(saved_posts_subquery)),
+                ~Post.user_id.in_(select(blocked_users_subquery)),  # ブロックしている人を除外
+                ~Post.user_id.in_(select(blocked_by_subquery))  # ブロックされている人を除外
             ).options(
                 joinedload(Post.images),
                 joinedload(Post.author)
@@ -157,8 +161,11 @@ class PostManager(DatabaseManager):
             reposted_posts_query = Session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
                 Repost.user_id == user_id,
                 Post.reply_id == None,  # リプライでない
-                Post.post_id.notin_(select(liked_posts_subquery)),
-                Post.post_id.notin_(select(saved_posts_subquery))
+                ~Post.post_id.in_(select(liked_posts_subquery)),
+                ~Post.post_id.in_(select(saved_posts_subquery)),
+                ~Post.user_id.in_(select(blocked_users_subquery)),  # ブロックしている人を除外
+                ~Post.user_id.in_(select(blocked_by_subquery))  # ブロックされている人を除外
+
             ).options(
                 joinedload(Post.images),
                 joinedload(Post.author),
@@ -166,7 +173,7 @@ class PostManager(DatabaseManager):
             )
 
             # オリジナル投稿とリポストを結合し、投稿時間で降順に並べ替え
-            all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).all()
+            all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).limit(3)
 
             # 投稿データをフォーマット
             formatted_posts = []
@@ -265,7 +272,6 @@ class PostManager(DatabaseManager):
             tags = Session.query(TagMaster).filter(
                 TagMaster.tag_text.ilike(f"%{query}%")
             ).all()
-
             print(f"Query: {query}, Tags Found: {[tag.tag_text for tag in tags]}")  # デバッグログ
 
             results = []
@@ -275,13 +281,14 @@ class PostManager(DatabaseManager):
                     post_count = Session.query(Post).join(TagPost).filter(
                         TagPost.tag_id == tag.tag_id
                     ).count()
+                    app.redis_client.zincrby("trending_tags", 5, f"{tag.tag_id}:{tag.tag_text}")
 
-                    # タグに紐づく投稿を最大30件取得
+                    # タグに紐づく投稿を最大5件取得
                     posts = (
                         Session.query(Post)
                         .join(TagPost)
                         .filter(TagPost.tag_id == tag.tag_id)
-                        .limit(30)
+                        .limit(5)
                         .all()
                     )
 
@@ -330,6 +337,7 @@ class PostManager(DatabaseManager):
                 tag = {"tag_id": tag.tag_id,}
             # タグと投稿の関連付け
             tag_post_data = {"tag_id": tag["tag_id"], "post_id": post_id}
+            app.redis_client.zincrby("trending_tags", 10, f"{tag['tag_id']}:{tag_text}")
             self.insert(model=TagPost, data=tag_post_data, unique_check=tag_post_data, Session=Session)
 
             self.make_commit_or_flush(Session)

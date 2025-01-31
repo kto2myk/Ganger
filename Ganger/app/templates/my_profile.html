@@ -61,6 +61,15 @@
                     <div class = "block-user">
                         <a href="{{url_for('toggle_block', user_id=profile.id)}}">ブロックする</a>
                     </div>
+                
+                {% else %}
+                    <div id="follow-button">
+                        <div class="follow-button">
+                            <svg></svg>
+                            プロフィールを編集
+                        </div>
+                    </div>
+
                 {% endif %}
             </div>
 

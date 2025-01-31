@@ -1,5 +1,7 @@
 from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify,abort # Flaskの各種機能をインポート
+from flask_session import Session
 from flask_wtf.csrf import CSRFProtect  # CSRF保護用
+from flask_redis import FlaskRedis
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
@@ -18,17 +20,41 @@ POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "post_images")
 TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
 PROFILE_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "profile_images")
 
-# Flask の基本設定
-app.secret_key = "your_secret_key"  # セッション用の秘密鍵（安全な値に変更してください）
-# csrf = CSRFProtect(app) # CSRF保護を有効化 
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300) 
+# 🔹 Flaskの基本設定
+app.secret_key = "your_secret_key"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300)
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-app.config['POST_FOLDER'] = POST_IMAGE_FOLDER
-app.config['TEMP_FOLDER'] = TEMP_IMAGE_FOLDER
-app.config['PROFILE_FOLDER'] = PROFILE_IMAGE_FOLDER
 
+# 🔹 画像保存先の設定
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "post_images")
+TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
+PROFILE_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "profile_images")
 
+app.config["POST_FOLDER"] = POST_IMAGE_FOLDER
+app.config["TEMP_FOLDER"] = TEMP_IMAGE_FOLDER
+app.config["PROFILE_FOLDER"] = PROFILE_IMAGE_FOLDER
+
+# 🔹 Redisの設定（キャッシュ用）
+app.config["REDIS_URL"] = "redis://localhost:6379/0"
+
+# 🔹 Flask-Redisの設定
+redis_client = FlaskRedis()  # `StrictRedis` ではなく `FlaskRedis` を使用
+redis_client.init_app(app)
+app.redis_client = redis_client
+# 🔹 Flask-Sessionの設定（Redisを使用）
+app.config["SESSION_TYPE"] = "redis"
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_USE_SIGNER"] = True
+app.config["SESSION_KEY_PREFIX"] = "session:"
+app.config["SESSION_REDIS"] = redis_client._redis_client  # ✅ ここを修正（StrictRedisを使用）
+
+# 🔹 キャッシュの有効期限設定（12時間）
+app.config["CACHE_DEFAULT_TIMEOUT"] = 3600 * 12
+
+# Flask-Sessionを適用（Flask-Redisの初期化後に適用）
+Session(app)
 
 # @app.before_request
 # def check_session():
@@ -104,7 +130,7 @@ def home():
     notification_manager = NotificationManager()
     try:
         # フィルターを設定して投稿データを取得
-        filters = {"user_id": 3}  # テスト用フィルタ
+        filters = {"user_id": 5}  # テスト用フィルタ
         user_id = Validator.decrypt(session.get("id"))
         formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id)
         # 未読通知の数を取得
@@ -228,7 +254,7 @@ def toggle_block(user_id):
     try:
         user_manager = UserManager()
         result  =user_manager.toggle_block(blocked_user_id=user_id)
-        
+
         if result.get('error'):
             return abort(400,description=result.get('error'))
 

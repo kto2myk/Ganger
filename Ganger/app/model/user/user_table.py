@@ -341,19 +341,21 @@ class UserManager(DatabaseManager):
             ).delete(synchronize_session=False)
 
 
-            #投稿削除（ブロックされた相手の投稿のリプライを削除）
+            # ① ブロックした/された人の投稿に対するリプライを削除
             Session.query(Post).filter(
-                exists().where(
-                    and_(
-                        Post.post_id == Post.reply_id,  # 返信先の投稿ID
-                        or_(
-                            Post.user_id == user_id,  # 自分の投稿への返信
-                            Post.user_id == blocked_user_id  # 相手の投稿への返信
-                        )
+                Post.reply_id.in_(
+                    Session.query(Post.post_id).filter(
+                        Post.user_id.in_([user_id, blocked_user_id])
                     )
                 )
             ).delete(synchronize_session=False)
 
+            # ② ブロックした/された人が投稿したリプライも削除
+            Session.query(Post).filter(
+                Post.user_id.in_([user_id, blocked_user_id]),
+                Post.reply_id.isnot(None)  # ルート投稿は削除しない
+            ).delete(synchronize_session=False)
+            
             notification_manager.delete_notifications(user_id=user_id,blocked_user_id=blocked_user_id,Session=Session)
 
             self.make_commit_or_flush(Session)
