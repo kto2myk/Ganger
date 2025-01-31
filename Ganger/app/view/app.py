@@ -12,6 +12,7 @@ app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
     static_folder=os.path.abspath("Ganger/app/static"),
 )
+#docker start redis-server
 
 # 実行ディレクトリを基準に保存先を設定  app.pyディレクトリの一階層上 app/までを取得
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))  
