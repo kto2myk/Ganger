@@ -8,8 +8,8 @@ from Ganger.app.model.model_manager.model import Notification, NotificationDetai
 from flask import current_app as app, url_for
 
 class NotificationManager(DatabaseManager):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,app=None):
+        super().__init__(app)
 
     def get_notification_count(self, user_id, is_read=None, is_deleted=False, Session=None):
         """

@@ -4,10 +4,11 @@ import threading
 from sqlalchemy import create_engine,event
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from flask import current_app as app
+from flask import current_app 
 from werkzeug.security import check_password_hash 
 from Ganger.app.model.validator import Validator  # 検証用
 from Ganger.app.model.model_manager.model import Base
+from Ganger.app.model.redis.redis_manager import RedisCache
 from ErrorManager.error_manager import ErrorLogManager  #errorログ記録
 
 class DatabaseConnector:
@@ -58,13 +59,38 @@ class DatabaseConnector:
 class DatabaseManager(DatabaseConnector):
     __multi_stuck = []
 
-    def __init__(self):
+    def __init__(self,app=None):
         super().__init__()
+        self.__app = app or current_app 
         self.__error_log_manager = ErrorLogManager()
+        self.__redis = RedisCache(self.__app)
+        self.__trend = ["trending_post","trending_tags","trending_product","trending_categories","trending_users"]
+
     
     @property
     def error_log_manager(self):
         return self.__error_log_manager
+    
+    @property
+    def redis(self):
+        return self.__redis
+    
+    @property
+    def app(self):
+        return self.__app
+    
+    @property
+    
+    def trending(self):
+        """
+        0 = posts,
+        1 = tags,
+        2 = products,
+        3 = categories,
+        4 = users
+        """
+        return self.__trend
+
     
     @classmethod
     def stuck(cls):
@@ -90,7 +116,7 @@ class DatabaseManager(DatabaseConnector):
                 # fetch_oneを使用して重複チェック
                 existing = self.fetch_one(model=model, filters=unique_check,Session=Session)
                 if existing:
-                    app.logger.info("重複あり.")
+                    self.app.logger.info("重複あり.")
                     self.pop_from_stack()
                     return None
             
@@ -115,7 +141,7 @@ class DatabaseManager(DatabaseConnector):
             Session = self.make_session(Session)
             query = Session.query(model).filter_by(**filters)
             if not query.first():
-                app.logger.info("No matching entry found for update.")
+                self.app.logger.info("No matching entry found for update.")
                 return None
             query.update(data)
             updated_instance = query.first()
@@ -124,7 +150,7 @@ class DatabaseManager(DatabaseConnector):
             return updated_instance
         except SQLAlchemyError as e:
             self.session_rollback(Session)
-            app.logger.error(f"Failed to update data: {e}")
+            self.app.logger.error(f"Failed to update data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
 
@@ -138,7 +164,7 @@ class DatabaseManager(DatabaseConnector):
             return deleted_count
         except SQLAlchemyError as e:
             self.session_rollback(Session)
-            app.logger.error(f"Failed to delete data: {e}")
+            self.app.logger.error(f"Failed to delete data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
 
@@ -160,7 +186,7 @@ class DatabaseManager(DatabaseConnector):
                     if hasattr(model, field):
                         query = query.filter(getattr(model, field) == value)
                     else:
-                        app.logger.error(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
+                        self.app.logger.error(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
                         raise AttributeError(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
 
             # リレーションシップのロード
@@ -169,14 +195,14 @@ class DatabaseManager(DatabaseConnector):
                     if hasattr(model, rel):
                         query = query.options(joinedload(getattr(model, rel)))
                     else:
-                        app.logger.error(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
+                        self.app.logger.error(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
                         raise AttributeError(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
             self.pop_and_close(Session)
             return query.all()
         
         except SQLAlchemyError as e:
             self.session_rollback(Session)
-            app.logger.error(f"Failed to fetch data: {e}")
+            self.app.logger.error(f"Failed to fetch data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
 
@@ -195,7 +221,7 @@ class DatabaseManager(DatabaseConnector):
                     if hasattr(model, field):
                         query = query.filter(getattr(model, field) == value)
                     else:
-                        app.logger.error(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
+                        self.app.logger.error(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
                         raise AttributeError(f"'{model.__name__}'モデルに'{field}'という属性は存在しません。")
 
             # リレーションシップのロード
@@ -204,7 +230,7 @@ class DatabaseManager(DatabaseConnector):
                     if hasattr(model, rel):
                         query = query.options(joinedload(getattr(model, rel)))
                     else:
-                        app.logger.error(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
+                        self.app.logger.error(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
                         raise AttributeError(f"'{model.__name__}'モデルに'{rel}'というリレーションは存在しません。")
 
             # 最初の一件を取得
@@ -212,7 +238,7 @@ class DatabaseManager(DatabaseConnector):
             return query.first()
         except SQLAlchemyError as e:
             self.session_rollback(Session)
-            app.logger.error(f"Failed to fetch one data: {e}")
+            self.app.logger.error(f"Failed to fetch one data: {e}")
             self.__error_log_manager.add_error(None, str(e))
             return None
         
@@ -237,27 +263,27 @@ class DatabaseManager(DatabaseConnector):
                     query = query.filter(getattr(model, key) == value)
             return query
         except AttributeError as ae:
-            app.logger.error(f"Query building error: {ae}")
+            self.app.logger.error(f"Query building error: {ae}")
             raise
         except SQLAlchemyError as se:
-            app.logger.error(f"SQLAlchemy error during query building: {se}")
+            self.app.logger.error(f"SQLAlchemy error during query building: {se}")
             raise
         except Exception as e:
-            app.logger.error(f"Unexpected error during query building: {e}")
+            self.app.logger.error(f"Unexpected error during query building: {e}")
             raise
 
 
     @classmethod
-    def push_to_stack(cls, value:bool):
+    def push_to_stack(cls,value:bool):
         """
         スタックに値を追加。
         """
         try:
             cls.__multi_stuck.append(value)
-            app.logger.info(f"add {value} to stuck in {inspect.stack()[2].function}")
-            app.logger.info(f"stuck is {cls.__multi_stuck} now")
+            current_app.logger.info(f"add {value} to stuck in {inspect.stack()[2].function}")
+            current_app.logger.info(f"stuck is {cls.__multi_stuck} now")
         except Exception as e:
-            app.logger.error(e)
+            current_app.logger.error(e)
             raise
 
 
@@ -268,16 +294,16 @@ class DatabaseManager(DatabaseConnector):
         """
         try:
             if cls.__multi_stuck:
-                app.logger.info(f"pop {cls.__multi_stuck[-1]} from stuck")
-                app.logger.info(f"stuck is {cls.__multi_stuck[:-1]} now")
+                current_app.logger.info(f"pop {cls.__multi_stuck[-1]} from stuck")
+                current_app.logger.info(f"stuck is {cls.__multi_stuck[:-1]} now")
                 return cls.__multi_stuck.pop()
             
             else:
                 e = "スタックが空です。pop操作に失敗しました。"
-                app.logger.error(e)
+                current_app.logger.error(e)
                 return None
         except Exception as e:
-            app.logger.error(e)
+            current_app.logger.error(e)
             raise
         
     @classmethod
@@ -288,9 +314,9 @@ class DatabaseManager(DatabaseConnector):
         try:
             cls.__multi_stuck.clear()
             Session.rollback()
-            app.logger.info(f"clear the stuck,error occur {inspect.stack()[1].function},session rollback!!")
+            current_app.logger.info(f"clear the stuck,error occur {inspect.stack()[1].function},session rollback!!")
         except Exception as e:
-            app.logger.error(e)
+            current_app.logger.error(e)
             raise
         finally:
             DatabaseManager.session_close(Session)
@@ -308,9 +334,9 @@ class DatabaseManager(DatabaseConnector):
     def session_close(Session):
         try:
             Session.close()
-            app.logger.info("session is closed")
+            current_app.logger.info("session is closed")
         except Exception as e:
-            app.logger.error(e)
+            current_app.logger.error(e)
             raise
         
     def make_session(self, db_session=None):
@@ -320,14 +346,14 @@ class DatabaseManager(DatabaseConnector):
         """
         try:
             if db_session is None or self.stuck() is False:
-                app.logger.info(f"make session in {inspect.stack()[1].function}")
+                self.app.logger.info(f"make session in {inspect.stack()[1].function}")
                 self.push_to_stack(False)
                 db_session = Session(self.engine())
                 db_session.begin()
-                app.logger.info("created top session")
+                self.app.logger.info("created top session")
             else:
                 self.push_to_stack(True)
-                app.logger.info("session is reused,nested transaction")
+                self.app.logger.info("session is reused,nested transaction")
                 db_session.begin_nested()
 
             return db_session
@@ -335,7 +361,7 @@ class DatabaseManager(DatabaseConnector):
         except Exception as e:
             if db_session:
                 self.session_rollback(db_session)
-            app.logger.error(e)
+            self.app.logger.error(e)
             raise
 
     @classmethod
@@ -348,22 +374,22 @@ class DatabaseManager(DatabaseConnector):
             # スタックの状態を確認し、ポップ
             popped_value = cls.pop_from_stack()
             if popped_value is None:
-                app.logger.error("スタックが空の状態で pop_and_close が呼び出されました。")
+                current_app.logger.error("スタックが空の状態で pop_and_close が呼び出されました。")
                 raise ValueError("トランザクション状態が不正です。")
 
             # Trueの場合は何もせず終了（ネストされたトランザクションを終了しない）
             if popped_value is True:
-                app.logger.info("ネストされたトランザクションの終了をスキップします。")
+                current_app.logger.info("ネストされたトランザクションの終了をスキップします。")
                 return
 
             # Falseの場合はセッションを閉じる
             if popped_value is False and Session:
                 DatabaseManager.session_close(Session=Session)
             else:
-                app.logger.warning("セッションが無効、または既に閉じられています。")
+                current_app.logger.warning("セッションが無効、または既に閉じられています。")
 
         except Exception as e:
-            app.logger.error(f"pop_and_close 中にエラーが発生しました: {e}")
+            current_app.logger.error(f"pop_and_close 中にエラーが発生しました: {e}")
             raise
     
     def make_commit_or_flush(self, Session):
@@ -375,19 +401,19 @@ class DatabaseManager(DatabaseConnector):
             is_multi = self.pop_from_stack()
             if is_multi is None:
                 e = "トランザクション状態が不正です。"
-                app.logger.error(e)
+                self.app.logger.error(e)
                 raise  SystemError(e)
             
             if is_multi:
                 Session.flush()  # トランザクションを継続する場合
-                app.logger.info(f"session.flush() in {inspect.stack()[1].function}")
+                self.app.logger.info(f"session.flush() in {inspect.stack()[1].function}")
             else:
                 Session.commit()  # トランザクションを確定する場合
-                app.logger.info(f"session.commit() in {inspect.stack()[1].function}")
+                self.app.logger.info(f"session.commit() in {inspect.stack()[1].function}")
                 DatabaseManager.session_close(Session=Session)
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(e)
+            self.app.logger.error(e)
             raise
 
     # def get_user_by_identifier(self, session, identifier):

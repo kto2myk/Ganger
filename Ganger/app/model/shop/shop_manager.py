@@ -1,6 +1,6 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
-from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like,Cart,CartItem,Sale,SalesItem
+from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like,Cart,CartItem,Sale,SalesItem,Image
 from Ganger.app.model.validator.validate import Validator
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
@@ -11,8 +11,8 @@ from flask import current_app as app, session,url_for
 
 
 class ShopManager(DatabaseManager):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,app=None):
+        super().__init__(app)
         self.__notification_manager = NotificationManager()
     
     def create_product(self, post_id, price, name, category_name, Session=None):
@@ -44,6 +44,7 @@ class ShopManager(DatabaseManager):
             if not category_id:
                 error_result = {"status": False, "message": f"カテゴリ '{category_name}' が見つかりません。", "product": None}
                 raise Exception
+            self.redis.add_score(ranking_key=self.trending[3],item_id=category_id,score=5)
 
             # Step 3: ProductCategoryテーブルに挿入
             product_category_data = {
@@ -73,7 +74,7 @@ class ShopManager(DatabaseManager):
                     related_item_type="shop",
                     Session=Session
                 )
-
+            self.redis.add_score(ranking_key=self.trending[2],item_id=inserted_product["product_id"],score=2)
             self.make_commit_or_flush(Session)
             return {
                 "status": True,
@@ -111,6 +112,7 @@ class ShopManager(DatabaseManager):
                 result = {"status": "not_found", "product_id": product_id}
                 app.logger.info(f"No product found with ID {product_id} to delete.")
 
+            self.redis.remove_score(ranking_key=self.trending[2],item_id=product_id)
             self.make_commit_or_flush(Session)
             return result
         except SQLAlchemyError as e:
@@ -171,6 +173,7 @@ class ShopManager(DatabaseManager):
                         "img_path":url_for("static", filename=f"images/post_images/{shop.post.images[0].img_path}")
                     }
                     formatted_data.append(shop_data)
+                    self.redis.add_score(ranking_key=self.trending[2],item_id=shop.product_id,score=5)
                 except AttributeError as e:
                     app.logger.error(f"データ整形エラー: {e}")
                     continue
@@ -199,6 +202,7 @@ class ShopManager(DatabaseManager):
                         for image in product.post.images
                         ] if product.post.images else []
                     } if product else None
+            self.redis.add_score(ranking_key=self.trending[2],item_id=product.product_id,score=8)
             self.pop_and_close(Session)
             return formatted_product
         
@@ -230,6 +234,7 @@ class ShopManager(DatabaseManager):
                 #商品がカートにない場合、新規追加
                 self.insert(model=CartItem,data={"cart_id":cart.cart_id,"product_id":product_id,"quantity":quantity},Session=Session)
             # 3. 変更を保存
+            self.redis.add_score(ranking_key=self.trending[2],item_id=product_id,score=12)
             self.make_commit_or_flush(Session)
             return {"status": "success", "message": "カートに商品を追加しました"}
         
@@ -347,7 +352,7 @@ class ShopManager(DatabaseManager):
             app.logger.error(f"カートアイテム取得エラー: {e}")
             return False, None
 
-    def update_cart_quantity(self, user_id, product_id, new_quantity):
+    def update_cart_quantity(self, user_id, product_id, new_quantity,Session=None):
         """
         カート内の商品数量を更新
 
@@ -362,12 +367,12 @@ class ShopManager(DatabaseManager):
 
             if cart_item:
                 cart_item.quantity = new_quantity
-                Session.commit()
+                self.make_commit_or_flush(Session)
                 return {"success": True, "message": "カートの数量が更新されました"}
             else:
                 return {"success": False, "message": "商品がカートに見つかりません"}
         except Exception as e:
-            Session.rollback()
+            self.session_rollback(Session)
             return {"success": False, "message": f"エラー: {str(e)}"}
 
 
@@ -456,6 +461,7 @@ class ShopManager(DatabaseManager):
                 raise Exception("カートアイテムの削除に失敗しました")
             
             # 6. トランザクションの確定
+            self.redis.add_score(ranking_key=self.trending[2],item_id=selected_cart_item_ids,score=15)
             self.make_commit_or_flush(Session)
             app.logger.info("購入が完了しました")
             return {"success": True, "message": "購入が完了しました。", "sale_id": sale['sale_id']}
@@ -544,6 +550,7 @@ class ShopManager(DatabaseManager):
             category_results = [{"category_name": category.category_name, "post_count": 0, "posts": []} for category in categories]
 
             category_ids = [category.category_id for category in categories]
+            self.redis.add_score(ranking_key=self.trending[3],item_id=category_ids,score=7)
             app.logger.info(f"Category IDs found: {category_ids}")
 
             # 2. カテゴリーに紐づく投稿を画像とともに一括取得
@@ -571,6 +578,7 @@ class ShopManager(DatabaseManager):
             post_data = {}
             for category_name, product_id,post_id, body_text, post_time, img_path  in results:
                 if post_id not in post_data:
+                    self.redis.add_score(ranking_key=self.trending[2],item_id=product_id,score=5)
                     post_data[post_id] = {
                         "post_id": Validator.encrypt(post_id),
                         "product_id": Validator.encrypt(product_id),
@@ -584,7 +592,6 @@ class ShopManager(DatabaseManager):
             for category in category_results:
                 category["posts"] = [post for post in post_data.values() if post["category_name"] == category["category_name"]]
                 category["post_count"] = len(category["posts"])
-
             self.pop_and_close(Session)
             app.logger.info(f"Final formatted results: {len(category_results)} categories")
 

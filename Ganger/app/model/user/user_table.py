@@ -13,8 +13,8 @@ from flask import current_app as app # ログ出力用
 
 
 class UserManager(DatabaseManager):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,app=None):
+        super().__init__(app)
 
 
     def create_user(self, username: str, email: str, password: str,Session=None):
@@ -43,7 +43,7 @@ class UserManager(DatabaseManager):
 
             # セッション登録
             self.register_session(new_user)
-
+            self.redis.add_score(ranking_key=self.trending[4],item_id=new_user['id'],score=1)
             self.make_commit_or_flush(Session)
             return True, new_user
 
@@ -70,7 +70,7 @@ class UserManager(DatabaseManager):
                 raise Exception("ユーザー名またはパスワードが間違っています。")
             # セッション登録
             self.register_session(user)
-
+            self.redis.add_score(ranking_key=self.trending[4],item_id=user.id,score=1)
             self.pop_and_close(Session)
             return user, None
 
@@ -129,7 +129,18 @@ class UserManager(DatabaseManager):
             ).limit(10).all()
 
             self.pop_and_close(Session)
-            return [{"user_id": user.user_id, "username": user.username, "id": Validator.encrypt(user.id)} for user in users]
+            result = []  # 🔹 結果を格納するリストを作成
+            for user in users:
+                self.redis.add_score(ranking_key=self.trending[4],item_id=user.id,score=3)
+                user_data = {
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "id": Validator.encrypt(user.id)
+                }
+                result.append(user_data) 
+
+            return result
+        
         except SQLAlchemyError as e:
             self.session_rollback(Session)
             app.logger.error(f"Failed to search users: {e}")
@@ -221,7 +232,7 @@ class UserManager(DatabaseManager):
                 "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}"),
                 "posts": formatted_posts,
             }
-        
+            self.redis.add_score(ranking_key=self.trending[4],item_id=decrypted_id,score=8)
             self.pop_and_close(Session)
             return profile_data
         
@@ -253,11 +264,13 @@ class UserManager(DatabaseManager):
                 # フォローが存在する場合は削除
                 self.delete(model=Follow, filters=data, Session=Session)
                 app.logger.info(f"Follow removed: followed_user={sender_id}, user_id={sender_id}")
+                self.redis.add_score(ranking_key=self.trending[4],item_id=followed_user_id,score=-15)
                 result = {"status": "unfollowed"}
             else:
                 # フォローが存在しない場合は作成
                 self.insert(model=Follow, data=data, Session=Session)
                 app.logger.info(f"Follow added: followed_user={followed_user_id}, user_id={sender_id}")
+                self.redis.add_score(ranking_key=self.trending[4],item_id=followed_user_id,score=15)
                 result = {"status": "followed"}
 
             self.make_commit_or_flush(Session)
@@ -293,6 +306,7 @@ class UserManager(DatabaseManager):
                 self.delete_related_data(user_id=user_id, blocked_user_id=blocked_user_id, Session=Session)
 
                 self.make_commit_or_flush(Session)
+                self.redis.add_score(ranking_key=self.trending[4],item_id=user_id,score=-5)
                 app.logger.info("ユーザーをブロックしました", new_block)
                 return {"message": "ユーザーをブロックしました", "status": "blocked"}
 

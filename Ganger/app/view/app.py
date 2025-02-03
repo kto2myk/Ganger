@@ -49,11 +49,10 @@ app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "session:"
-app.config["SESSION_REDIS"] = redis_client._redis_client  # ✅ ここを修正（StrictRedisを使用）
-
+app.config["SESSION_REFRESH_EACH_REQUEST"] = True
+app.config["SESSION_REDIS"] = redis_client._redis_client
 # 🔹 キャッシュの有効期限設定（12時間）
 app.config["CACHE_DEFAULT_TIMEOUT"] = 3600 * 12
-
 # Flask-Sessionを適用（Flask-Redisの初期化後に適用）
 Session(app)
 
