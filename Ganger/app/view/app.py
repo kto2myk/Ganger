@@ -5,8 +5,13 @@ from flask_redis import FlaskRedis
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
+from Ganger.app.model.model_manager.model import User
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
+from Ganger.app.model.user.user_table import UserManager
+from Ganger.app.model.post.post_manager import PostManager
+from Ganger.app.model.shop.shop_manager import ShopManager
+from Ganger.app.model.notification.notification_manager import NotificationManager
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -66,11 +71,15 @@ Session(app)
 # def make_session_permanent(): #sessionの一括永続化
 #     session.permanent = True
 
+with app.app_context():
+    db_manager = DatabaseManager(app)
+    user_manager = UserManager()
+    post_manager = PostManager()
+    shop_manager = ShopManager()
+    notification_manager = NotificationManager()
 
 @app.route("/", methods=["GET", "POST"])
 def login():
-    from Ganger.app.model.user.user_table import UserManager
-    user_manager = UserManager()
 
     if request.method == "GET":
         if "id" in session:
@@ -93,9 +102,7 @@ def login():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    from Ganger.app.model.user.user_table import UserManager
-    user_manager = UserManager()
-
+    
     if request.method == "GET":
         if "id" in session:
             return redirect(url_for("home"))
@@ -124,10 +131,6 @@ def signup():
         
 @app.route("/home")
 def home():
-    from Ganger.app.model.post.post_manager import PostManager
-    from Ganger.app.model.notification.notification_manager import NotificationManager
-    post_manager = PostManager()
-    notification_manager = NotificationManager()
     try:
         # フィルターを設定して投稿データを取得
         filters = {"user_id": 5}  # テスト用フィルタ
@@ -158,7 +161,6 @@ def fetch_post():
 def password_reset():
     if request.method == 'POST':
         
-        from Ganger.app.model.model_manager.model import User
         email = request.form['email']
         password = request.form['password']
         password_confirm = request.form['password_confirm']
@@ -171,8 +173,7 @@ def password_reset():
             return render_template('password_reset.html')
         
         # ユーザーの検索とパスワード更新
-        database_manager = DatabaseManager()
-        user = database_manager.fetch_one(User, filters={"email": email})
+        user = db_manager.fetch_one(User, filters={"email": email})
         if not user:
             error = '該当するメールアドレスが見つかりません。'
             flash(error)
@@ -181,7 +182,7 @@ def password_reset():
         
         # パスワードの更新
         hashed_password = generate_password_hash(password)
-        success = database_manager.update(User, {"email": email}, {"password": hashed_password})
+        success = db_manager.update(User, {"email": email}, {"password": hashed_password})
         if success:
             flash('パスワードをリセットしました。ログインしてください。', 'success')
             return redirect(url_for('login'))
@@ -195,7 +196,6 @@ def password_reset():
 
 @app.route('/like/<string:post_id>', methods=['POST'])
 def toggle_like(post_id,):
-    from Ganger.app.model.post.post_manager import PostManager
     try:
         sender_id = Validator.decrypt(session.get("id"))
         post_id = Validator.decrypt(post_id)
@@ -216,14 +216,12 @@ def toggle_like(post_id,):
 @app.route('/follow/<string:follow_user_id>', methods=['POST'])
 def toggle_follow(follow_user_id):
     try:
-        from Ganger.app.model.user.user_table import UserManager
 
         if not follow_user_id:
             app.logger.error("Missing required IDs for authentication.")
             return jsonify({'error': 'Unauthorized'}), 401
 
-        follow_manager = UserManager()
-        result = follow_manager.toggle_follow(followed_user_id=follow_user_id)
+        result = user_manager.toggle_follow(followed_user_id=follow_user_id)
 
         return jsonify(result), 200
 
@@ -233,8 +231,6 @@ def toggle_follow(follow_user_id):
     
 @app.route("/my_profile/<id>", methods=["GET"])
 def my_profile(id):
-    from Ganger.app.model.user.user_table import UserManager
-    user_manager = UserManager()
 
     try:
         # プロフィール情報を取得
@@ -250,9 +246,7 @@ def my_profile(id):
     
 @app.route("/toggle_block/<string:user_id>")
 def toggle_block(user_id):
-    from Ganger.app.model.user.user_table import UserManager
     try:
-        user_manager = UserManager()
         result  =user_manager.toggle_block(blocked_user_id=user_id)
 
         if result.get('error'):
@@ -269,7 +263,6 @@ def create_post():
         return render_template('create_post.html')
     else:
         try:
-            from Ganger.app.model.post.post_manager import PostManager
             # フォームデータの取得
             content = request.form.get('content')
             tags = request.form.get('tags', "")  # タグが無い場合は空文字
@@ -283,7 +276,6 @@ def create_post():
                 return jsonify({"success": False, "error": "You can upload a maximum of 6 images"}), 400
             
             # 投稿処理を呼び出し
-            post_manager = PostManager()
             result = post_manager.create_post(
                 content=content,
                 image_files=images, 
@@ -304,8 +296,6 @@ def create_design():
 
 @app.route('/submit_comment/<string:post_id>', methods=['POST'])
 def submit_comment(post_id):
-    from Ganger.app.model.post.post_manager import PostManager
-    post_manager = PostManager()
 
     try:
         sender_id = Validator.decrypt(session.get("id"))
@@ -398,20 +388,14 @@ def search():
         results = {"users": [], "tags": [], "categories": []}
 
         if query:
-            from Ganger.app.model.shop.shop_manager import ShopManager
-            from Ganger.app.model.post.post_manager import PostManager
-            from Ganger.app.model.user.user_table import UserManager
 
 
             # タブに基づいた処理
             if tab == "USER":
-                user_manager = UserManager()
                 results['users'] = user_manager.search_users(query)
             elif tab == "TAG":
-                post_manager = PostManager()
                 results['tags'] = post_manager.search_tags(query)
             elif tab == "CATEGORY":
-                shop_manager = ShopManager()
                 results['categories'] = shop_manager.search_categories(query)
 
         # ログ出力
@@ -432,17 +416,17 @@ def search():
         
 @app.route('/display_post/<post_id>', methods=['GET'])
 def display_post(post_id):
-    from Ganger.app.model.post.post_manager import PostManager
-    post_manager = PostManager()
 
     try:
         # デバッグ用ログ
         app.logger.info(f"Fetching post with post_id: {post_id}")
 
         # 投稿データを取得
-        post_details = post_manager.get_post_details(post_id)
+        post_details = post_manager.get_posts_details(post_id)
         app.logger.info(f"Post details: {post_details}")
         # テンプレートにデータを渡す
+        if post_details:
+            post_details = post_details[0]
         return render_template("display_post.html", post=post_details)
     except ValueError as e:
         app.logger.error(f"ValueError: {e}")
@@ -451,12 +435,38 @@ def display_post(post_id):
         app.logger.error(f"Unexpected error: {e}")
         return "投稿データの取得中にエラーが発生しました。", 500
 
+@app.route("/fetch_trending_posts")
+def fetch_trending_posts():
+    try:
+        # 現在のユーザーIDを取得（ログインしていない場合は None）
+        current_user_id = session.get("id")
+
+        # Redis からトレンド投稿の ID を取得
+        trending_posts_ids = db_manager.redis.get_ranking_ids(
+            ranking_key=db_manager.trending[0], top_n=10
+        )
+
+        # 投稿データを取得
+        post_data = post_manager.get_posts_details(
+            post_ids=trending_posts_ids, current_user_id=current_user_id
+        )
+
+        # データが空なら適切なレスポンスを返す
+        if not post_data:
+            return ("trending_posts", {"message": "トレンド投稿がありません。", "posts": []})
+
+        # クライアントにデータを送信
+        return("trending_posts", {"message": "トレンド投稿を取得しました", "posts": post_data})
+
+    except Exception as e:
+        app.logger.error(f"⚠️ Error in fetch_trending_posts: {e}")
+        return("error", {"message": "トレンド投稿の取得に失敗しました。"})
+
 @app.route("/notifications", methods=["GET"])
 def notifications():
     """
     通知一覧を表示するエンドポイント
     """
-    from Ganger.app.model.notification.notification_manager import NotificationManager
     # セッションからユーザーIDを取得
 
     # NotificationManager を使って通知データを取得
@@ -473,8 +483,6 @@ def notifications():
 
 @app.route("/repost/<post_id>", methods=["POST"])
 def repost(post_id):
-    from Ganger.app.model.post.post_manager import PostManager
-    post_manager = PostManager()
 
     try:
         sender_id = Validator.decrypt(session.get("id"))
@@ -497,8 +505,6 @@ def repost(post_id):
     
 @app.route("/save_post/<post_id>", methods=["POST"])
 def save_post(post_id):
-    from Ganger.app.model.post.post_manager import PostManager
-    post_manager = PostManager()
 
     try:
         post_id = Validator.decrypt(post_id)
@@ -529,7 +535,6 @@ def save_post(post_id):
     
 @app.route("/make_post_into_product/<post_id>", methods=["POST"])
 def make_post_into_product(post_id):
-    from Ganger.app.model.shop.shop_manager import ShopManager
     try:
         # フォームデータの取得
         post_id = Validator.decrypt(post_id)
@@ -546,7 +551,6 @@ def make_post_into_product(post_id):
             return jsonify({"status": False, "message": "商品名は3文字以上で入力してください。"}), 400
 
         # 商品化処理
-        shop_manager = ShopManager()
         result = shop_manager.create_product(
             post_id=post_id,
             price=int(price),
@@ -567,8 +571,6 @@ def make_post_into_product(post_id):
 
 @app.route("/shop_page")
 def shop_page():
-    from Ganger.app.model.shop.shop_manager import ShopManager
-    shop_manager = ShopManager()
     shop_data = shop_manager.get_shop_with_images(limit=10)
 
     if shop_data is None:
@@ -578,8 +580,6 @@ def shop_page():
 
 @app.route("/display_product/<product_id>")
 def display_product(product_id):
-    from Ganger.app.model.shop.shop_manager import ShopManager
-    shop_manager = ShopManager()
     product = shop_manager.fetch_one_product_images(product_id=product_id)
 
     if product_id is None:
@@ -590,10 +590,7 @@ def display_product(product_id):
 @app.route('/add_cart', methods=['POST'])
 def add_to_cart():
     try:
-        from Ganger.app.model.shop.shop_manager import ShopManager
-        shop_manager = ShopManager()
         # リクエストのJSONデータを取得
-
         data = request.get_json()
         product_id = data.get('product_id')
         quantity = int(data.get('quantity'))
@@ -621,9 +618,6 @@ def after_add_cart():
 @app.route("/display_cart")
 def display_cart():
     user_id = session.get("id")  # セッションからユーザーIDを取得
-    from Ganger.app.model.shop.shop_manager import ShopManager
-    shop_manager = ShopManager()
-
     success, cart_items = shop_manager.fetch_cart_items(user_id)
 
     if not success:
@@ -634,8 +628,6 @@ def display_cart():
 
 @app.route("/checkout", methods=["GET","POST"])
 def check_out():
-    from Ganger.app.model.shop.shop_manager import ShopManager
-    shop_manager = ShopManager()
     try:
         if request.method == "POST":
             user_id = Validator.decrypt(session.get("id"))
@@ -655,8 +647,6 @@ def check_out():
 @app.route("/complete_checkout")
 def complete_checkout():
     try:
-        from Ganger.app.model.shop.shop_manager import ShopManager
-        shop_manager = ShopManager()
         user_id = session.get("id")
         result = shop_manager.fetch_sales_history(user_id=user_id)
         if not result:

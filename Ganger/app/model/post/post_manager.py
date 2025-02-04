@@ -123,7 +123,7 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Unexpected error: {e}")
             return {"success": False, "error": "An unexpected error occurred"}
     
-    def get_filtered_posts_with_reposts(self, filters, current_user_id, Session=None):
+    def get_filtered_posts_with_reposts(self, filters, current_user_id,offset = 10,limit = 5,Session=None):
         try:
             Session = self.make_session(Session)
             user_id = filters.get("user_id")
@@ -170,7 +170,7 @@ class PostManager(DatabaseManager):
             )
 
             # 🔥 `union_all()` を適用（エラーが出る場合は `list()` に切り替え）
-            all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).limit(3)
+            all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).offset(offset).limit(limit)
 
             # 🔥 投稿データをフォーマット
             formatted_posts = []
@@ -218,68 +218,104 @@ class PostManager(DatabaseManager):
 
             
 
-    def get_post_details(self, post_id, Session=None):
+
+    def get_posts_details(self, post_ids, current_user_id=None, Session=None):
         """
-        指定されたpost_idの投稿データを取得し、フォーマットして返す。
+        指定された複数の post_id の投稿データを取得し、フォーマットして返す。
+        ブロックしている/されているユーザーの投稿を除外する。
 
         Args:
-            post_id (int): 取得する投稿のID。
+            post_ids (list[str]): 取得する投稿の暗号化IDリスト。
+            current_user_id (int): ログイン中のユーザーのID。
 
         Returns:
-            dict: フォーマットされた投稿データ。
+            list[dict]: フォーマットされた投稿データのリスト。
         """
         try:
             Session = self.make_session(Session)
+            if current_user_id:
+                current_user_id = Validator.decrypt(current_user_id)
 
-            # 投稿データを取得
-            post = self.fetch_one(
-                model=Post,
-                relationships=["images", "author", "likes", "reposts", "saved_by_users", "replies"],
-                filters={"post_id": Validator.decrypt(post_id)},
-                Session=Session
+            post_ids = Validator.ensure_list(post_ids)
+            # post_ids を動的復号化
+            decrypted_ids = [Validator.decrypt(post_id) if len(post_id) > 5 else post_id for post_id in post_ids]
+
+            # ブロック関連のサブクエリ
+            blocked_users_subquery = (
+                Session.query(Block.blocked_user)
+                .filter(Block.user_id == current_user_id)
+                .subquery()
             )
 
-            if not post:
-                app.logger.warning(f"Post with post_id {post_id} not found.")
+            blocked_by_subquery = (
+                Session.query(Block.user_id)
+                .filter(Block.blocked_user == current_user_id)
+                .subquery()
+            )
+
+            # クエリ作成（リレーションも一括取得）
+            posts = (
+                Session.query(Post).filter(
+                    Post.post_id.in_(decrypted_ids),  # 指定されたpost_idの投稿のみ取得
+                    ~Post.user_id.in_(select(blocked_users_subquery)),  # 自分がブロックしたユーザーの投稿を除外
+                    ~Post.user_id.in_(select(blocked_by_subquery))
+                    )# 自分をブロックしているユーザーの投稿を除外
+                .options(
+                    joinedload(Post.images),
+                    joinedload(Post.author),
+                    joinedload(Post.likes),
+                    joinedload(Post.reposts),
+                    joinedload(Post.saved_by_users),
+                    joinedload(Post.replies)
+                )
+                .all()
+            )
+
+            if not posts:
+                app.logger.warning(f"Posts with post_ids {post_ids} not found or blocked.")
                 raise ValueError("投稿が見つかりません。")
 
-            # 🔥 各カウントを取得（リレーションの `.or []` を使い NoneType エラー回避）
-            like_count = len(post.likes or [])
-            repost_count = len(post.reposts or [])
-            saved_count = len(post.saved_by_users or [])
-            comment_count = len(post.replies or [])
+            formatted_posts = []
+            for post in posts:
+                # 各カウントを取得（リレーションの `.or []` で NoneType エラー回避）
+                like_count = len(post.likes or [])
+                repost_count = len(post.reposts or [])
+                saved_count = len(post.saved_by_users or [])
+                comment_count = len(post.replies or [])
 
-            # データをフォーマット
-            formatted_post = {
-                "post_id": Validator.encrypt(post.post_id),
-                "user_info": {
-                    "id": Validator.encrypt(post.author.id),
-                    "user_id": post.author.user_id,
-                    "username": post.author.username,
-                    "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}")
-                },
-                "body_text": post.body_text,
-                "post_time": Validator.calculate_time_difference(post.post_time),
-                "images": [
-                    {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
-                    for image in post.images
-                ],
-                # 🔥 追加: 各カウント情報
-                "like_count": like_count,
-                "repost_count": repost_count,
-                "saved_count": saved_count,
-                "comment_count": comment_count
-            }
-            self.redis.add_score(ranking_key=self.trending[0],item_id=post.post_id,score=6)
+                # データをフォーマット
+                formatted_post = {
+                    "post_id": Validator.encrypt(post.post_id),
+                    "user_info": {
+                        "id": Validator.encrypt(post.author.id),
+                        "user_id": post.author.user_id,
+                        "username": post.author.username,
+                        "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}")
+                    },
+                    "body_text": post.body_text,
+                    "post_time": Validator.calculate_time_difference(post.post_time),
+                    "images": [
+                        {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
+                        for image in post.images
+                    ],
+                    "like_count": like_count,
+                    "repost_count": repost_count,
+                    "saved_count": saved_count,
+                    "comment_count": comment_count
+                }
+                # Redis スコア更新
+                self.redis.add_score(ranking_key=self.trending[0], item_id=post.post_id, score=6)
+                formatted_posts.append(formatted_post)
+
             self.pop_and_close(Session)
-            return formatted_post
+            return formatted_posts
 
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(f"Error in get_post_details: {e}")
+            app.logger.error(f"Error in get_posts_details: {e}")
             raise
 
-    def search_tags(self, query, Session=None):
+    def search_tags(self, query,limit=10,Session=None):
         try:
             Session = self.make_session(Session)
 
@@ -287,7 +323,6 @@ class PostManager(DatabaseManager):
             tags = Session.query(TagMaster).filter(
                 TagMaster.tag_text.ilike(f"%{query}%")
             ).all()
-            print(f"Query: {query}, Tags Found: {[tag.tag_text for tag in tags]}")  # デバッグログ
 
             results = []
             if tags:
@@ -304,7 +339,7 @@ class PostManager(DatabaseManager):
                         Session.query(Post)
                         .join(TagPost)
                         .filter(TagPost.tag_id == tag.tag_id)
-                        .limit(5)
+                        .limit(limit)
                         .all()
                     )
 
@@ -339,6 +374,37 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Error in search_tags: {e}")
             return []    
 
+    def get_tags_by_ids(self, tag_ids,Session=None):
+        """
+        指定されたタグIDリストに対応するタグテキストを取得する（辞書型で返す）。
+
+        Args:
+            tag_ids (list[int]): 検索対象のタグIDリスト。
+
+        Returns:
+            dict: {tag_id: tag_text} の形式の辞書。
+        """
+        if not tag_ids:
+            return {}
+        else:
+            tag_ids = Validator.ensure_list(tag_ids) #単一値のリスト化
+
+        try:
+            Session = self.make_session(Session)
+            # ORM クエリで TagMaster から tag_id と tag_text を取得
+            tag_records = (
+                Session.query(TagMaster.tag_id, TagMaster.tag_text)
+                .filter(TagMaster.tag_id.in_(tag_ids))
+                .all()
+            )
+            #辞書型で返す
+            self.pop_and_close(Session)
+            return {tag.tag_id: tag.tag_text for tag in tag_records}
+
+        except Exception as e:
+            print(f"❌ ERROR: get_tags_by_ids failed - {e}")
+            self.session_rollback(Session)
+            return {}
         
     def add_tag_to_post(self, tag_text, post_id, Session=None):
         """ 投稿にタグを追加する処理 """

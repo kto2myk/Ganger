@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "Ganger"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
