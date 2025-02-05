@@ -83,11 +83,11 @@ class DatabaseManager(DatabaseConnector):
     
     def trending(self):
         """
-        0 = posts,
-        1 = tags,
-        2 = products,
-        3 = categories,
-        4 = users
+        posts = 0,
+        tags = 1,
+        products = 2,
+        categories = 3,
+        users = 4
         """
         return self.__trend
 
