@@ -3,125 +3,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カート内容</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>ショッピングカート</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
         }
 
-        h1 {
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .cart-header {
+            background-color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .cart-header h1 {
+            font-size: 24px;
+            font-weight: normal;
             text-align: center;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        .cart-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        table, th, td {
+        .cart-items {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .cart-item {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 20px;
+            position: relative;
+        }
+
+        .item-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .item-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e60012;
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
             border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-
-        img {
-            max-width: 100px;
-            height: auto;
-        }
-
-        .remove-btn {
-            background-color: #ff6666;
-            color: white;
+        .quantity-btn {
+            background: none;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 12px;
             cursor: pointer;
         }
 
-        .remove-btn:hover {
-            background-color: #cc0000;
+        .quantity-display {
+            padding: 8px 16px;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
         }
 
         .cart-summary {
-            margin-top: 20px;
-            text-align: right;
-            font-size: 1.2em;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 300px;
+            align-self: flex-start;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .total-row {
+            font-size: 20px;
+            font-weight: bold;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
         }
 
         .checkout-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #28a745;
+            display: block;
+            width: 100%;
+            background-color: #e60012;
             color: white;
-            text-decoration: none;
-            border-radius: 5px;
+            border: none;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
         }
 
         .checkout-btn:hover {
-            background-color: #218838;
+            background-color: #cc0000;
+        }
+
+        @media (max-width: 768px) {
+            .cart-content {
+                flex-direction: column;
+            }
+
+            .cart-item {
+                flex-direction: column;
+            }
+
+            .item-image {
+                width: 100%;
+                height: 200px;
+            }
+        }
+
+        /* 新しいスタイル追加 */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #e60012;
+        }
+
+        .select-all {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .continue-shopping {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background-color: #e60012;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .continue-shopping:hover {
+            background-color: #cc0000;
+        }
+
+        .item-unit-price {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .item-quantity {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
         }
     </style>
 </head>
 <body>
-    <header>
+    <div class="cart-header">
         <h1>ショッピングカート</h1>
-    </header>
-    <main>
+    </div>
+
+    <div class="container">
         {% if cart_items %}
         <form action="{{ url_for('check_out') }}" method="POST">
-            <table>
-                <thead>
-                    <tr>
-                        <th>選択</th>
-                        <th>商品画像</th>
-                        <th>商品名</th>
-                        <th>価格</th>
-                        <th>数量</th>
-                        <th>合計</th>
-                        <th>削除</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="select-all">
+                <input type="checkbox" id="select-all" class="custom-checkbox" checked>
+                <label for="select-all">すべて選択</label>
+            </div>
+            <div class="cart-content">
+                <div class="cart-items">
                     {% for item in cart_items %}
-                    <tr>
-                        <td>
-                            <input type="checkbox" name="selected_products" value="{{ item.item_id }}" checked>
-                        </td>
-                        <td>
-                            {% if item.image_path %}
-                                <img src="{{ item.image_path }}" alt="商品画像">
-                            {% else %}
-                                <p>画像なし</p>
-                            {% endif %}
-                        </td>
-                        <td>{{ item.product_name }}</td>
-                        <td>￥{{ "{:,.2f}".format(item.price) }}</td>
-                        <td>{{ item.quantity }}</td>
-                        <td>￥{{ "{:,.2f}".format(item.price * item.quantity) }}</td>
-                        <td>
-                            <form action="{# {{ url_for('remove_cart_item') }} #}" method="POST">
-                                <input type="hidden" name="removed_item" value="{{ item.item_id }}">
-                                <button type="submit" class="remove-btn">削除</button>
-                            </form>
-                        </td>
-                    </tr>
+                    <div class="cart-item" data-price="{{ item.price * item.quantity }}">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" 
+                                   name="selected_products" 
+                                   value="{{ item.item_id }}" 
+                                   class="custom-checkbox item-checkbox"
+                                   checked>
+                        </div>
+                        <img src="{{ item.image_path or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ item.product_name }}" class="item-image">
+                        <div class="item-details">
+                            <h3 class="item-name">{{ item.product_name }}</h3>
+                            <div class="item-unit-price">￥{{ "{:,.0f}".format(item.price) }}</div>
+                            <div class="item-quantity">数量: {{ item.quantity }}</div>
+                            <div class="item-price">￥{{ "{:,.0f}".format(item.price * item.quantity) }}</div>
+                        </div>
+                        <button type="button" class="remove-btn material-icons">close</button>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-            <div class="cart-summary">
-                <p>合計金額: ￥{{ "{:,.2f}".format(cart_items | sum(attribute='price', start=0) * cart_items | sum(attribute='quantity', start=0)) }}</p>
-                <button type="submit" class="checkout-btn">購入手続きへ</button>
+                </div>
+
+                <div class="cart-summary">
+                    <div class="summary-row total-row">
+                        <span>合計</span>
+                        <span id="total-amount">￥{{ "{:,.0f}".format(cart_items|sum(attribute='price', start=0)) }}</span>
+                    </div>
+                    <button type="submit" class="checkout-btn" id="checkout-btn">
+                        レジに進む (<span id="selected-count">{{ cart_items|length }}</span>点)
+                    </button>
+                </div>
             </div>
         </form>
         {% else %}
-            <p>カートには商品がありません。</p>
-            <a href="{{ url_for('shop_page') }}">買い物を続ける</a>
+        <div class="empty-cart">
+            <p>カートに商品がありません</p>
+            <a href="{{ url_for('shop_page') }}" class="continue-shopping">買い物を続ける</a>
+        </div>
         {% endif %}
-    </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            const totalAmountElement = document.getElementById('total-amount');
+            const selectedCountElement = document.getElementById('selected-count');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            function updateTotal() {
+                let total = 0;
+                let selectedCount = 0;
+                itemCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const price = parseFloat(checkbox.closest('.cart-item').dataset.price);
+                        total += price;
+                        selectedCount++;
+                    }
+                });
+                totalAmountElement.textContent = `￥${total.toLocaleString()}`;
+                selectedCountElement.textContent = selectedCount;
+                checkoutBtn.disabled = selectedCount === 0;
+            }
+
+            selectAllCheckbox.addEventListener('change', function() {
+                itemCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateTotal();
+            });
+
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    selectAllCheckbox.checked = Array.from(itemCheckboxes)
+                        .every(cb => cb.checked);
+                    updateTotal();
+                });
+            });
+
+            // 削除ボタンの処理
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    if (confirm('この商品をカートから削除しますか？')) {
+                        const cartItem = this.closest('.cart-item');
+                        // ここでAjax削除処理を実装
+                        try {
+                            // const response = await fetch('/remove-from-cart', {
+                            //     method: 'POST',
+                            //     // ...
+                            // });
+                            cartItem.remove();
+                            updateTotal();
+                            
+                            // カートが空になった場合
+                            if (document.querySelectorAll('.cart-item').length === 0) {
+                                location.reload(); // ページをリロードして空のカート表示に
+                            }
+                        } catch (error) {
+                            console.error('削除エラー:', error);
+                        }
+                    }
+                });
+            });
+
+            // 初期表示時の合計計算
+            updateTotal();
+        });
+    </script>
 </body>
 </html>

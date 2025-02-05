@@ -1,308 +1,90 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ショップページ</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
-</head>
-<body>
-<style>
-    @media (max-width: 768px) {
-    .header {
-        flex-wrap: wrap;
-    }
-    .search-bar {
-        margin: 10px 0;
-    }
-    .nav-links {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-}
+{% extends "extends/shop_base.html" %}
 
-    /* ベーススタイル */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+{% block title %}ショップページ{% endblock %}
 
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-}
+{% block extra_css %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/shop_page.css')}}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hamburger_menu.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
 
-/* ヘッダースタイル */
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background-color: white;
-    border-bottom: 1px solid #ddd;
-}
+{% block content %}
+<!-- ハンバーガーメニューの追加 -->
+<nav class="main-menu">
+    <div class="scrollbar" id="style-1">
+        <ul>
+            <li>                                   
+                <a href="{{url_for('home')}}">
+                    <i class="fa fa-home fa-lg"></i>
+                    <span class="nav-text">Home</span>
+                </a>
+            </li>   
+            <li>                                   
+                <a href="{{url_for('my_profile',id = session['id'])}}">
+                    <i class="fa fa-user fa-lg"></i>
+                    <span class="nav-text">Profile</span>
+                </a>
+            </li>
+            <!-- 他のメニュー項目... -->
+            <li>                                   
+                <a href="{#{{url_for('******')}}#}">
+                    <i class="fa fa-tshirt fa-lg"></i>
+                    <span class="nav-text">トップス</span>
+                </a>
+            </li>   
+            <li>                                   
+                <a href="{#{{url_for('******')}}#}">
+                    <i class="fa fa-coat fa-lg"></i>
+                    <span class="nav-text">ジャケット/アウター</span>
+                </a>
+            </li>   
+            <li>                                   
+                <a href="{#{{url_for('******')}}#}">
+                    <i class="fa fa-trousers fa-lg"></i>
+                    <span class="nav-text">パンツ</span>
+                </a>
+            </li>   
+            <li>                                   
+                <a href="{#{{url_for('******')}}#}">
+                    <i class="fa fa-skert fa-lg"></i>
+                    <span class="nav-text">スカート</span>
+                </a>
+            </li>   
+            <li>                                   
+                <a href="{#{{url_for('******')}}#}">
+                    <i class="fa fa-shoe-prints fa-lg"></i>
+                    <span class="nav-text">シューズ</span>
+                </a>
+            </li>   
+            <li>                                   
+                <a href="{#{{url_for('******')}}#}">
+                    <i class="fa fa-hat-cowboy fa-lg"></i>
+                    <span class="nav-text">帽子</span>
+                </a>
+            </li>   
+            <li>                                   
+                <a href="{#{{url_for('******')}}#}">
+                    <i class="fa fa-gem fa-lg"></i>
+                    <span class="nav-text">アクセサリー</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
 
-.logo {
-    height: 40px;
-}
+<nav class="category-nav">
+    <a href="{# {{ url_for(######) }} #}"><button data-category="all">すべてのアイテム</button></a>
+    <a href="{# {{ url_for(######) }} #}"><button data-category="accessories">アクセサリー</button></a>
+    <a href="{# {{ url_for(######) }} #}"><button data-category="web-items">ウェブアイテム</button></a>
+    <a href="{# {{ url_for(######) }} #}"><button data-category="shoes">シューズ</button></a>
+</nav>
 
-.search-bar {
-    flex: 1;
-    margin: 0 20px;
-    padding: 8px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.nav-links a {
-    margin-left: 15px;
-    font-size: 18px;
-    color: #333;
-    text-decoration: none;
-}
-
-.nav-links a.login {
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.nav-links i {
-    font-size: 20px;
-}
-
-.custom-menu-popup {
-    font-size: 18px;
-    text-align: center;
-    width: 600px !important;
-    height: 500px;
-}
-
-.custom-menu-popup ul li {
-    margin: 10px 0;
-}
-
-.custom-menu-popup a {
-    text-decoration: none;
-    color: #333;
-    font-weight: bold;
-}
-
-.custom-menu-popup a:hover {
-    color: #007bff;
-}
-
-
-
-/* カテゴリーナビゲーションスタイル */
-.category-nav {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    border-bottom: 2px solid #ddd;
-}
-
-.category-nav button {
-    background: none;
-    border: none;
-    font-size: 18px;
-    padding: 10px 20px;
-    cursor: pointer;
-    position: relative;
-    color: #555;
-    transition: color 0.3s;
-}
-
-.category-nav button:hover,
-.category-nav button.active {
-    color: #000;
-}
-
-.category-nav button::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: #000;
-    transition: width 0.3s;
-}
-
-.category-nav button:hover::after,
-.category-nav button.active::after {
-    width: 100%;
-}
-
-.link-nav {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
-    gap: 20px;
-}
-
-.link-nav a {
-    font-size: 18px;
-    color: #555;
-    text-decoration: none;
-    padding: 10px 20px;
-    position: relative;
-    transition: color 0.3s;
-}
-
-.link-nav a[data-link="men"] {
-    color: blue;
-}
-
-.link-nav a[data-link="women"] {
-    color: red;
-}
-
-.link-nav a[data-link="kids"] {
-    color: #f1d501;
-}
-
-
-/* メインコンテンツエリア */
-#content {
-    margin: 20px;
-    font-size: 18px;
-    text-align: center;
-}
-
-.swiper-slide img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-}
-
-
-
-.main_content{
-    display: flex;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(5, 1fr);
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
-}
-
-.serch_item { grid-area: 1 / 1 / 6 / 2; }
-    .populer_item { grid-area: 1 / 2 / 6 / 5; }
-    .div3 { grid-area: 1 / 5 / 6 / 6; }
-
-.shop_select{
-    display: flex;
-    padding: 0 0 25px 0;
-    gap: 30px;
-    overflow-x: auto;
-    padding: 10px;
-}
-
-.shop_select > div {
-    width: 170px;
-    height: 335px;
-    flex-shrink: 0;
-}
-
-.shop_select img {
-    width: 170px;
-    height: 200px;
-    object-fit: contain;
-}
-
-.shop_select h5,
-.shop_select p,
-.shop_select h4 {
-    margin: 0;
-    text-align: left;
-    padding: 15px 15px 0 15px;
-}
-
-.shop_select a {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    margin-bottom: 20px;
-}
-
-.product-name {
-    margin: 10px 0;
-    font-size: 16px;
-}
-
-.product-price {
-    color: #333;
-    font-weight: bold;
-}
-
-.main_content {
-    margin: 35px 10px 0px 10px;
-    padding: 40px 0px 30px 0px;
-}
-
-.search_item {
-    width: 180px;
-}
-
-/* 検索項目が横並びになるように調整 */
-.search_item select,
-.search_item input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-/* 検索ボタンのスタイリング */
-.search_item button {
-    width: 100%;
-    padding: 8px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.search_item button:hover {
-    background-color: #45a049;
-}
-</style>
-
-
-
-<header class="header">
-    <img src="logo.png" alt="ロゴ" class="logo">
-    
-    <input type="text" placeholder="検索" class="search-bar">
-    
-    <nav class="nav-links">
-        <a href="#" class="login">ログイン</a>
-        <a href="#"><i class="fas fa-bell"></i></a>
-        <a href="#"><i class="fas fa-heart"></i></a>
-        <a href="{{ url_for('display_cart') }}"><i class="fas fa-shopping-cart"></i></a>
-        <a href="#" class="menu">≡</a>
-    </nav>
-</header>
-
-    <nav class="category-nav">
-        <a href="{# {{ url_for(######) }} #}"><button data-category="all">すべてのアイテム</button></a>
-        <a href="{# {{ url_for(######) }} #}"><button data-category="accessories">アクセサリー</button></a>
-        <a href="{# {{ url_for(######) }} #}"><button data-category="web-items">ウェブアイテム</button></a>
-        <a href="{# {{ url_for(######) }} #}"><button data-category="shoes">シューズ</button></a>
-    </nav>
-
-    <nav class="link-nav">
-        <a href="#" data-link="all" class="active">すべて</a>
-        <a href="#" data-link="men">メンズ</a>
-        <a href="#" data-link="women">レディース</a>
-        <a href="#" data-link="kids">キッズ</a>
-    </nav>
+<nav class="link-nav">
+    <a href="#" data-link="all" class="active">すべて</a>
+    <a href="#" data-link="men">メンズ</a>
+    <a href="#" data-link="women">レディース</a>
+    <a href="#" data-link="kids">キッズ</a>
+</nav>
 
 <main id="content">
     <div class="swiper">
@@ -338,13 +120,6 @@ body {
             <h2>人気アイテム</h2>
             <div class="shop_select">
                 <div class="goods">
-                    <!-- {% for product in products %}
-                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
-                            <img src="{{ product['img_path'] }}" alt="商品画像">
-                            <h4 class="product-name">{{ product['name'] }}</h4>
-                            <h3 class="product-price">￥{{ product['price'] }}</h3>
-                        </a>
-                    {% endfor %} -->
                     <div>
                         <img src="../static/images/logo_images/Ganger.png" alt="">
                     </div>
@@ -359,13 +134,6 @@ body {
                     </div>
                 </div>
                 <div class="goods">
-                    <!-- {% for product in products %}
-                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
-                            <img src="{{ product['img_path'] }}" alt="商品画像">
-                            <h4 class="product-name">{{ product['name'] }}</h4>
-                            <h3 class="product-price">￥{{ product['price'] }}</h3>
-                        </a>
-                    {% endfor %} -->
                     <div>
                         <img src="../static/images/logo_images/Ganger.png" alt="">
                     </div>
@@ -380,13 +148,6 @@ body {
                     </div>
                 </div>
                 <div class="goods">
-                    <!-- {% for product in products %}
-                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
-                            <img src="{{ product['img_path'] }}" alt="商品画像">
-                            <h4 class="product-name">{{ product['name'] }}</h4>
-                            <h3 class="product-price">￥{{ product['price'] }}</h3>
-                        </a>
-                    {% endfor %} -->
                     <div>
                         <img src="../static/images/logo_images/Ganger.png" alt="">
                     </div>
@@ -401,13 +162,6 @@ body {
                     </div>
                 </div>
                 <div class="goods">
-                    <!-- {% for product in products %}
-                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
-                            <img src="{{ product['img_path'] }}" alt="商品画像">
-                            <h4 class="product-name">{{ product['name'] }}</h4>
-                            <h3 class="product-price">￥{{ product['price'] }}</h3>
-                        </a>
-                    {% endfor %} -->
                     <div>
                         <img src="../static/images/logo_images/Ganger.png" alt="">
                     </div>
@@ -422,13 +176,6 @@ body {
                     </div>
                 </div>
                 <div class="goods">
-                    <!-- {% for product in products %}
-                        <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
-                            <img src="{{ product['img_path'] }}" alt="商品画像">
-                            <h4 class="product-name">{{ product['name'] }}</h4>
-                            <h3 class="product-price">￥{{ product['price'] }}</h3>
-                        </a>
-                    {% endfor %} -->
                     <div>
                         <img src="../static/images/logo_images/Ganger.png" alt="">
                     </div>
@@ -448,99 +195,14 @@ body {
     </div>
 
 </main>
+{% endblock %}
 
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/hamburger_menu.js') }}"></script>
 <script>
-    /*ハンバーガーメニュー内部*/
-    document.querySelector('.menu').addEventListener('click', () => {
-    Swal.fire({
-        title: 'お気に入り',
-        html: `
-            <div style="text-align: left;">
-                <h2>お気に入り</h2>
-                <ul style="list-style: none; padding: 0;">
-                    <li><a href="/items">アイテム一覧</a></li>
-                    <li><a href="/brands">ブランド一覧</a></li>
-                    <li><a href="/shops">ショップ一覧</a></li>
-                </ul>
-
-                <div style="display: flex; justify-content: space-between;">
-                    <div>
-                        <h3>ブランド</h3>
-                        <ul>
-                            <li><a href="/brands/brand1">ブランド1</a></li>
-                            <li><a href="/brands/brand2">ブランド2</a></li>
-                            <li><a href="/brands/brand3">ブランド3</a></li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3>ショップ</h3>
-                        <ul>
-                            <li><a href="/shops/shop1">ショップ1</a></li>
-                            <li><a href="/shops/shop2">ショップ2</a></li>
-                            <li><a href="/shops/shop3">ショップ3</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        `,
-        showCloseButton: true,
-        showConfirmButton: false,
-        customClass: {
-            popup: 'custom-menu-popup',
-        }
-    });
-});
-
-//上がうまく動かなかった場合のコード
-// <script>
-// document.querySelectorAll('.category-nav button').forEach(button => {
-//     button.addEventListener('click', () => {
-//         const category = button.getAttribute('data-category');
-//         const content = document.getElementById('content');
-        
-//         console.log('Button clicked:', button);
-//         console.log('Category:', category);
-//         console.log('Content element:', content);
-        
-//         switch(category) {
-//             case 'all':
-//                 content.innerHTML = '<p>すべてのアイテムが表示されます。</p>';
-//                 break;
-//             case 'accessories':
-//                 content.innerHTML = '<p>アクセサリーが表示されます。</p>';
-//                 break;
-//             case 'web-items':
-//                 content.innerHTML = '<p>ウェブアイテムが表示されます。</p>';
-//                 break;
-//             case 'shoes':
-//                 content.innerHTML = '<p>シューズが表示されます。</p>';
-//                 break;
-//             default:
-//                 content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
-//         }
-//     });
-// });
-
     /*カテゴリー別ページ*/
-    // const categories = 
-    // [
-    //     { id: 'all', label: 'すべてのアイテム' },
-    //     { id: 'accessories', label: 'アクセサリー' },
-    //     { id: 'web-items', label: 'ウェブアイテム' },
-    //     { id: 'shoes', label: 'シューズ' },
-    // ];
-
-    // categories.forEach(category => {
-    //     const button = document.createElement('button');
-    //     button.textContent = category.label;
-    //     button.setAttribute('data-category', category.id);
-    //     document.querySelector('.category-nav').appendChild(button);
-    // });
-
-
     document.querySelectorAll('.category-nav button').forEach(button => {
         button.addEventListener('click', () => {
             const category = button.getAttribute('data-category');
@@ -585,7 +247,7 @@ body {
             direction: 'horizontal',
             slidesPerView: 3,
             centeredSlides: true,
-            spaceBetween: 10,  // スライド間の余白を少し追加
+            spaceBetween: 10,
             
             pagination: {
                 el: '.swiper-pagination',
@@ -596,13 +258,10 @@ body {
                 prevEl: '.swiper-button-prev',
             },
             
-            // レスポンシブ設定を追加
             breakpoints: {
-                // 768px未満の場合
                 768: {
                     slidesPerView: 1,
                 },
-                // 768px以上の場合
                 769: {
                     slidesPerView: 3,
                 }
@@ -610,5 +269,4 @@ body {
         });
     });
 </script>
-</body>
-</html>
+{% endblock %}

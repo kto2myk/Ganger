@@ -1,0 +1,206 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Open Sans", arial;
+    color: #fff;
+    font-weight: 300;
+}
+
+/* スクロールバー */
+.scrollbar {
+    height: 90%;
+    width: 100%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    float: left;  /* rightから leftに変更 */
+}
+
+.scrollbar:hover {
+    height: 90%;
+    width: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* スクロールバーのスタイル */ 
+#style-1::-webkit-scrollbar-track {
+    border-radius: 2px;
+}
+
+#style-1::-webkit-scrollbar {
+    width: 5px;
+    background-color: #F7F7F7;
+}
+
+#style-1::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #BFBFBF;
+}
+
+/* Font Awesome アイコン設定 */
+.fa-lg {
+    font-size: 1em;
+}
+
+.fa {
+    position: relative;
+    display: table-cell;
+    width: 55px;
+    height: 36px;
+    text-align: center;
+    top: 12px; 
+    font-size: 20px;
+}
+
+/* メインメニュー */
+.main-menu {
+    background: #F7F7F7;
+    position: fixed; /* absoluteからfixedに変更 */
+    top: 60px; /* ヘッダーの高さ分下げる */
+    bottom: 0;
+    height: calc(100% - 60px); /* ヘッダーの高さを考慮 */
+    right: 0;  /* leftから rightに変更 */
+    width: 55px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-transition: width .2s linear;
+    transition: width .2s linear;
+    box-shadow: -1px 0 15px rgba(0, 0, 0, 0.07);  /* 左側の影に変更 */
+    opacity: 1;
+    z-index: 1000;
+}
+
+.main-menu:hover,
+nav.main-menu.expanded {
+    width: 250px;
+    overflow: hidden;
+    opacity: 1;
+}
+
+/* メニューリスト */
+.main-menu > ul {
+    margin: 7px 0;
+}
+
+/* メインメニュー内のリスト修正 */
+.main-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 7px 0;
+}
+
+.main-menu li {
+    position: relative;
+    display: block;
+    width: 250px;
+    white-space: nowrap; /* テキストの折り返しを防ぐ */
+}
+
+.main-menu li > a {
+    position: relative;
+    width: 250px;
+    display: flex;
+    align-items: center;
+    color: #8a8a8a;
+    font-size: 13px;
+    text-decoration: none;
+    -webkit-transition: all .14s linear;
+    transition: all .14s linear;
+    font-family: 'Strait', sans-serif;
+    border-top: 1px solid #f2f2f2;
+    text-shadow: 1px 1px 1px #fff;
+    padding: 10px 0;
+}
+
+/* アイコンとテキストの配置修正 */
+.main-menu .fa {
+    width: 55px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.main-menu .nav-text {
+    flex-grow: 1;
+    color: #8a8a8a;
+    font-size: 13px;
+    font-family: 'Titillium Web', sans-serif;
+}
+
+/* ナビゲーションアイコンとテキスト */
+.main-menu .nav-icon {
+    position: relative;
+    display: table-cell;
+    width: 55px;
+    height: 36px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 18px;
+}
+
+.main-menu .nav-text {
+    position: relative;
+    display: table-cell;
+    vertical-align: middle;
+    width: 190px;
+    font-family: 'Titillium Web', sans-serif;
+}
+
+/* ログアウトセクション */
+.main-menu > ul.logout {
+    position: absolute;
+    right: 0;  /* leftから rightに変更 */
+    bottom: 0;
+}
+
+/* ホバー効果 */
+.main-menu li:hover > a,
+nav.main-menu li.active > a,
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus,
+.dropdown-menu > .active > a,
+.dropdown-menu > .active > a:hover,
+.dropdown-menu > .active > a:focus,
+.no-touch .dashboard-page nav.dashboard-menu ul li:hover a,
+.dashboard-page nav.dashboard-menu ul li.active a {
+    color: #fff;
+    background-color: #8a8a8a;
+    text-shadow: 0px 0px 0px;
+}
+
+/* ホバー時のスタイル */
+.main-menu li:hover > a {
+    background-color: #8a8a8a;
+}
+
+.main-menu li:hover > a .fa,
+.main-menu li:hover > a .nav-text {
+    color: #fff;
+}
+
+/* メインエリア */
+.area {
+    float: left;
+    background: #e2e2e2;
+    width: 100%;
+    height: 100%;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .main-menu {
+        width: 0;
+    }
+    
+    .main-menu:hover,
+    nav.main-menu.expanded {
+        width: 200px;
+    }
+
+    .main_content.menu-expanded {
+        margin-right: 200px;
+    }
+}

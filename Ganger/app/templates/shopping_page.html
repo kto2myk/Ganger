@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <title>商品ページ</title>
+{% extends "extends/shop_base.html" %}
+
+{% block title %}ショップページ{% endblock %}
+
+{% block extra_css %}
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,7 +20,7 @@
     .product-page {
       display: flex;
       max-width: 1200px;
-      margin: 20px auto;
+      margin: 76.8px auto 20px; /* headerの高さ(56.8px) + padding(上下10px) = 76.8px */
       gap: 20px;
     }
 
@@ -154,11 +152,9 @@
       color: #333;
     }
   </style>
-</head>
-<body>
-  <header>
-    <h1>個別商品ページ</h1>
-  </header>
+{% endblock %}
+
+{% block content %}
   <main class="product-page" data-product-id="{{ product['product_id'] }}">
     <div class="product-image-section">
       <div class="image-slider">
@@ -192,7 +188,10 @@
       <a href="{{ url_for('shop_page') }}">shop_page</a>
     </div>
   </main>
-  <script>
+{% endblock %}
+
+{% block scripts %}
+<script>
     // いいねアイコンの動作
     document.querySelector('.like').addEventListener('click', function() {
       this.classList.toggle('liked');
@@ -273,5 +272,4 @@
       updateSlider();
     });
   </script>
-  </body>
-</html>
+{% endblock %}

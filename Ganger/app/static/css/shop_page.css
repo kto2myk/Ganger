@@ -1,0 +1,320 @@
+@media (max-width: 768px) {
+    .header {
+        flex-wrap: wrap;
+    }
+    .search-bar {
+        margin: 10px 0;
+    }
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+    /* ベーススタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding-top: 60px;
+}
+
+/* ヘッダースタイル */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-left {
+    position: absolute;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo {
+    height: 40px;
+}
+
+.search-bar {
+    flex: 0 1 600px;
+    margin: 0 20px;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.nav-links {
+    position: absolute;
+    right: 20px;
+}
+
+.nav-links a {
+    margin-left: 15px;
+    font-size: 18px;
+    color: #333;
+    text-decoration: none;
+}
+
+.nav-links a.login {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.nav-links i {
+    font-size: 20px;
+}
+
+.custom-menu-popup {
+    font-size: 18px;
+    text-align: center;
+    width: 600px !important;
+    height: 500px;
+}
+
+.custom-menu-popup ul li {
+    margin: 10px 0;
+}
+
+.custom-menu-popup a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+.custom-menu-popup a:hover {
+    color: #007bff;
+}
+
+.home-icon {
+    color: #333;
+    font-size: 18px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.home-icon:hover {
+    color: #a46a9a;
+}
+
+/* カテゴリーナビゲーションスタイル */
+.category-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 80px; /* ヘッダーの高さ(60px)より大きい値に変更 */
+    border-bottom: 2px solid #ddd;
+    /* background-color: white;  */
+    position: relative; /* z-indexを有効にするため */
+    z-index: 999; /* ヘッダーより下、ハンバーガーメニューより下の値 */
+}
+
+.category-nav button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    padding: 10px 20px;
+    cursor: pointer;
+    position: relative;
+    color: #555;
+    transition: color 0.3s;
+}
+
+.category-nav button:hover,
+.category-nav button.active {
+    color: #000;
+}
+
+.category-nav button::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #000;
+    transition: width 0.3s;
+}
+
+.category-nav button:hover::after,
+.category-nav button.active::after {
+    width: 100%;
+}
+
+/* link-navの位置も調整 */
+.link-nav {
+    position: relative;
+    z-index: 999;
+    /* background-color: white; */
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 20px;
+}
+
+.link-nav a {
+    font-size: 18px;
+    color: #555;
+    text-decoration: none;
+    padding: 10px 20px;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.link-nav a[data-link="men"] {
+    color: blue;
+}
+
+.link-nav a[data-link="women"] {
+    color: red;
+}
+
+.link-nav a[data-link="kids"] {
+    color: #f1d501;
+}
+
+
+/* メインコンテンツエリア */
+#content {
+    margin: 20px;
+    font-size: 18px;
+    text-align: center;
+    margin-right: 55px; /* ハンバーガーメニューの基本幅分 */
+    position: relative;
+    transition: none; /* トランジションを無効化 */
+    margin-top: 20px; /* category-navとの間隔を確保 */
+}
+
+.swiper-slide img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+
+
+.main_content{
+    display: flex;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.serch_item { grid-area: 1 / 1 / 6 / 2; }
+    .populer_item { grid-area: 1 / 2 / 6 / 5; }
+    .div3 { grid-area: 1 / 5 / 6 / 6; }
+
+.shop_select{
+    display: flex;
+    padding: 0 0 25px 0;
+    gap: 30px;
+    overflow-x: auto;
+    padding: 10px;
+}
+
+.shop_select > div {
+    width: 170px;
+    height: 335px;
+    flex-shrink: 0;
+}
+
+.shop_select img {
+    width: 170px;
+    height: 200px;
+    object-fit: contain;
+}
+
+.shop_select h5,
+.shop_select p,
+.shop_select h4 {
+    margin: 0;
+    text-align: left;
+    padding: 15px 15px 0 15px;
+}
+
+.shop_select a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.product-name {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.product-price {
+    color: #333;
+    font-weight: bold;
+}
+
+.main_content {
+    margin: 35px 10px 0px 10px;
+    padding: 40px 0px 30px 0px;
+    width: calc(100% - 55px); /* ハンバーガーメニューの幅分を引く */
+    position: relative;
+    transition: none; /* トランジションを無効化 */
+}
+
+.search_item {
+    width: 180px;
+}
+
+.search_item select,
+.search_item input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 検索ボタンのスタイリング */
+.search_item button {
+    width: 100%;
+    padding: 8px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search_item button:hover {
+    background-color: #45a049;
+}
+
+/* ハンバーガーメニューの調整用スタイル */
+.main-menu {
+    z-index: 1001; /* ヘッダーより上に表示 */
+}
+
+/* メインコンテンツのマージン調整 */
+.main_content {
+    margin-right: 60px; /* ハンバーガーメニューの基本幅分 */
+    transition: margin-right .2s linear;
+}
+
+/* ハンバーガーメニュー展開時 */
+.main_content.menu-expanded {
+    margin-right: 55px;
+}

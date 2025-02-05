@@ -1,0 +1,81 @@
+/* ショップヘッダースタイル */
+.shop-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: white;
+    border-bottom: 1px solid #ddd;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.shop-header-left {
+    position: absolute;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.shop-logo {
+    height: 40px;
+}
+
+.shop-search-bar {
+    flex: 0 1 600px;
+    margin: 0 20px;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.shop-nav-links {
+    position: absolute;
+    right: 20px;
+}
+
+.shop-nav-links a {
+    margin-left: 15px;
+    font-size: 18px;
+    color: #333;
+    text-decoration: none;
+}
+
+.shop-nav-links a.login {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.shop-nav-links i {
+    font-size: 20px;
+}
+
+.shop-home-icon {
+    color: #333;
+    font-size: 18px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.shop-home-icon:hover {
+    color: #a46a9a;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .shop-header {
+        flex-wrap: wrap;
+    }
+    .shop-search-bar {
+        margin: 10px 0;
+    }
+    .shop-nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+} 
