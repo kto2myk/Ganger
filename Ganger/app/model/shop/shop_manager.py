@@ -185,31 +185,47 @@ class ShopManager(DatabaseManager):
             self.session_rollback(Session)
             return None
         
-    def fetch_one_product_images(self,product_id,Session=None):
+    def fetch_multiple_products_images(self, product_ids, Session=None):
         try:
-            product_id = Validator.decrypt(product_id)
+            product_ids = Validator.ensure_list(product_ids) #単一値でもリスト化
+            product_ids = [Validator.decrypt(pid) if len(pid) >= 5 else pid for pid in product_ids]
             Session = self.make_session(Session)
-            product = Session.query(Shop).options(joinedload(Shop.post).joinedload(Post.images)).filter(Shop.product_id==product_id).first()
 
-            formatted_product = {
-                "product_id":Validator.encrypt(product.product_id),
-                "post_id":Validator.encrypt(product.post.post_id),
-                "name":product.name,
-                "price":float(product.price),
-                "created_at":Validator.calculate_time_difference(product.created_at),
-                "images": [
+            # 一括でデータ取得（JOIN で関連する post, images も取得）
+            products = (
+                Session.query(Shop)
+                .options(joinedload(Shop.post).joinedload(Post.images))
+                .filter(Shop.product_id.in_(product_ids))
+                .all()
+            )
+
+            # 取得データを整形
+            formatted_products = [
+                {
+                    "product_id": Validator.encrypt(product.product_id),
+                    "post_id": Validator.encrypt(product.post.post_id),
+                    "name": product.name,
+                    "price": float(product.price),
+                    "created_at": Validator.calculate_time_difference(product.created_at),
+                    "images": [
                         {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
                         for image in product.post.images
-                        ] if product.post.images else []
-                    } if product else None
-            self.redis.add_score(ranking_key=self.trending[2],item_id=product.product_id,score=8)
+                    ] if product.post.images else []
+                }
+                for product in products if product  # None のデータを除外
+            ]
+
+            # Redis スコア更新
+            for product in products:
+                self.redis.add_score(ranking_key=self.trending[2], item_id=product.product_id, score=8)
+
             self.pop_and_close(Session)
-            return formatted_product
-        
+            return formatted_products
+
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(f"error発生:{e}")
-            return None
+            app.logger.error(f"error発生: {e}")
+            return []
         
     def add_cart_item(self, user_id, product_id, quantity,Session=None):
         try:

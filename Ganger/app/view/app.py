@@ -473,11 +473,29 @@ def fetch_trending_tags():
             else:
                 return  jsonify("trending_tags",{"message":"トレンドタグなし","tags":[]}),200
         else:
-            pass
+            raise Exception("トレンドなし")
     except Exception as e:
             app.logger.error(f"⚠️ Error in fetch_trending_tags: {e}")
             return jsonify("error", {"message": "トレンド投稿の取得に失敗しました。"}),500
 
+@app.route("/fetch_trending_products")
+def fetch_trending_products():
+    try:
+        trending_ids = db_manager.redis.get_ranking_ids(ranking_key=db_manager.trending[2],top_n=10)
+        if trending_ids:
+            trending_products = shop_manager.fetch_multiple_products_images(product_ids=trending_ids)
+            if trending_products:
+                return jsonify("trending_products",{"message":"トレンド商品取得","products":trending_products}),200
+            else:
+                return  jsonify("trending_products",{"message":"トレンド商品なし","products":[]}),200
+        else:
+            raise Exception("トレンドなし")
+        
+    except Exception as e:
+            app.logger.error(f"⚠️ Error in fetch_trending_products: {e}")
+            return jsonify("error", {"message": "トレンド商品の取得に失敗しました。"}),500
+
+                
 
         
 @app.route("/notifications", methods=["GET"])
@@ -598,12 +616,12 @@ def shop_page():
 
 @app.route("/display_product/<product_id>")
 def display_product(product_id):
-    product = shop_manager.fetch_one_product_images(product_id=product_id)
+    product = shop_manager.fetch_multiple_products_images(product_ids=product_id)
 
     if product_id is None:
         abort(404,description="商品が見つかりません")
     
-    return render_template("shopping_page.html",product=product)
+    return render_template("shopping_page.html",product=product[0])
 
 @app.route('/add_cart', methods=['POST'])
 def add_to_cart():

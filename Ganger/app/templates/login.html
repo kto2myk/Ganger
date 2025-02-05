@@ -12,7 +12,6 @@
     <title>ログイン</title>
 </head>
 <body>
-  <form onsubmit="return false;">
     <div class='box'>
       <div class='box-form'>
         <div class='box-login-tab'></div>
@@ -22,38 +21,44 @@
         <div class='box-login'>
           <div class='fieldset-body' id='login_form'>
             <button onclick="openLoginInfo();" class='b b-form i i-more' title='Help Menu'></button>
-              <p class='field'>
-              <label for='user'>UserID/E-MAIL</label>
-              <input type='text' id='user' name='identifier' title='ユーザーID/メールアドレス' />
-              <span id='valida' class='i i-warning'></span>
-            </p>
-              <p class='field'>
-              <label for='pass'>PASSWORD</label>
-              <input type='password' id='pass' name='password' title='パスワード' />
-              <span id='valida' class='i i-close'></span>
-            </p>
-    
-              <label class='checkbox'>
-                <input type='checkbox' value='TRUE' title='サインイン状態を保持' /> Keep me Signed in
-              </label>
-    
-              <input type='submit' id='do_login' value='LOGIN' title='ログイン' />
+              <form method="POST">
+                <p class='field'>
+                  <label for='user'>UserID/E-MAIL</label>
+                  <input type='text' id='user' name='identifier' title='ユーザーID/メールアドレス' />
+                  <span id='valida' class='i i-warning'></span>
+                </p>
+                <p class='field'>
+                  <label for='pass'>PASSWORD</label>
+                  <input type='password' id='pass' name='password' title='パスワード' />
+                  <span id='valida' class='i i-close'></span>
+                </p>
+      
+                <input type='submit' id='do_login' value='LOGIN' title='ログイン' />
+              </form>
+
           </div>
         </div>
       </div>
       <div class='box-info'>
-                  <p><button onclick="closeLoginInfo();" class='b b-info i i-left' title='閉じる'></button><h3>Need Help?</h3>
+
+        <p>
+          <button onclick="closeLoginInfo();" class='b b-info i i-left' title='閉じる'></button>
+          <h3>Need Help?</h3>
         </p>
-                  <div class='line-wh'></div>
-                  <a href="../templates/password_reset.html"><button onclick="" class='b-support' title='パスワードを忘れた方'> Forgot Password?</button></a>
-        <button onclick="" class='b-support' title='お問い合わせ'> Contact Support</button>
-                  <div class='line-wh'></div>
-        <a href="../templates/signup.html"><button onclick="" class='b-cta' title='新規会員登録'> CREATE ACCOUNT</button></a>
-              </div>
+
+        <div class='line-wh'></div>
+        <a href="{{ url_for('password_reset') }}">
+          <button onclick="" class='b-support' title='パスワードを忘れた方'> Forgot Password?</button>
+        </a>
+
+        <div class='line-wh'></div>
+        <a href="{{ url_for('signup') }}">
+          <button onclick="" class='b-cta' title='新規会員登録'> CREATE ACCOUNT</button>
+        </a>
+
+      </div>
     </div>
     
     
-    <div class='icon-credits'>Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a>, <a href="http://www.flaticon.com/authors/budi-tanrim" title="Budi Tanrim">Budi Tanrim</a> & <a href="http://www.flaticon.com/authors/nice-and-serious" title="Nice and Serious">Nice and Serious</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
-  </form>
 </body>
 </html>
