@@ -453,15 +453,33 @@ def fetch_trending_posts():
 
         # データが空なら適切なレスポンスを返す
         if not post_data:
-            return ("trending_posts", {"message": "トレンド投稿がありません。", "posts": []})
+            return jsonify("trending_posts", {"message": "トレンド投稿がありません。", "posts": []}),200
 
         # クライアントにデータを送信
-        return("trending_posts", {"message": "トレンド投稿を取得しました", "posts": post_data})
+        return jsonify("trending_posts", {"message": "トレンド投稿を取得しました", "posts": post_data}),200
 
     except Exception as e:
         app.logger.error(f"⚠️ Error in fetch_trending_posts: {e}")
-        return("error", {"message": "トレンド投稿の取得に失敗しました。"})
+        return jsonify("error", {"message": "トレンド投稿の取得に失敗しました。"}),500
 
+@app.route("/fetch_trending_tags")
+def fetch_trending_tags():
+    try:
+        trending_tag_ids = db_manager.redis.get_ranking_ids(ranking_key=db_manager.trending[1],top_n=10)
+        if trending_tag_ids:
+            trending_tags = post_manager.get_tags_by_ids(tag_ids=trending_tag_ids)
+            if trending_tags:
+                return jsonify("trending_tags",{"message":"トレンドタグ取得","tags":trending_tags}),200
+            else:
+                return  jsonify("trending_tags",{"message":"トレンドタグなし","tags":[]}),200
+        else:
+            pass
+    except Exception as e:
+            app.logger.error(f"⚠️ Error in fetch_trending_tags: {e}")
+            return jsonify("error", {"message": "トレンド投稿の取得に失敗しました。"}),500
+
+
+        
 @app.route("/notifications", methods=["GET"])
 def notifications():
     """
