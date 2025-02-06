@@ -1,5 +1,6 @@
 import os
 import uuid
+from PIL import Image as PILImage
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 from sqlalchemy.sql import select
@@ -29,10 +30,27 @@ class PostManager(DatabaseManager):
         return f"{user_id}_{post_id}_{img_order}_{unique_id}{ext}"
 
     def save_file(self, file, file_path):
-        """ ファイルを指定のパスに保存する """
+        """ ファイルを正方形に加工して保存 """
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        file.save(file_path)
 
+        with PILImage.open(file) as img:
+            img = self.make_square(img)  # **ここで正方形に加工**
+            img.save(file_path, quality=95, optimize=True)  # 高品質保存
+
+    def make_square(self, img, background_color=(255, 255, 255)):
+        """ 画像のアスペクト比を維持したまま、余白を追加して正方形にする """
+        width, height = img.size
+        new_size = max(width, height)  # 正方形のサイズ
+
+        # 正方形の背景キャンバスを作成
+        new_img = PILImage.new("RGB", (new_size, new_size), background_color)
+
+        # 画像を中央配置
+        paste_position = ((new_size - width) // 2, (new_size - height) // 2)
+        new_img.paste(img, paste_position)
+
+        return new_img  # 加工後の画像を返す
+    
     def delete_files(self, file_list):
         """ エラー発生時に保存したファイルを削除 """
         for file_path in file_list:

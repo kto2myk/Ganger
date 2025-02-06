@@ -5,6 +5,7 @@ from flask_redis import FlaskRedis
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
+import subprocess
 from Ganger.app.model.model_manager.model import User
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
@@ -660,6 +661,21 @@ def display_cart():
         abort(500, description = "カートの取得に失敗しました。")
 
     return render_template("display_cart.html", cart_items=cart_items)    
+@app.route("/remove_from_cart" ,methods = ["POST"])
+def remove_from_cart():
+    try:
+        if request.method == "POST":
+            product_id = request.form.get("product_id")
+            result = shop_manager.delete_cart_items(product_ids=product_id)
+            if result:
+                return jsonify(result),200
+            else:
+                raise Exception("サーバーエラー")
+            
+    except Exception as e:
+        app.logger.error(e)
+        return jsonify({"error": e}), 500
+
 
 
 @app.route("/checkout", methods=["GET","POST"])
@@ -699,6 +715,7 @@ def test():
     
 if __name__ == "__main__":
     try:
+        subprocess.run(["pip", "install", "-r", "requirements.txt"], check=True)
         app.run(host="0.0.0.0", port=80, debug=True)
     except KeyboardInterrupt:
         print("\n[INFO] Server 停止")

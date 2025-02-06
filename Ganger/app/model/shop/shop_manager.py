@@ -262,7 +262,7 @@ class ShopManager(DatabaseManager):
             Session.rollback(Session)
             app.logger.error(f"予期しないエラー: {e}")
         
-    def delete_cart_items(self, user_id, product_ids,Session=None):
+    def delete_cart_items(self, product_ids,Session=None):
         """
         指定されたカートアイテムを削除し、すべて削除された場合にカートも削除する。
 
@@ -271,8 +271,8 @@ class ShopManager(DatabaseManager):
         :return: 処理結果（成功/エラー）
         """
         try:
-            # user_id = Validator.decrypt(user_id)
             
+            user_id = Validator.decrypt(session.get('id'))
             Session = self.make_session(Session)
             # ユーザーのカートを取得
             cart = Session.query(Cart).filter_by(user_id=user_id).first()
@@ -282,9 +282,10 @@ class ShopManager(DatabaseManager):
                 return None
 
             # 単一値の場合、リストに変換
-            if isinstance(product_ids, int):
-                product_ids = [product_ids]
-            # product_ids = map(Validator.decrypt, product_ids)  # 復号化
+            product_ids = Validator.ensure_list(product_ids)
+
+            # 各要素が5文字以上なら復号化、そうでなければそのまま
+            product_ids = [Validator.decrypt(pid) if len(pid) >= 5 else pid for pid in product_ids]
 
 
             # 指定されたカートアイテムを削除
@@ -379,13 +380,24 @@ class ShopManager(DatabaseManager):
         """
         try:
             Session = self.make_session()
-            cart_item = Session.query(CartItem).filter_by(user_id=user_id, product_id=product_id).first()
+            product_id = Validator.decrypt(product_id)
 
-            if cart_item:
+            if new_quantity <= 0: #新しい個数が0の場合。
+                self.delete_cart_items(product_ids=product_id,Session=Session)
+                self.make_commit_or_flush(Session)
+                return {"success": True, "message": "カート内の商品が削除されました"}
+            
+            cart_item = Session.query(CartItem).filter_by(user_id=user_id, product_id=product_id).first()
+            if cart_item and cart_item.quantity == new_quantity:
+                self.pop_and_close(Session)
+                return {"success": True, "message": "個数が同じなため、変更なし。"}
+            
+            elif cart_item: #個数変更ありの場合
                 cart_item.quantity = new_quantity
                 self.make_commit_or_flush(Session)
                 return {"success": True, "message": "カートの数量が更新されました"}
             else:
+                self.pop_and_close(Session)
                 return {"success": False, "message": "商品がカートに見つかりません"}
         except Exception as e:
             self.session_rollback(Session)
