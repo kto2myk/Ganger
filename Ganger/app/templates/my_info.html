@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>myinfo</title>
+</head>
+<body>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="text" name="user_id" value=" {{ user.user_id}}">
+        <input type="text" name="username" value=" {{ user.username}}">
+        <input type="text" name="real_name" value="{{ user.real_name}} ">
+        <input type="text" name="address" id=" " value="{{ user.address}} ">
+        <input type="text" name="bio" id="" value="{{ user.bio}}">
+        <img src="{{ session.get('profile_image') }}" alt=""> 
+        <input type="file" name="profile_image">
+        <button type="submit"> 送信　</button>
+    </form>
+</body>
+</html>
