@@ -1,3 +1,17 @@
 <div id="loading">
-    <div class="cssanimation leFadeInLeft sequence"> Example </div>
+    <div class="spinner">
+        <img src="../../static/images/logo_images/ganger_icon_text.png"
+        style="margin: 0 auto;">
+    </div>
 </div>
+<script>
+    if (sessionStorage.getItem("pageLoaded")) {
+    // すでにロード済みならロード画面を非表示にする
+    document.getElementById("loading").style.display = "none";
+    } else {
+        sessionStorage.setItem("pageLoaded", "true");
+        // ローディングアニメーションの表示
+        const spinner = document.getElementById('loading');
+        spinner.classList.add('loaded');
+    }
+</script>

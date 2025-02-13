@@ -297,6 +297,7 @@ class UserManager(DatabaseManager):
                 "id": Validator.encrypt(user.id),
                 "user_id": user.user_id,
                 "username": user.username,
+                "bio":user.bio,
                 "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}"),
                 "posts": formatted_posts,
             }
