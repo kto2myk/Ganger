@@ -8,17 +8,23 @@
 
 .account_info {
     display: flex;
+    align-items: center;
     padding-left: 30%;
     width: 100%;
-    height: 20dvh;
-    border: solid 1px #ddd;
+    height: auto;
 }
 
 .account_info img {
-    width: 15dvh;
-    height: 15dvh;
+    width: 18dvh;
+    height: 18dvh;
     border-radius: 50%;
     border: solid 1px #ddd;
+}
+
+.account_info h1 {
+    margin-top: 3dvh;
+    padding-left: 3dvw;
+    padding-left: 3dvw;
 }
 
 #follow-button {
@@ -30,13 +36,89 @@
     border: solid 1px #ddd;
     border-radius: 5vh;
     margin: 1%;
+    transition: all, 0.2s;
+}
+
+#follow-button:hover {
+    background-color: #ddd;
+}
+
+.follow-button{
+    display: flex;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    align-items: center;
+    text-decoration: none;
+    color: black;
+}
+
+.follow-button p {
+    display: inline-block;
+    margin: 0 auto;
+    line-height: 100%;
+}
+
+.profile_info {
+    padding-left: 45%;
+}
+
+.follows {
+    display: flex;
+}
+
+.follow_count {
+    display: flex;
+    padding-right: 5%;
+}
+
+.follower_count {
+    display: flex;
+}
+
+.int {
+    font-weight: bold;
 }
 
 .post_container {
-    width: 75dvh;
+    width: 50dvw;
+    min-width: 600px;
     height: auto;
     margin: 0 auto;
     padding-top: 5dvh;
     padding-bottom: 5dvh;
-    border: solid 1px #ddd;
+    border-top: solid 1px #ddd;
+}
+
+.post_container ul {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+    width: 100%;
+    height: auto;
+}
+
+.post_container ol {
+    padding: 0;
+    width: calc(33.33% - 10px); /* 3等分して余白を考慮 */
+    box-sizing: border-box;
+    height: auto;
+    padding: 3px;
+}
+
+.image_area {
+    width: 100%;
+    height: 100%;
+    background-color: #ddd;
+}
+
+.image_area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.clear {
+    flex-basis: 100%; /* 改行を作成 */
+    height: 0;
 }
