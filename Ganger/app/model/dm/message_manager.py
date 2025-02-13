@@ -1,59 +1,76 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.model_manager import Message,MessageRoom,MessageStatus,RoomMember
-from sqlalchemy.sql import select,func
-from sqlalchemy.orm  import joinedload
+from sqlalchemy.sql import select,func,exists
+from sqlalchemy.orm  import joinedload,aliased
 from sqlalchemy.exc import SQLAlchemyError
 from flask import current_app as app, session, url_for
 from Ganger.app.model.validator import Validator
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 class MessageManager(DatabaseManager):
     def __init__(self, app=None):
         super().__init__(app)
 
-    def get_or_create_room(self,sender_id, recipient_id,Session=None)->int:
+    def get_or_create_room(self, sender_id, recipient_id, Session=None) -> int:
         """2人のユーザー間のルームを取得、または新規作成する関数"""
         try:
             Session = self.make_session(Session)
+            app.logger.info(f"Session ID: {id(Session)} | Starting get_or_create_room")
 
-            room = (
-                Session.query(MessageRoom)
-                .join(RoomMember)
-                .filter(RoomMember.user_id.in_([sender_id, recipient_id]))
-                .group_by(MessageRoom.room_id)
-                .having(func.count(RoomMember.user_id) == 2)
-                .first()
-            )
+            # ルームの既存チェック
+            room = Session.query(MessageRoom).filter(
+                MessageRoom.room_id.in_(
+                    Session.query(RoomMember.room_id)
+                    .filter(RoomMember.user_id.in_([sender_id, recipient_id]))
+                    .group_by(RoomMember.room_id)
+                    .having(func.count(RoomMember.user_id) == 2)
+                )
+            ).first()
+
+            app.logger.info(f"Room result: {room}")
+            app.logger.info(f"Session identity map (before create): {Session.identity_map}")
 
             if room:
-                app.logger.info(f"{room.room_id}を取得")
-                return room.room_id  # 既存ルームがあればそのIDを返す
+                app.logger.info(f"Existing room found: {room.room_id}")
+                self.pop_and_close(Session)
+                return room.room_id
 
             # 新規ルーム作成
             room = MessageRoom()
             Session.add(room)
             Session.flush()
+            app.logger.info(f"New room created: {room}")
+            app.logger.info(f"Session identity map (after create): {Session.identity_map}")
 
             # ルームメンバー追加
-            members = [RoomMember(room_id=room.room_id, user_id=sender_id), RoomMember(room_id=room.room_id, user_id=recipient_id)]
+            members = [
+                RoomMember(room_id=room.room_id, user_id=sender_id),
+                RoomMember(room_id=room.room_id, user_id=recipient_id)
+            ]
             Session.add_all(members)
             self.make_commit_or_flush(Session)
+            app.logger.info(f"Room members added: {members}")
 
             return room.room_id
         except Exception as e:
             app.logger.error(e)
             self.session_rollback(Session)
-            return {"success":False, "message":str(e)}
-    
+            return {"success": False, "message": str(e)}    
+        
     def delete_room(self, room_id,Session=None)-> dict:
         """選択されたルームIDを削除するメソッド"""
         try:
             Session = self.make_session(Session)
-            dm_room = Session.query(MessageRoom).filter(room_id==MessageRoom.room_id).first()
+            dm_room = Session.query(MessageRoom).filter(MessageRoom.room_id == room_id).first()
+            app.logger.info(dm_room)
             if not dm_room:
                 raise ValueError("DMルームが存在していません。")
             else:
                 Session.delete(dm_room)
+                self.make_commit_or_flush(Session)
                 return {"success":True,"message":"ルームが削除されました。"}
         except ValueError as ve:
             self.session_rollback(Session)
@@ -65,31 +82,42 @@ class MessageManager(DatabaseManager):
             return {"success":False,"message":str(e)}
 
 
-    def send_message(self,sender_id, recipient_id, content,Session=None)-> dict:
+    def send_message(self, sender_id, recipient_id, content, Session=None) -> dict:
         """メッセージを送信する関数。ルームがなければ作成する。"""
-        # ルーム取得または新規作成
         try:
+            
             Session = self.make_session(Session)
-            room_id = self.get_or_create_room(sender_id, recipient_id,Session=Session)
+            app.logger.info(f"Session ID: {id(Session)} | Starting send_message")
+            
+            # ルーム取得または新規作成
+            room_id = self.get_or_create_room(sender_id, recipient_id)
+            app.logger.info(f"Room ID returned: {room_id}")
+
+            Session.expire_all()  # キャッシュをクリア
+            app.logger.info("Session cache expired")
 
             # メッセージ挿入
             message = Message(room_id=room_id, sender_id=sender_id, receiver_id=recipient_id, content=content)
             Session.add(message)
-            self.make_commit_or_flush(Session)
+            Session.flush()
+            app.logger.info(f"Message created: {message}")
+            app.logger.info(f"Session identity map: {Session.identity_map}")
 
-            app.logger.info("message作成成功")
 
             # MessageStatusの挿入 (既読・削除状態の初期化)
             status_sender = MessageStatus(message_id=message.message_id, user_id=sender_id, is_read=True, is_deleted=False)
             status_recipient = MessageStatus(message_id=message.message_id, user_id=recipient_id, is_read=False, is_deleted=False)
             Session.add_all([status_sender, status_recipient])
+            app.logger.info(f"Session identity map: {Session.identity_map}")
+
             self.make_commit_or_flush(Session)
-            
-            app.logger.info("messageが送信されました")
-            return {"success":True,"Message":"メッセージ送信成功"}
+
+            app.logger.info("Message and statuses committed successfully")
+            return {"success": True, "Message": "メッセージ送信成功"}
         except Exception as e:
             app.logger.error(e)
-            return {"success":False,"massage":str(e)}
+            self.session_rollback(Session)
+            return {"success": False, "message": str(e)}
         
 
     def mark_messages_as_read_up_to(self,message_id, recipient_id,Session=None) -> dict:
