@@ -8,18 +8,11 @@ with app.test_request_context():
         dm_manager = MessageManager()
         # result = dm_manager.get_or_create_room(sender_id=1,recipient_id=2)
         # result = dm_manager.delete(model=MessageRoom,filters={"room_id":1})
-        result = dm_manager.delete_room(room_id=2)
-        # result = dm_manager.send_message(sender_id=1,recipient_id=2,content="aaaaaa")
-        # Session = dm_manager.make_session(None)
-        # result =    room =Session.query(MessageRoom).filter(
-        #             MessageRoom.room_id.in_(
-        #                 Session.query(RoomMember.room_id)
-        #                 .filter(RoomMember.user_id.in_([13, 14]))
-        #                 .group_by(RoomMember.room_id)
-        #                 .having(func.count(RoomMember.user_id) == 2)
-        #             )
-        #         ).first()
-        
+        # result = dm_manager.delete_room(room_id=1)
+        # result = dm_manager.send_message(sender_id=1,recipient_id=5,content="more status test5")
+        result = dm_manager.delete_message_for_user(message_id=1,user_id=1)
+        # result = dm_manager.mark_messages_as_read_up_to(message_id=8,recipient_id=5)
+                
         print(result)
 
     except Exception as e:
