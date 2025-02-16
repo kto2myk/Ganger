@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
+
     document.querySelectorAll('.splide').forEach(function (carousel) {
     new Splide(carousel).mount();
     });
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //     }
 // });
 
+// ボタンのサイズを固定する関数
 function setFixedSize() {
     let button = document.getElementById("post_button");
 
@@ -54,9 +56,18 @@ function setFixedSize() {
 }
 
 // 初回読み込み時に設定
-
+    
 window.onload = function() {
-    const spinner = document.getElementById('loading');
-    spinner.classList.add('loaded');
+    // ボタンのサイズを設定
     setFixedSize();
 };
+
+    // ロード完了時の処理
+    // window.addEventListener("load", function() {
+    //     const loadingScreen = document.getElementById("loading");
+    //     loadingScreen.style.opacity = "0";  // フェードアウト
+    //     setTimeout(() => {
+    //       loadingScreen.style.display = "none";  // 完全に非表示
+    //       document.body.style.overflow = "auto";  // スクロール再開
+    //     }, 500);
+    // });

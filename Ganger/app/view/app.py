@@ -20,13 +20,6 @@ app = Flask(__name__,
 )
 #docker start redis-server
 
-# 実行ディレクトリを基準に保存先を設定  app.pyディレクトリの一階層上 app/までを取得
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))  
-# 画像保存先の設定
-POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "post_images")
-TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
-PROFILE_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "profile_images")
-
 # 🔹 Flaskの基本設定
 app.secret_key = "your_secret_key"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300)
@@ -35,9 +28,9 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # 🔹 画像保存先の設定
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
-POST_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "post_images")
+POST_IMAGE_FOLDER = os.path.join("Ganger","app", "static", "images", "post_images")
 TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
-PROFILE_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "profile_images")
+PROFILE_IMAGE_FOLDER = os.path.join("Ganger","app", "static", "images", "profile_images")
 
 app.config["POST_FOLDER"] = POST_IMAGE_FOLDER
 app.config["TEMP_FOLDER"] = TEMP_IMAGE_FOLDER
@@ -245,6 +238,23 @@ def my_profile(id):
         app.logger.error(f"Unexpected error: {e}")
         return ("ユーザーデータの取得に失敗しました。")
     
+
+@app.route("/user/update_info",methods = ["GET","POST"])
+def update_info():
+    if request.method == "GET":
+        user = db_manager.fetch_one(model=User,filters={"id":Validator.decrypt(session['id'])})
+        return render_template("my_info.html",user=user)
+    else:
+            result = user_manager.updata_user_info(
+                user_id = request.form.get('user_id',None),
+                username = request.form.get('username',None),
+                real_name=request.form.get('real_name',None),
+                address = request.form.get('address',None),
+                bio=request.form.get('bio',None),
+                profile_image=request.files.get('profile_image',None)
+            )
+            return jsonify(result)
+
 @app.route("/toggle_block/<string:user_id>")
 def toggle_block(user_id):
     try:

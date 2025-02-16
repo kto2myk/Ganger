@@ -1,4 +1,6 @@
+import os
 from werkzeug.security import generate_password_hash, check_password_hash # パスワードハッシュ化用
+from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベース操作用
 from Ganger.app.model.notification.notification_manager import NotificationManager
 from Ganger.app.model.model_manager.model import User,Post,Follow,Block,Repost,CartItem,Shop,Like,SavedPost,SavedProduct
@@ -9,7 +11,6 @@ from sqlalchemy.orm import Session, joinedload# セッション管理、リレ�
 from sqlalchemy import or_,and_,func,case,exists # OR検索用
 from sqlalchemy.exc import SQLAlchemyError # データベースエラー用
 import uuid # ランダムID生成用
-from flask import current_app as app # ログ出力用
 
 
 class UserManager(DatabaseManager):
@@ -49,12 +50,12 @@ class UserManager(DatabaseManager):
 
         except ValueError as ve:
             self.session_rollback(Session)
-            app.logger.error(f"[ERROR] Validation error: {ve}")
+            self.app.logger.error(f"[ERROR] Validation error: {ve}")
             self.error_log_manager.add_error(None, str(ve))
             return False, str(ve)
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(f"[ERROR] Unexpected error: {e}")
+            self.app.logger.error(f"[ERROR] Unexpected error: {e}")
             self.error_log_manager.add_error(None, str(e))
             return False, str(e)
 
@@ -108,10 +109,13 @@ class UserManager(DatabaseManager):
                     session[key] = custom_logic[key](value)  # カスタムロジック適用
                 else:
                     session[key] = value  # 通常の登録処理
-
+        else:
+            session.modified = True
+                
         # プロフィール画像の特殊処理
         if "profile_image" in source and source["profile_image"]:
             session["profile_image"] = url_for("static", filename=f"images/profile_images/{source['profile_image']}")
+            session.modified = True
         else:
             session["profile_image"] = url_for("static", filename="images/profile_images/default.png")
 
@@ -143,10 +147,74 @@ class UserManager(DatabaseManager):
         
         except SQLAlchemyError as e:
             self.session_rollback(Session)
-            app.logger.error(f"Failed to search users: {e}")
+            self.app.logger.error(f"Failed to search users: {e}")
             raise
 
+
+    def updata_user_info(self,user_id=None,username=None,real_name=None,address=None,bio=None,profile_image=None,Session=None):
+        """
+        ユーザーの情報の更新を一括で請け負うメソッド。更新されるデータがある場合、自動でNONEが解除され更新される。
+        """
+        from Ganger.app.model.post.post_manager import PostManager
+        post_manager = PostManager()
+        try:
+            Session = self.make_session(Session)
+            id = Validator.decrypt(session["id"])
+
+            user = Session.query(User).filter_by(id=id).first()
+            self.app.logger.info(user)
+
+            if not user:
+                self.session_rollback(Session)
+                raise ValueError("存在しないユーザーです")
+            
+            if user_id: #! 重複なしを確認
+                Validate_user_id = Session.query(User).filter_by(user_id=user_id).first()
+                if not Validate_user_id:
+                    user.user_id = user_id
+                else:
+                    raise ValueError(f"user_id{user_id}は既に存在しています。")
+            if username:
+                user.username = username
+            if real_name:
+                user.real_name = real_name
+            if address:
+                user.address = address
+            if bio:
+                user.bio = bio
+            if profile_image: #! 画像保存処理を作成
+                user_id = user_id if user_id else session['user_id']
+                original_filename = secure_filename(profile_image.filename)
+
+                if not post_manager.is_allowed_extension(original_filename):
+                    raise ValueError(f"File type not allowed: {original_filename}")
+                
+                ext = os.path.splitext(original_filename)[1].lower()
+                filename = f"{user_id}_{ext}"
+                file_path = os.path.join(self.app.config['PROFILE_FOLDER'], filename)
+
+                post_manager.save_file(file=profile_image, file_path=file_path)
+
+                user.profile_image = filename
+
+            Session.flush()
+            user = Session.query(User).filter_by(id=id).first()
+            self.register_session(user)
+            self.make_commit_or_flush(Session)
+            return {"success":True, "message":"ユーザー情報が更新されました"}
         
+        except ValueError as ve:
+            self.session_rollback(Session)
+            self.app.logger.error(ve)
+            return {"success":False,"message":ve}
+        
+        except Exception as e:
+            self.session_rollback(Session)
+            self.app.logger.error(e)
+            return    {"success":False, "message":"ユーザー情報更新に失敗しました"}
+
+            
+            
     def get_user_profile_with_posts(self, user_id,Session=None):
         """
         指定されたユーザーIDのプロフィール情報と投稿データを取得。
@@ -229,6 +297,7 @@ class UserManager(DatabaseManager):
                 "id": Validator.encrypt(user.id),
                 "user_id": user.user_id,
                 "username": user.username,
+                "bio":user.bio,
                 "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}"),
                 "posts": formatted_posts,
             }
@@ -238,11 +307,11 @@ class UserManager(DatabaseManager):
         
         except SQLAlchemyError as db_error:
             self.session_rollback(Session)
-            app.logger.error(f"Database error: {db_error}")
+            self.app.logger.error(f"Database error: {db_error}")
             raise
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(f"Unexpected error: {e}")
+            self.app.logger.error(f"Unexpected error: {e}")
             raise
 
     def toggle_follow(self, followed_user_id,Session=None):
@@ -263,13 +332,13 @@ class UserManager(DatabaseManager):
             if existing_follow:
                 # フォローが存在する場合は削除
                 self.delete(model=Follow, filters=data, Session=Session)
-                app.logger.info(f"Follow removed: followed_user={sender_id}, user_id={sender_id}")
+                self.app.logger.info(f"Follow removed: followed_user={sender_id}, user_id={sender_id}")
                 self.redis.add_score(ranking_key=self.trending[4],item_id=followed_user_id,score=-15)
                 result = {"status": "unfollowed"}
             else:
                 # フォローが存在しない場合は作成
                 self.insert(model=Follow, data=data, Session=Session)
-                app.logger.info(f"Follow added: followed_user={followed_user_id}, user_id={sender_id}")
+                self.app.logger.info(f"Follow added: followed_user={followed_user_id}, user_id={sender_id}")
                 self.redis.add_score(ranking_key=self.trending[4],item_id=followed_user_id,score=15)
                 result = {"status": "followed"}
 
@@ -278,7 +347,7 @@ class UserManager(DatabaseManager):
 
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(f"Failed to toggle follow: {e}")
+            self.app.logger.error(f"Failed to toggle follow: {e}")
             self.error_log_manager.add_error(sender_id, str(e))
             raise
 
@@ -296,7 +365,7 @@ class UserManager(DatabaseManager):
                 # すでにブロックしている場合 → ブロック解除
                 Session.delete(existing_block)
                 self.make_commit_or_flush(Session)
-                app.logger.info("ブロックを解除しました")
+                self.app.logger.info("ブロックを解除しました")
                 return {"message": "ブロックを解除しました", "status": "unblocked"}
             else:
 
@@ -307,7 +376,7 @@ class UserManager(DatabaseManager):
 
                 self.make_commit_or_flush(Session)
                 self.redis.add_score(ranking_key=self.trending[4],item_id=user_id,score=-5)
-                app.logger.info("ユーザーをブロックしました", new_block)
+                self.app.logger.info("ユーザーをブロックしました", new_block)
                 return {"message": "ユーザーをブロックしました", "status": "blocked"}
 
         except SQLAlchemyError as e:
@@ -377,5 +446,5 @@ class UserManager(DatabaseManager):
         
         except Exception as e:
             self.session_rollback(Session)
-            app.logger.error(e)
+            self.app.logger.error(e)
             raise e

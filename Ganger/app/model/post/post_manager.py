@@ -26,8 +26,7 @@ class PostManager(DatabaseManager):
 
     def generate_filename(self, user_id, post_id, img_order, ext):
         """ 一意のファイル名を生成する """
-        unique_id = uuid.uuid4().hex  # UUIDを使用して衝突を回避
-        return f"{user_id}_{post_id}_{img_order}_{unique_id}{ext}"
+        return f"{user_id}_{post_id}_{img_order}{ext}"
 
     def save_file(self, file, file_path):
         """ ファイルを正方形に加工して保存 """
@@ -42,12 +41,17 @@ class PostManager(DatabaseManager):
         width, height = img.size
         new_size = max(width, height)  # 正方形のサイズ
 
+        # 透明度を持つ画像は RGBA に変換
+        if img.mode in ("P", "LA") or (img.mode == "RGBA" and "transparency" in img.info):
+            img = img.convert("RGBA")
+            background_color = (255, 255, 255, 0)  # 透明な背景に設定
+
         # 正方形の背景キャンバスを作成
-        new_img = PILImage.new("RGB", (new_size, new_size), background_color)
+        new_img = PILImage.new("RGBA" if img.mode == "RGBA" else "RGB", (new_size, new_size), background_color)
 
         # 画像を中央配置
         paste_position = ((new_size - width) // 2, (new_size - height) // 2)
-        new_img.paste(img, paste_position)
+        new_img.paste(img, paste_position, img if img.mode == "RGBA" else None)  # RGBAの場合はマスクを使用
 
         return new_img  # 加工後の画像を返す
     
@@ -62,7 +66,7 @@ class PostManager(DatabaseManager):
         """ 
         投稿データを作成し、関連する画像とタグを保存する 
         """
-        upload_folder = "Ganger/app/static/images/post_images"
+        upload_folder = app.config['POST_FOLDER']
         try:
             Session = self.make_session(Session)
             user_id =  Validator.decrypt(session['id'])
