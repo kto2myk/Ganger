@@ -230,6 +230,49 @@
             font-size: 14px;
             margin-bottom: 8px;
         }
+
+        .payment-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .payment-info h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .card-expiry {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-expiry input {
+            width: 70px;
+        }
+
+        .card-security {
+            width: 80px !important;
+        }
     </style>
 </head>
 <body>
@@ -271,6 +314,28 @@
                     <div class="summary-row total-row">
                         <span>合計</span>
                         <span id="total-amount">￥{{ "{:,.0f}".format(cart_items|sum(attribute='price', start=0)) }}</span>
+                    </div>
+                    <div class="payment-info">
+                        <h3>クレジットカード情報</h3>
+                        <div class="form-group">
+                            <label for="card-number">カード番号</label>
+                            <input type="text" id="card-number" name="card_number" maxlength="16" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-name">カード名義人</label>
+                            <input type="text" id="card-name" name="card_name" placeholder="TARO YAMADA" required>
+                        </div>
+                        <div class="form-group">
+                            <label>有効期限</label>
+                            <div class="card-expiry">
+                                <input type="text" id="card-month" name="card_month" placeholder="MM" maxlength="2" required>
+                                <input type="text" id="card-year" name="card_year" placeholder="YY" maxlength="2" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-security">セキュリティコード</label>
+                            <input type="password" id="card-security" name="card_security" class="card-security" maxlength="4" placeholder="123" required>
+                        </div>
                     </div>
                     <button type="submit" class="checkout-btn" id="checkout-btn">
                         レジに進む (<span id="selected-count">{{ cart_items|length }}</span>点)

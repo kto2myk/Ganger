@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>決済ページ</title>
+    <link rel="stylesheet" href="../static/css/payment.css">
+</head>
+<body>
+    <div class="payment-container">
+        <h1>お支払い情報入力</h1>
+        <form id="payment-form">
+            <!-- 個人情報セクション -->
+            <div class="form-group">
+                <label for="lastname">姓</label>
+                <input type="text" id="lastname" required>
+            </div>
+            <div class="form-group">
+                <label for="firstname">名</label>
+                <input type="text" id="firstname" required>
+            </div>
+            <div class="form-group">
+                <label for="lastname-kana">姓（フリガナ）</label>
+                <input type="text" id="lastname-kana" required pattern="[\u30A0-\u30FF]*">
+            </div>
+            <div class="form-group">
+                <label for="firstname-kana">名（フリガナ）</label>
+                <input type="text" id="firstname-kana" required pattern="[\u30A0-\u30FF]*">
+            </div>
+            <div class="form-group">
+                <label for="address">住所</label>
+                <input type="text" id="address" required>
+            </div>
+
+            <!-- カード情報セクション -->
+            <div class="form-group">
+                <label for="card-number">カード番号</label>
+                <input type="text" id="card-number" maxlength="16" required>
+            </div>
+            <div class="form-group">
+                <label for="expiry">有効期限</label>
+                <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" required>
+            </div>
+            <div class="form-group">
+                <label for="cvv">セキュリティコード</label>
+                <input type="text" id="cvv" maxlength="4" required>
+            </div>
+            <div class="form-group">
+                <label for="name">カード名義人</label>
+                <input type="text" id="name" required>
+            </div>
+            <button type="submit" class="submit-button">決済を確定する</button>
+        </form>
+    </div>
+    <script src="../static/js/payment.js"></script>
+</body>
+</html>
