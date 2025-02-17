@@ -277,6 +277,7 @@
 </head>
 <body>
     <div class="cart-header">
+        <a href="{{url_for('shop_page')}}">shop_page</a>
         <h1>ショッピングカート</h1>
     </div>
 
@@ -302,7 +303,13 @@
                         <div class="item-details">
                             <h3 class="item-name">{{ item.product_name }}</h3>
                             <div class="item-unit-price">￥{{ "{:,.0f}".format(item.price) }}</div>
-                            <div class="item-quantity">数量: {{ item.quantity }}</div>
+                            <div class="item-controls">
+                                <div class="quantity-selector">
+                                    <button type="button" class="quantity-btn decrease-btn">-</button>
+                                    <div class="quantity-display">{{ item.quantity }}</div>
+                                    <button type="button" class="quantity-btn increase-btn">+</button>
+                                </div>
+                            </div>
                             <div class="item-price">￥{{ "{:,.0f}".format(item.price * item.quantity) }}</div>
                         </div>
                         <button type="button" class="remove-btn material-icons">close</button>
@@ -389,23 +396,76 @@
                 });
             });
 
+            // 数量変更ボタンの処理
+            document.querySelectorAll('.quantity-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const cartItem = this.closest('.cart-item');
+                    const productId = cartItem.querySelector('.item-checkbox').value;
+                    const isIncrease = this.classList.contains('increase-btn');
+                    const change = isIncrease ? 1 : -1;
+
+                    const quantityDisplay = cartItem.querySelector('.quantity-display');
+                    const currentQuantity = parseInt(quantityDisplay.textContent);
+
+                    if (currentQuantity + change < 1) {
+                        return; // 数量が1未満にならないようにする
+                    }
+
+                    try {
+                        const response = await fetch('/update_cart_quantity', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ product_id: productId, change: change })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const newQuantity = currentQuantity + change;
+                            quantityDisplay.textContent = newQuantity;
+
+                            // 合計金額の更新
+                            const unitPrice = parseFloat(cartItem.querySelector('.item-unit-price').textContent.replace('￥', '').replace(',', ''));
+                            const newPrice = unitPrice * newQuantity;
+                            cartItem.querySelector('.item-price').textContent = `￥${newPrice.toLocaleString()}`;
+                            cartItem.dataset.price = newPrice;
+                            updateTotal();
+                        } else {
+                            console.error('数量更新に失敗しました');
+                        }
+                    } catch (error) {
+                        console.error('数量更新エラー:', error);
+                    }
+                });
+            });
+
             // 削除ボタンの処理
             document.querySelectorAll('.remove-btn').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     if (confirm('この商品をカートから削除しますか？')) {
                         const cartItem = this.closest('.cart-item');
-                        // ここでAjax削除処理を実装
+                        const productId = cartItem.querySelector('.item-checkbox').value;
+
                         try {
-                            // const response = await fetch('/remove-from-cart', {
-                            //     method: 'POST',
-                            //     // ...
-                            // });
-                            cartItem.remove();
-                            updateTotal();
-                            
-                            // カートが空になった場合
-                            if (document.querySelectorAll('.cart-item').length === 0) {
-                                location.reload(); // ページをリロードして空のカート表示に
+                            const response = await fetch('/remove_from_cart', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ product_id: productId })
+                            });
+
+                            if (response.ok) {
+                                cartItem.remove();
+                                updateTotal();
+
+                                // カートが空になった場合
+                                if (document.querySelectorAll('.cart-item').length === 0) {
+                                    location.reload(); // ページをリロードして空のカート表示に
+                                }
+                            } else {
+                                console.error('削除に失敗しました');
                             }
                         } catch (error) {
                             console.error('削除エラー:', error);

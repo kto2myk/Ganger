@@ -670,21 +670,66 @@ def display_cart():
     if not success:
         abort(500, description = "カートの取得に失敗しました。")
 
-    return render_template("display_cart.html", cart_items=cart_items)    
-@app.route("/remove_from_cart" ,methods = ["POST"])
+    return render_template("display_cart.html", cart_items=cart_items)
+
+@app.route("/update_cart_quantity", methods=["POST"])
+def update_cart_quantity():
+    try:
+        data = request.get_json()
+        product_id = data.get("product_id")
+        change = int(data.get("change"))
+
+        if not product_id:
+            return jsonify({"message": "無効な商品IDです"}), 400
+
+        user_id = Validator.decrypt(session.get("id"))
+        product_id = Validator.decrypt(product_id)
+
+        success = shop_manager.update_cart_quantity(user_id, product_id, change)
+
+        if success:
+            # セッションのカート情報を更新
+            cart = session.get("cart", {})
+            if product_id in cart:
+                cart[product_id] += change
+                if cart[product_id] < 1:
+                    cart[product_id] = 1  # 数量が1未満にならないようにする
+            else:
+                cart[product_id] = 1  # カートに存在しない場合は1に設定
+            session["cart"] = {Validator.encrypt(k): v for k, v in cart.items()}
+
+            return jsonify({"message": "数量が更新されました"}), 200
+        else:
+            return jsonify({"message": "数量更新に失敗しました"}), 400
+
+    except ValueError as e:
+        app.logger.error(f"Decryption error: {e}")
+        return jsonify({"message": "無効なデータが提供されました。"}), 400
+    except Exception as e:
+        app.logger.error(f"エラーが発生しました: {e}")
+        return jsonify({"message": "エラーが発生しました", "error": str(e)}), 500
+
+@app.route("/remove_from_cart", methods=["POST"])
 def remove_from_cart():
     try:
-        if request.method == "POST":
-            product_id = request.form.get("product_id")
-            result = shop_manager.delete_cart_items(product_ids=product_id)
-            if result:
-                return jsonify(result),200
-            else:
-                raise Exception("サーバーエラー")
-            
+        data = request.get_json()
+        product_id = data.get("product_id")
+
+        if not product_id:
+            return jsonify({"message": "無効な商品IDです"}), 400
+
+        cart = session.get("cart", {})
+        if product_id in cart:
+            cart.pop(product_id)  # セッションから削除
+            session["cart"] = cart
+            return jsonify({"message": "カートから削除されました"}), 200
+        else:
+            return jsonify({"message": "商品がカートに存在しません"}), 400
+
     except Exception as e:
         app.logger.error(e)
-        return jsonify({"error": e}), 500
+        return jsonify({"message": "エラーが発生しました", "error": str(e)}), 500
+
 
 
 
