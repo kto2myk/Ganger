@@ -1,6 +1,6 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager import Message,MessageRoom,MessageStatus,RoomMember
-from sqlalchemy.sql import select,func,exists
+from Ganger.app.model.model_manager import Message,MessageRoom,MessageStatus,RoomMember,User
+from sqlalchemy.sql import select,func,exists,desc
 from sqlalchemy.orm  import joinedload,aliased
 from sqlalchemy.exc import SQLAlchemyError
 from flask import current_app as app, session, url_for
@@ -185,4 +185,171 @@ class MessageManager(DatabaseManager):
             return {"success": False, "message": str(e)}
 
 
+    def fetch_message_rooms(self, user_id, Session=None) -> dict:
+        try:
+            Session = self.make_session(Session)
+            user_id = Validator.decrypt(user_id)
 
+            # 最新のメッセージを取得するサブクエリ
+            latest_message_subquery = (
+                Session.query(
+                    Message.room_id,
+                    func.max(Message.sent_time).label("latest_sent_time")
+                )
+                .group_by(Message.room_id)
+                .subquery()
+            )
+
+            # ルームメンバーの「自分以外」のユーザー情報を取得するサブクエリ
+            other_user_subquery = (
+                Session.query(RoomMember.room_id, User.id, User.username, User.profile_image)
+                .join(User, RoomMember.user_id == User.id)
+                .filter(RoomMember.user_id != user_id)  # 自分以外のユーザーを取得
+                .subquery()
+            )
+
+            # クエリ本体
+            rooms = (
+                Session.query(
+                    MessageRoom,
+                    Message.content,
+                    Message.sent_time,
+                    other_user_subquery.c.profile_image,
+                    other_user_subquery.c.username
+                )
+                .join(MessageRoom.room_members)  # 自分のルームを取得
+                .join(other_user_subquery, other_user_subquery.c.room_id == MessageRoom.room_id)  # 自分以外のルームメンバー
+                .outerjoin(Message, Message.room_id == MessageRoom.room_id)  # メッセージを取得
+                .outerjoin(latest_message_subquery, latest_message_subquery.c.room_id == Message.room_id)  # 最新メッセージ取得
+                .filter(RoomMember.user_id == user_id)  # 自分が所属するルームのみ取得
+                .filter(Message.sent_time == latest_message_subquery.c.latest_sent_time)  # 最新メッセージのみ取得
+                .order_by(desc(Message.sent_time))  # 最新メッセージ順
+                .all()
+            )
+
+            result = []
+            for room, last_message, last_sent_time, profile_image, username in rooms:
+                result.append({
+                    "room_id": Validator.encrypt(room.room_id),
+                    "profile_image": url_for("static", filename=f"images/profile_images/{profile_image}") if profile_image else "default-profile.png",
+                    "username": username if username else "Unknown",
+                    "last_message": last_message if last_message else "",
+                    "sent_time": Validator.calculate_time_difference(last_sent_time) if last_sent_time else None
+                })
+            self.pop_and_close(Session)
+            return {"success": True, "result": result}
+
+        except Exception as e:
+            self.session_rollback(Session)
+            app.logger.error(e)
+            return {"success": False, "result": str(e)}
+    
+    def fetch_messages_by_room(self, room_id, user_id, Session=None):
+        """
+        `room_id` を使用してメッセージを取得するメソッド。
+        - `room_id` 内のメッセージを取得
+        - 返却データ:
+        - メッセージの `message_id`, `content`, `sent_time`
+        - `sender_id` が `user_id` かどうか（`is_self`）
+        """
+        try:
+            Session = self.make_session(Session)
+
+            # `room_id` を使ってメッセージを取得
+            messages = (
+                Session.query(
+                    Message.message_id,
+                    Message.content,
+                    Message.sent_time,
+                    Message.sender_id
+                )
+                .filter(Message.room_id == room_id)
+                .order_by(Message.sent_time.asc())  # 古い順にソート
+                .all()
+            )
+
+            result = [
+                {
+                    "message_id": message_id,
+                    "content": content,
+                    "sent_time": sent_time.isoformat(),
+                    "is_self": sender_id == user_id  # 自分の送信かどうか判定
+                }
+                for message_id, content, sent_time, sender_id in messages
+            ]
+
+            self.pop_and_close(Session)
+            return {"success": True, "room_id": room_id, "messages": result}
+
+        except Exception as e:
+            self.session_rollback(Session)
+            return {"success": False, "error": str(e)}
+        
+    def fetch_messages_by_user(self, user_id, other_user_id, Session=None):
+        """
+        `user_id` & `other_user_id` を使用してメッセージを取得するメソッド。
+        - `user_id` & `other_user_id` のペアで `room_id` を検索
+        - ルームが見つからなければ `"No existing room found"` を返す
+        - 返却データ:
+        - `room_id`
+        - 相手の `username`
+        - 相手の `profile_image`
+        - メッセージの `message_id`, `content`, `sent_time`
+        - `sender_id` が `user_id` かどうか（`is_self`）
+        """
+        try:
+            Session = self.make_session(Session)
+
+            # `user_id` & `other_user_id` のペアで `room_id` を検索
+            room = (
+                Session.query(MessageRoom)
+                .join(RoomMember)
+                .filter(RoomMember.user_id.in_([user_id, other_user_id]))  # 自分と相手の両方が含まれるルーム
+                .group_by(MessageRoom.room_id)
+                .having(func.count(RoomMember.user_id) == 2)  # 両方がいるルームのみ
+                .first()
+            )
+
+            # ルームが見つからない場合はエラーを返す
+            if not room:
+                return {"success": False, "error": "No existing room found"}
+
+            room_id = room.room_id
+
+            # `room_id` を使ってメッセージと相手の情報を取得
+            messages = (
+                Session.query(
+                    Message.message_id,
+                    Message.content,
+                    Message.sent_time,
+                    Message.sender_id,
+                    User.username,
+                    User.profile_image
+                )
+                .join(MessageRoom, Message.room_id == MessageRoom.room_id)  # メッセージルームを取得
+                .join(RoomMember, RoomMember.room_id == MessageRoom.room_id)  # ルームメンバーを取得
+                .join(User, RoomMember.user_id == User.id)  # メンバーのユーザー情報を取得
+                .filter(Message.room_id == room_id)  # `room_id` のメッセージを取得
+                .filter(RoomMember.user_id != user_id)  # 自分以外のメンバー（相手）を取得
+                .order_by(Message.sent_time.asc())  # 古い順にソート
+                .all()
+            )
+
+            result = []
+            for message_id, content, sent_time, sender_id, username, profile_image in messages:
+                result.append({
+                    "message_id": message_id,
+                    "content": content,
+                    "sent_time": sent_time.isoformat(),  # ISOフォーマットで時刻を返す
+                    "is_self": sender_id == user_id,  # 自分の送信かどうか判定
+                    "username": username,  # 相手の `username`
+                    "profile_image": url_for("static", filename=f"images/profile_images/{profile_image}")
+                    if profile_image else "default-profile.png"  # プロフィール画像
+                })
+
+            self.pop_and_close(Session)
+            return {"success": True, "room_id": room_id, "messages": result}
+
+        except Exception as e:
+            self.session_rollback(Session)
+            return {"success": False, "error": str(e)}

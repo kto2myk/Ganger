@@ -1,5 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import MetaData, text
+import sqlite3
 
 from Ganger.app.model.database_manager.database_manager import DatabaseConnector
 import os
@@ -72,6 +73,33 @@ class TableManager(DatabaseConnector):
 
         except SQLAlchemyError as e:
             return f"エラーが発生しました: {e}"
+    
+    def check_columns(self,table_name,database_path="Ganger/app/model/database_manager/Ganger.db"):
+        """
+        指定したSQLiteデータベースのテーブルのカラム情報を取得する
+        """
+        try:
+            # SQLiteデータベースに接続
+            conn = sqlite3.connect(database_path)
+            cursor = conn.cursor()
+
+            # PRAGMA table_info を使ってカラム情報を取得
+            cursor.execute(f"PRAGMA table_info({table_name});")
+            columns = cursor.fetchall()
+
+            # カラム情報を表示
+            if columns:
+                print(f"テーブル '{table_name}' のカラム情報:")
+                for col in columns:
+                    print(f"  - {col[1]} (型: {col[2]})")
+            else:
+                print(f"テーブル '{table_name}' が見つかりません。")
+
+            # 接続を閉じる
+            conn.close()
+        except sqlite3.Error as e:
+            print(f"エラー: {e}")
+
                 
 # `if __name__ == "__main__":` で直接実行時に処理を行う部分
 if __name__ == "__main__":

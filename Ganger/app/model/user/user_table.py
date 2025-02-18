@@ -139,7 +139,8 @@ class UserManager(DatabaseManager):
                 user_data = {
                     "user_id": user.user_id,
                     "username": user.username,
-                    "id": Validator.encrypt(user.id)
+                    "id": Validator.encrypt(user.id),
+                    "profile_image":url_for("static", filename=f"images/profile_images/{user.profile_image}")
                 }
                 result.append(user_data) 
 
@@ -150,7 +151,50 @@ class UserManager(DatabaseManager):
             self.app.logger.error(f"Failed to search users: {e}")
             raise
 
+    def get_followed_users(self, user_id, Session=None):
+        """
+        指定したユーザーがフォローしているユーザーを取得する。
+        フォローしている人がいない場合、ランダムで10人のユーザーを取得する。
+        """
+        Session = self.make_session(Session)
+        try:
+            user_id = Validator.decrypt(user_id)
+            # **フォローしている人がいるかを事前チェック**
+            has_follows = Session.query(exists().where(Follow.user_id == user_id)).scalar()
 
+            if has_follows:
+                # **フォローしているユーザーを取得（リレーションを活用）**
+                followed_users = (
+                    Session.query(User.id, User.username, User.profile_image)
+                    .join(Follow, Follow.follow_user_id == User.id)
+                    .filter(Follow.user_id == user_id)
+                    .order_by(func.random())
+                    .limit(10)
+                    .all()
+                )
+
+            else:
+                # **フォローが0人の場合、ランダムに10人を取得**
+                followed_users = (
+                    Session.query(User.id, User.username, User.profile_image)
+                    .order_by(func.random())  # SQLiteなら `random()`, PostgreSQLなら `RANDOM()`
+                    .limit(10)
+                    .all()
+                )
+
+            # **データを辞書リストに変換**
+            users_data = [
+                {"id": user.id, "username": user.username, "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")}
+                for user in followed_users
+            ]
+
+            self.pop_and_close(Session)
+            return {"success": True, "result": users_data}
+
+        except Exception as e:
+            self.session_rollback(Session)
+            return {"success": False, "result": str(e)}
+            
     def updata_user_info(self,user_id=None,username=None,real_name=None,address=None,bio=None,profile_image=None,Session=None):
         """
         ユーザーの情報の更新を一括で請け負うメソッド。更新されるデータがある場合、自動でNONEが解除され更新される。
