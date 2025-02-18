@@ -37,7 +37,7 @@ async function loadMoreData() {
     if (loading) return;
 
     loading = true;
-    document.getElementById("loading").style.display = "block";
+    // document.getElementById("loading").style.display = "block";
 
     try {
         let response = await fetch(`/fetch_post?offset=${offset}&limit=${limit}`);
@@ -62,7 +62,7 @@ async function loadMoreData() {
         console.error("データの取得に失敗しました:", error);
     } finally {
         loading = false;
-        document.getElementById("loading").style.display = "none";
+        // document.getElementById("loading").style.display = "none";
     }
 }
 
@@ -71,4 +71,17 @@ window.addEventListener("scroll", () => {
     if (isBottomReached()) {
         loadMoreData();
     }
+});
+
+// おすすめボタンクリック判定
+document.getElementById('recommended-posts-button').addEventListener('click', function () {
+    console.log("おすすめボタンがクリックされました");
+    fetch('/fetch_trending_posts')
+        .then(response => {response.json();
+            console.log("投稿取得");
+        })
+        .then(data => {
+            console.log(data);
+        })
+
 });
