@@ -13,6 +13,7 @@ from Ganger.app.model.user.user_table import UserManager
 from Ganger.app.model.post.post_manager import PostManager
 from Ganger.app.model.shop.shop_manager import ShopManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
+from Ganger.app.model.dm.message_manager import MessageManager
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -71,6 +72,7 @@ with app.app_context():
     post_manager = PostManager()
     shop_manager = ShopManager()
     notification_manager = NotificationManager()
+    dm_manager = MessageManager()
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -268,6 +270,17 @@ def toggle_block(user_id):
         app.logger.error(f"Error toggling block: {e}")
         return abort(500,description='Server error')
 
+@app.route("/api/user/followed",methods=["GET"])
+def fetch_followed_users():
+    try:
+        result = user_manager.get_followed_users(user_id=session['id'])
+        if result['result']:
+            return jsonify(result),200
+        else:
+            raise
+    except Exception as e:
+        return jsonify(result),500
+
 @app.route('/create_post', methods=['POST', 'GET'])
 def create_post():
     if request.method == 'GET':
@@ -388,6 +401,31 @@ def delete_temp():
     except Exception as e:
         return f"エラーが発生しました: {str(e)}", 500
     
+@app.route('/message',methods=['GET'])
+def display_message_room():
+    message_data = dm_manager.fetch_message_rooms(user_id=session['id'])
+    if message_data['result']:
+        return render_template("display_message_rooms.html",room_data = message_data["result"])
+    else:
+        abort(400,description="不正なアクセス")
+    
+    
+
+# @app.route('/message/send/<user_id>',methods=['GET','POST'])
+# def send_message(user_id):
+#     try:
+#         if request.method == "POST":
+#             message = request.form.get('message','').strip()
+#             if not message:
+#                 abort(400)
+#             else:
+#                 dm_manager.send_message(sender_id=session['id'],recipient_id=user_id)
+#                 return redirect(url_for('send_message',user_id=user_id))
+#         elif request.method == "GET":
+
+
+
+
 @app.route('/search', methods=['GET'])
 def search():
     try:
