@@ -67,6 +67,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0;
     width: 50%;
     height: 100%;
     text-decoration: none;
@@ -83,13 +84,24 @@ header {
 
 
 /* 投稿表示エリア */ 
-.contents {
+#following-contents {
     padding-top: 15dvh;
     padding-left: 19vw;
     height: auto;
     width: 60dvw;
     background-color: #fafafa;
+    z-index: 9997;
     /* border: solid 1px #999; */
+}
+
+#recommended-contents {
+    padding-top: 15dvh;
+    padding-left: 19vw;
+    height: auto;
+    width: 60dvw;
+    background-color: #fafafa;
+    z-index: 9996;
+    display: none;
 }
 
 .reposted_massage {

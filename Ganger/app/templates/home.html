@@ -20,8 +20,9 @@
 {% endblock %}
 {% block content %}
     <!-- メインコンテンツエリア -->
+    <div class="main-contents">
     {% if posts %}
-      <div class="contents">
+      <div id="following-contents">
         {% for post in posts %}
           <div class="post_container">
             {% if post["repost_user"] %}
@@ -135,10 +136,15 @@
     {% else %}
       <h1 id="no_result">投稿がありません。</h1>
     {% endif %}
+      </div><!-- following-contents -->
+
+      <div id="recommended-contents">
+        <h1 style="margin-top: 400px;">osususme!!!</h1>
       </div>
+    </div><!-- main-contents -->
 
       <!-- 投稿ボタン -->
-      <div id = "post_button" style="position: fixed; bottom: 10%; left: 70%;">
+      <div id = "post_button" style="position: fixed; bottom: 10%; left: 70%; z-index: 9998;">
         <a href="{{ url_for('create_post') }}">
           <button id="add_post_button">
             <?xml version="1.0" encoding="utf-8"?>
