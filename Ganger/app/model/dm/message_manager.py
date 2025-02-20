@@ -1,6 +1,6 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.model_manager import Message,MessageRoom,MessageStatus,RoomMember,User
-from sqlalchemy.sql import select,func,exists,desc
+from sqlalchemy.sql import select,func,exists,desc,and_
 from sqlalchemy.orm  import joinedload,aliased
 from sqlalchemy.exc import SQLAlchemyError
 from flask import current_app as app, session, url_for
@@ -38,7 +38,7 @@ class MessageManager(DatabaseManager):
             # 新規ルーム作成
             room = MessageRoom()
             Session.add(room)
-            Session.commit()
+            Session.flush()
 
             app.logger.info("commit")
 
@@ -48,14 +48,14 @@ class MessageManager(DatabaseManager):
                 RoomMember(room_id=room.room_id, user_id=recipient_id)
             ]
             Session.add_all(members)
-            self.make_commit_or_flush(Session)
+            self.pop_and_close(Session)
             app.logger.info(f"Room members added: {members}")
 
             return room.room_id
         except Exception as e:
             app.logger.error(e)
             self.session_rollback(Session)
-            return {"success": False, "message": str(e)}    
+            raise Exception(str(e))
         
     def delete_room(self, room_id,Session=None)-> dict:
         """選択されたルームIDを削除するメソッド"""
@@ -85,8 +85,10 @@ class MessageManager(DatabaseManager):
             
             Session = self.make_session(Session)
             
+            #ユーザー主キーの複号化
+            sender_id,recipient_id = Validator.decrypt(sender_id),Validator.decrypt(recipient_id)
             # ルーム取得または新規作成
-            room_id = self.get_or_create_room(sender_id, recipient_id)
+            room_id = self.get_or_create_room(sender_id, recipient_id,Session=Session)
 
 
             # メッセージ挿入
@@ -97,9 +99,8 @@ class MessageManager(DatabaseManager):
 
 
             # MessageStatusの挿入 (既読・削除状態の初期化)
-            status_sender = MessageStatus(message_id=message.message_id, user_id=sender_id, is_read=True, is_deleted=False)
             status_recipient = MessageStatus(message_id=message.message_id, user_id=recipient_id, is_read=False, is_deleted=False)
-            Session.add_all([status_sender, status_recipient])
+            Session.add(status_recipient)
 
             self.make_commit_or_flush(Session)
 
@@ -117,6 +118,7 @@ class MessageManager(DatabaseManager):
         """
         try:
             # セッション作成
+            message_id, recipient_id = Validator.decrypt(message_id), Validator.decrypt(recipient_id)
             Session = self.make_session(Session)
             
             # 対象のメッセージを取得
@@ -160,6 +162,7 @@ class MessageManager(DatabaseManager):
     def delete_message_for_user(self,message_id, user_id,Session=None):
         """指定されたメッセージを論理削除する関数"""
         try:
+            user_id = Validator.decrypt(user_id)
             Session = self.make_session(Session)
             status = (
                 Session.query(MessageStatus)
@@ -167,14 +170,17 @@ class MessageManager(DatabaseManager):
                 .first()
             )
             if not status:
-                raise ValueError("メッセージが存在しません。")
+                status = MessageStatus(message_id=message_id,user_id=user_id,is_deleted=True)
+                Session.add(status)
             
             elif status and not status.is_deleted:
                 status.is_deleted = True
-                self.make_commit_or_flush(Session)
-                return {"success":True,"message":"メッセージ削除完了"}
             else:
                 return {"success":False,"message":"既に削除されています"}
+            
+            self.make_commit_or_flush(Session)
+            return {"success":True,"message":"メッセージ削除完了"}
+
         except ValueError as ve:
             self.session_rollback(Session)
             app.logger.error(ve)
@@ -243,17 +249,29 @@ class MessageManager(DatabaseManager):
             self.session_rollback(Session)
             app.logger.error(e)
             return {"success": False, "result": str(e)}
+
     
     def fetch_messages_by_room(self, room_id, user_id, Session=None):
-        """
-        `room_id` を使用してメッセージを取得するメソッド。
-        - `room_id` 内のメッセージを取得
-        - 返却データ:
-        - メッセージの `message_id`, `content`, `sent_time`
-        - `sender_id` が `user_id` かどうか（`is_self`）
-        """
         try:
             Session = self.make_session(Session)
+            room_id = Validator.decrypt(room_id)
+            user_id = Validator.decrypt(user_id)
+
+            # ルームに参加している相手の情報を取得（自分以外のユーザー）
+            other_user = (
+                Session.query(User.id, User.username, User.profile_image)
+                .join(RoomMember, RoomMember.user_id == User.id)
+                .filter(RoomMember.room_id == room_id)
+                .filter(RoomMember.user_id != user_id)
+                .first()
+            )
+
+            if not other_user:
+                return {"success": False, "error": "No valid user found in room"}
+
+            # MessageStatus のエイリアスを作成
+            read_status = aliased(MessageStatus)
+            delete_status = aliased(MessageStatus)
 
             # `room_id` を使ってメッセージを取得
             messages = (
@@ -261,43 +279,60 @@ class MessageManager(DatabaseManager):
                     Message.message_id,
                     Message.content,
                     Message.sent_time,
-                    Message.sender_id
+                    Message.sender_id,
+                    func.coalesce(read_status.is_read, False).label("is_read"),
+                    func.coalesce(delete_status.is_deleted, False).label("is_deleted")
                 )
+                .outerjoin(read_status, and_(
+                    read_status.message_id == Message.message_id,
+                    read_status.user_id == other_user.id
+                ))  # 相手の `is_read` を取得
+                .outerjoin(delete_status, and_(
+                    delete_status.message_id == Message.message_id,
+                    delete_status.user_id == user_id
+                ))  # 自分の `is_deleted` を取得
                 .filter(Message.room_id == room_id)
-                .order_by(Message.sent_time.asc())  # 古い順にソート
+                .order_by(Message.sent_time.asc())
                 .all()
             )
 
+            print("Fetched messages:", messages)  # デバッグ用
+
             result = [
                 {
-                    "message_id": message_id,
+                    "message_id": Validator.encrypt(message_id),
                     "content": content,
-                    "sent_time": sent_time.isoformat(),
-                    "is_self": sender_id == user_id  # 自分の送信かどうか判定
+                    "sent_time": Validator.calculate_time_difference(sent_time),
+                    "is_me": sender_id == user_id,
+                    "status": {
+                        "is_read": is_read,
+                        "is_deleted": is_deleted
+                    }
                 }
-                for message_id, content, sent_time, sender_id in messages
+                for message_id, content, sent_time, sender_id, is_read, is_deleted in messages
             ]
 
             self.pop_and_close(Session)
-            return {"success": True, "room_id": room_id, "messages": result}
+            return {
+                "success": True,
+                "room_id": room_id,
+                "user": {
+                    "id": Validator.encrypt(other_user.id),
+                    "username": other_user.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{other_user.profile_image}")
+                    if other_user.profile_image else "default-profile.png"
+                },
+                "messages": result
+            }
 
         except Exception as e:
             self.session_rollback(Session)
             return {"success": False, "error": str(e)}
-        
+
     def fetch_messages_by_user(self, user_id, other_user_id, Session=None):
-        """
-        `user_id` & `other_user_id` を使用してメッセージを取得するメソッド。
-        - `user_id` & `other_user_id` のペアで `room_id` を検索
-        - ルームが見つからなければ `"No existing room found"` を返す
-        - 返却データ:
-        - `room_id`
-        - 相手の `username`
-        - 相手の `profile_image`
-        - メッセージの `message_id`, `content`, `sent_time`
-        - `sender_id` が `user_id` かどうか（`is_self`）
-        """
         try:
+            user_id = Validator.decrypt(user_id)
+            other_user_id = Validator.decrypt(other_user_id)
             Session = self.make_session(Session)
 
             # `user_id` & `other_user_id` のペアで `room_id` を検索
@@ -310,46 +345,75 @@ class MessageManager(DatabaseManager):
                 .first()
             )
 
-            # ルームが見つからない場合はエラーを返す
-            if not room:
-                return {"success": False, "error": "No existing room found"}
+            room_id = room.room_id if room else None
 
-            room_id = room.room_id
-
-            # `room_id` を使ってメッセージと相手の情報を取得
-            messages = (
-                Session.query(
-                    Message.message_id,
-                    Message.content,
-                    Message.sent_time,
-                    Message.sender_id,
-                    User.username,
-                    User.profile_image
-                )
-                .join(MessageRoom, Message.room_id == MessageRoom.room_id)  # メッセージルームを取得
-                .join(RoomMember, RoomMember.room_id == MessageRoom.room_id)  # ルームメンバーを取得
-                .join(User, RoomMember.user_id == User.id)  # メンバーのユーザー情報を取得
-                .filter(Message.room_id == room_id)  # `room_id` のメッセージを取得
-                .filter(RoomMember.user_id != user_id)  # 自分以外のメンバー（相手）を取得
-                .order_by(Message.sent_time.asc())  # 古い順にソート
-                .all()
+            # 相手の情報を取得
+            other_user = (
+                Session.query(User.id, User.username, User.profile_image)
+                .filter(User.id == other_user_id)
+                .first()
             )
 
-            result = []
-            for message_id, content, sent_time, sender_id, username, profile_image in messages:
-                result.append({
-                    "message_id": message_id,
-                    "content": content,
-                    "sent_time": sent_time.isoformat(),  # ISOフォーマットで時刻を返す
-                    "is_self": sender_id == user_id,  # 自分の送信かどうか判定
-                    "username": username,  # 相手の `username`
-                    "profile_image": url_for("static", filename=f"images/profile_images/{profile_image}")
-                    if profile_image else "default-profile.png"  # プロフィール画像
-                })
+            if not other_user:
+                raise ValueError("User not found")
+
+            # **ルームがない場合は `result = []` を設定**
+            result = []  
+
+            # `room_id` を使ってメッセージを取得 (ルームがある場合のみ)
+            if room_id:
+                read_status = aliased(MessageStatus)
+                delete_status = aliased(MessageStatus)
+                messages = (
+                    Session.query(
+                        Message.message_id,
+                        Message.content,
+                        Message.sent_time,
+                        Message.sender_id,
+                        func.coalesce(read_status.is_read, False).label("is_read"),
+                        func.coalesce(delete_status.is_deleted, False).label("is_deleted")
+                    )
+                    .outerjoin(read_status, and_(
+                        read_status.message_id == Message.message_id,
+                        read_status.user_id == other_user_id
+                    ))  # 相手の `is_read` を取得
+                    .outerjoin(delete_status, and_(
+                        delete_status.message_id == Message.message_id,
+                        delete_status.user_id == user_id
+                    ))  # 自分の `is_deleted` を取得
+                    .filter(Message.room_id == room_id)
+                    .order_by(Message.sent_time.asc())
+                    .all()
+                )
+
+                result = [
+                    {
+                        "message_id": Validator.encrypt(message_id),
+                        "content": content,
+                        "sent_time": Validator.calculate_time_difference(sent_time),
+                        "is_me": sender_id == user_id,
+                        "status": {
+                            "is_read": is_read,
+                            "is_deleted": is_deleted
+                        }
+                    }
+                    for message_id, content, sent_time, sender_id, is_read, is_deleted in messages
+                ]
 
             self.pop_and_close(Session)
-            return {"success": True, "room_id": room_id, "messages": result}
+            return {
+                "success": True,
+                "room_id": room_id,
+                "user": {
+                    "id": Validator.encrypt(other_user.id),
+                    "username": other_user.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{other_user.profile_image}")
+                    if other_user.profile_image else "default-profile.png"
+                },
+                "messages": result
+            }
 
         except Exception as e:
+            app.logger.error(e)
             self.session_rollback(Session)
             return {"success": False, "error": str(e)}

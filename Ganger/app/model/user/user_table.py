@@ -184,7 +184,7 @@ class UserManager(DatabaseManager):
 
             # **データを辞書リストに変換**
             users_data = [
-                {"id": user.id, "username": user.username, "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")}
+                {"id": Validator.encrypt(user.id), "username": user.username, "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")}
                 for user in followed_users
             ]
 
@@ -203,6 +203,8 @@ class UserManager(DatabaseManager):
         post_manager = PostManager()
         try:
             Session = self.make_session(Session)
+            user_info = [data.strip() if isinstance(data, str) else data for data in [user_id, username, real_name, address, bio] if data is not None]
+
             id = Validator.decrypt(session["id"])
 
             user = Session.query(User).filter_by(id=id).first()
@@ -212,20 +214,20 @@ class UserManager(DatabaseManager):
                 self.session_rollback(Session)
                 raise ValueError("存在しないユーザーです")
             
-            if user_id: #! 重複なしを確認
+            if user_info[0]: #! 重複なしを確認
                 Validate_user_id = Session.query(User).filter_by(user_id=user_id).first()
                 if not Validate_user_id:
-                    user.user_id = user_id
+                    user.user_id = user_info[0]
                 else:
                     raise ValueError(f"user_id{user_id}は既に存在しています。")
-            if username:
-                user.username = username
-            if real_name:
-                user.real_name = real_name
-            if address:
-                user.address = address
-            if bio:
-                user.bio = bio
+            if user_info[1]:
+                user.username = user_info[1]
+            if user_info[2]:
+                user.real_name = user_info[2]
+            if user_info[3]:
+                user.address = user_info[3]
+            if user_info[4]:
+                user.bio = user_info[4]
             if profile_image: #! 画像保存処理を作成
                 user_id = user_id if user_id else session['user_id']
                 original_filename = secure_filename(profile_image.filename)

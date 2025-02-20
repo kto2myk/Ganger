@@ -279,6 +279,7 @@ def fetch_followed_users():
         else:
             raise
     except Exception as e:
+        app.logger.error(e)
         return jsonify(result),500
 
 @app.route('/create_post', methods=['POST', 'GET'])
@@ -411,19 +412,64 @@ def display_message_room():
     
     
 
-# @app.route('/message/send/<user_id>',methods=['GET','POST'])
-# def send_message(user_id):
-#     try:
-#         if request.method == "POST":
-#             message = request.form.get('message','').strip()
-#             if not message:
-#                 abort(400)
-#             else:
-#                 dm_manager.send_message(sender_id=session['id'],recipient_id=user_id)
-#                 return redirect(url_for('send_message',user_id=user_id))
-#         elif request.method == "GET":
+@app.route("/message/user/<user_id>", methods=["GET"])
+def display_message_by_user(user_id):
+    try:
+        # メッセージルームのデータを取得
+        message_data = dm_manager.fetch_messages_by_user(user_id=session['id'],other_user_id=user_id)
+        app.logger.info(f"Message data: {message_data}")
+        if message_data['success']:
+            return render_template("message_room.html",message = message_data)
+        else:
+            abort(400,description="不正なアクセス")
+    except Exception as e:
+        app.logger.error(f"Error in display_message: {e}")
+        return abort(500,description="エラーが発生しました")
 
+@app.route("/message/room/<room_id>", methods=["GET"])
+def display_message_by_room(room_id):
+    try:
+        # メッセージルームのデータを取得
+        message_data = dm_manager.fetch_messages_by_room(room_id=room_id,
+                                                        user_id=session['id'])
+        app.logger.info(f"Message data: {message_data}")
+        if message_data['success']:
+            return render_template("message_room.html",message = message_data)
+        else:
+            abort(400,description="不正なアクセス")
+    except Exception as e:
+        app.logger.error(f"Error in display_message: {e}")
+        return abort(500,description="エラーが発生しました")
 
+@app.route('/message/send/<user_id>',methods=['GET','POST'])
+def send_message(user_id):
+    try:
+        if request.method == "POST":
+            message = request.form.get('message','').strip()
+            
+            if not message:
+                abort(400,description="メッセージが空です")
+            else:
+                dm_manager.send_message(sender_id=session['id'],recipient_id=user_id,content=message)
+                return redirect(url_for('send_message',user_id=user_id))
+        elif request.method == "GET":
+            return redirect(url_for('display_message_by_user',user_id=user_id))
+    except Exception as e:
+        app.logger.error(f"Error in send_message: {e}")
+        return abort(500,description="エラーが発生しました")
+
+@app.route('/message/mark-as-read/<message_id>',methods=['POST'])
+def mark_message_as_read(message_id):
+    try:
+        result = dm_manager.mark_messages_as_read_up_to(message_id=message_id,recipient_id=session['id'])
+        if result['success']:
+            return jsonify(result),200
+        else:
+            return jsonify(result),400
+    except Exception as e:
+        app.logger.error(f"Error in mark_message_as_read: {e}")
+        return jsonify({"error":"エラーが発生しました"}),500
+        
 
 
 @app.route('/search', methods=['GET'])
