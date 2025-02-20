@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // ボタンのサイズを設定
+    setFixedSize();
 
     document.querySelectorAll('.splide').forEach(function (carousel) {
     new Splide(carousel).mount();
@@ -58,8 +60,11 @@ function setFixedSize() {
 // 初回読み込み時に設定
     
 window.onload = function() {
-    // ボタンのサイズを設定
-    setFixedSize();
+    let element = document.getElementById("loading");
+    if (element) {
+        element.id = "loaded";
+        console.log("IDが変更されました:", element.id);
+    }
 };
 
     // ロード完了時の処理
