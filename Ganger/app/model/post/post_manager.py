@@ -52,7 +52,9 @@ class PostManager(DatabaseManager):
         # 画像を中央配置
         paste_position = ((new_size - width) // 2, (new_size - height) // 2)
         new_img.paste(img, paste_position, img if img.mode == "RGBA" else None)  # RGBAの場合はマスクを使用
-
+        # **JPEG で保存する場合は RGB に変換**
+        if new_img.mode == "RGBA":
+            new_img = new_img.convert("RGB")
         return new_img  # 加工後の画像を返す
     
     def delete_files(self, file_list):
@@ -60,6 +62,28 @@ class PostManager(DatabaseManager):
         for file_path in file_list:
             if os.path.exists(file_path):
                 os.remove(file_path)
+
+    def delete_temp(self):
+        """ 一時フォルダ内の画像を削除 """
+
+        # セッションから画像名を取得
+        image_path = os.path.join(app.config['TEMP_FOLDER'], session.get('image_name', ''))
+        if not image_path:
+            return{"success":False,"message":"削除する画像が見つかりません。"}
+
+        try:
+            # 画像のパスを構築
+            app.logger.info(f"imgpath:{image_path}")
+            # ファイルの存在確認
+            if os.path.exists(image_path):
+                os.remove(image_path)  # ファイルを削除
+                session.pop('image_name', None)  # セッションから削除
+                return {"success": True, "message": "画像を削除しました。"}
+            else:
+                return {"success":False, "message":"画像ファイルが存在しません。"}
+        except Exception as e:
+            app.logger.error(f"Failed to delete image: {e}")
+            return {"success":False,"message":str(e)}
 
                 
     def create_post(self, content, image_files, tags, Session=None):

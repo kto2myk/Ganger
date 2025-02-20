@@ -31,7 +31,7 @@
         </form>
     </main>
 
-    <script>
+    <!-- <script>
         const contentInput = document.getElementById('content');
         const suggestionsList = document.getElementById('tag-suggestions');
         const tagListInput = document.getElementById('tag-list');
@@ -177,6 +177,185 @@
                 alert('サーバーエラーが発生しました。');
             });
         });    
+</script> -->
+
+<script>
+    const contentInput = document.getElementById('content');
+    const suggestionsList = document.getElementById('tag-suggestions');
+    const tagListInput = document.getElementById('tag-list');
+    const imageInput = document.getElementById('images');
+    const previewContainer = document.getElementById('image-preview');
+    const imageError = document.getElementById('image-error');
+    
+    let tagFetchTimeout = null;
+
+    // サーバー側から渡される可能性のある初期画像（1枚だけ）
+    const initialImagePath = "{{ initial_image or '' }}";  // ← ここにサーバーから渡された画像パスを設定（例: "/static/images/post_images/sample1.jpg"）
+
+    async function convertToFile(url, filename) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new File([blob], filename, { type: blob.type });
+    }
+
+    async function setInitialFile(imagePath) {
+        if (!imagePath|| imagePath.trim() === "") return; // 初期画像がなければ何もしない
+
+        const file = await convertToFile(imagePath, "initial_image.jpg");
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+
+        imageInput.files = dataTransfer.files; // `<input type="file">` にセット
+        displayImages(imageInput.files);
+    }
+
+    function displayImages(files) {
+        previewContainer.innerHTML = "";
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<img src="${e.target.result}" alt="画像${index + 1}" style="width: 100px; height: 100px; object-fit: cover; margin: 5px;">`;
+                previewContainer.appendChild(listItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 初期画像がある場合はセット
+    if (initialImagePath) {
+        setInitialFile(initialImagePath);
+    }
+
+    // 画像のプレビューとバリデーション（既存機能）
+    imageInput.addEventListener('change', function() {
+        if (imageInput.files.length > 6) {
+            imageError.style.display = 'block';
+            imageInput.value = '';
+            previewContainer.innerHTML = '';
+            return;
+        } else {
+            imageError.style.display = 'none';
+        }
+
+        previewContainer.innerHTML = '';
+        displayImages(imageInput.files);
+    });
+
+    contentInput.addEventListener('input', function() {
+        extractTags();
+        const cursorPosition = contentInput.selectionStart;
+        const text = contentInput.value.slice(0, cursorPosition);
+        const tagMatches = text.match(/(?:^|\s)(#\w+)$/);
+
+        if (tagMatches) {
+            const tagQuery = tagMatches[1].slice(1);
+
+            if (tagQuery.length > 0) {
+                clearTimeout(tagFetchTimeout);
+                tagFetchTimeout = setTimeout(() => {
+                    fetch(`/search?query=${encodeURIComponent(tagQuery)}&tab=TAG`, {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        showTagSuggestions(data.tags);
+                    })
+                    .catch(error => console.error('タグ検索エラー:', error));
+                }, 300);
+            } else {
+                suggestionsList.style.display = 'none';
+            }
+        } else {
+            suggestionsList.style.display = 'none';
+        }
+    });
+
+    function showTagSuggestions(tags) {
+        suggestionsList.innerHTML = '';
+
+        if (tags.length === 0) {
+            const noTagItem = document.createElement('li');
+            noTagItem.textContent = "まだタグが存在していません。";
+            noTagItem.style.color = 'gray';
+            noTagItem.style.cursor = 'default';
+            suggestionsList.appendChild(noTagItem);
+            suggestionsList.style.display = 'block';
+            return;
+        }
+        
+        tags.forEach(tag => {
+            const item = document.createElement('ol');
+            item.textContent = `#${tag.tag_text}`;
+            item.style.cursor = 'pointer';
+
+            item.addEventListener('click', () => {
+                insertTag(tag.tag_text);
+            });
+
+            suggestionsList.appendChild(item);
+        });
+
+        const rect = contentInput.getBoundingClientRect();
+        suggestionsList.style.top = `${rect.bottom + window.scrollY}px`;
+        suggestionsList.style.left = `${rect.left + window.scrollX}px`;
+        suggestionsList.style.display = 'block';
+    }
+
+    function insertTag(tag) {
+        const cursorPosition = contentInput.selectionStart;
+        const textBeforeCursor = contentInput.value.slice(0, cursorPosition);
+        const textAfterCursor = contentInput.value.slice(cursorPosition);
+        const lastHashIndex = textBeforeCursor.lastIndexOf('#');
+
+        if (lastHashIndex !== -1) {
+            contentInput.value = textBeforeCursor.slice(0, lastHashIndex + 1) + tag + ' ' + textAfterCursor;
+        } else {
+            contentInput.value += `#${tag} `;
+        }
+
+        contentInput.focus();
+        suggestionsList.style.display = 'none';
+        extractTags();
+    }
+
+    function extractTags() {
+        const content = contentInput.value;
+        const tags = content.match(/(?:^|\s)(#\w+)/g) || [];
+        const cleanTags = tags.map(tag => tag.trim().replace('#', ''));
+        tagListInput.value = cleanTags.join(',');
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!suggestionsList.contains(event.target) && event.target !== contentInput) {
+            suggestionsList.style.display = 'none';
+        }
+    });
+
+    // 投稿フォーム送信処理（既存機能）
+    document.getElementById('post-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/create_post', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('投稿が成功しました！');
+                window.location.href = '/home';  // 成功時にHOMEページへリダイレクト
+            } else {
+                alert('投稿に失敗しました: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('投稿エラー:', error);
+            alert('サーバーエラーが発生しました。');
+        });
+    });    
 </script>
+
 </body>
 </html>
