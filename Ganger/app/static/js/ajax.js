@@ -1,8 +1,11 @@
 let loading = false;
 let hasMoreData = true;
-let offset = 0;
-const limit = 10;
+let followingOffset = 0;
+let recommendedOffset = 0;
+const limit = 2;
 let totalPost = 0;
+let nowPlace = "following-contents";
+let requestTo = "";
 
 
 // postデータ取得関数   ※未テストのためコメントアウト
@@ -34,6 +37,7 @@ function isBottomReached() {
 function switchRecommendedArea(){
     let following_container_style = document.getElementById("following-contents");
     let recommended_container_style = document.getElementById("recommended-contents");
+    nowPlace = "recommended-contents";
     following_container_style.style.display = "none";
     recommended_container_style.style.display = "block";
 }
@@ -41,13 +45,14 @@ function switchRecommendedArea(){
 function switchFollowingArea(){
     let following_container_style = document.getElementById("following-contents");
     let recommended_container_style = document.getElementById("recommended-contents");
+    nowPlace = "following-contents";
     following_container_style.style.display = "block";
     recommended_container_style.style.display = "none";
 }
 
 // 投稿データ非同期取得処理
 function getPostData() {
-    fetch('/fetch_trending_posts')
+    fetch(`/${requestTo}`)
         .then(response => response.json())
         .then((data) => {
             console.log(data)
@@ -63,15 +68,18 @@ function getPostData() {
                 data[1].posts.forEach(postData => {
                     bodyText        = postData.body_text;
                     commentCount    = postData.comment_count;
+                    images          = postData.images;
+                    isMe            = postData.is_me;
                     likeCount       = postData.like_count;
                     postID          = postData.post_id;
+                    postTime        = postData.post_time;
                     repostCount     = postData.repost_count;
                     savedCount      = postData.saved_count;
 
 
                     // ユーザー情報解凍
                     userInfo        = postData.user_info;   //id, profile_image, username　番目がそれぞれ存在
-                    uniqueID        = userInfo.id;
+                    userID_unique        = userInfo.id;
                     profileImagePath = userInfo.profile_image;
                     userID          = userInfo.user_id;
                     userName        = userInfo.username;
@@ -103,6 +111,18 @@ function getPostData() {
                           </li>
                           `}
                         `});
+                    
+                    let isMeAreaHTML = "";
+                    if (isMe) {
+                      isMeAreaHTML = `
+                        <button id="product-button-${postID}" class="extension_button" popovertarget="product-popover-${postID}">
+                            <?xml version="1.0" encoding="utf-8"?>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11V6C9 4.34315 10.3431 3 12 3C13.6569 3 15 4.34315 15 6V10.9673M10.4 21H13.6C15.8402 21 16.9603 21 17.816 20.564C18.5686 20.1805 19.1805 19.5686 19.564 18.816C20 17.9603 20 16.8402 20 14.6V12.2C20 11.0799 20 10.5198 19.782 10.092C19.5903 9.71569 19.2843 9.40973 18.908 9.21799C18.4802 9 17.9201 9 16.8 9H7.2C6.0799 9 5.51984 9 5.09202 9.21799C4.71569 9.40973 4.40973 9.71569 4.21799 10.092C4 10.5198 4 11.0799 4 12.2V14.6C4 16.8402 4 17.9603 4.43597 18.816C4.81947 19.5686 5.43139 20.1805 6.18404 20.564C7.03968 21 8.15979 21 10.4 21Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          </button>
+                      `;
+                    };
 
                     // console.log(`text"${bodyText}", commentCount"${commentCount}", imagepath"${images}", likeCount"${likeCount}", postID"${postID}", repostCount"${repostCount}", savedCount"${savedCount}", userInfo"${userInfo}", imageAreaHTML"${imageAreaHTML}"`);
 
@@ -167,56 +187,49 @@ function getPostData() {
                           </svg>
                         </button>
 
+                        ${isMeAreaHTML}
 
-                        {% if post["is_me"] %}
-                          <button id="product-button-{{ post['post_id'] }}" class="extension_button" popovertarget="product-popover-{{ post['post_id'] }}">
-                            <?xml version="1.0" encoding="utf-8"?>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 11V6C9 4.34315 10.3431 3 12 3C13.6569 3 15 4.34315 15 6V10.9673M10.4 21H13.6C15.8402 21 16.9603 21 17.816 20.564C18.5686 20.1805 19.1805 19.5686 19.564 18.816C20 17.9603 20 16.8402 20 14.6V12.2C20 11.0799 20 10.5198 19.782 10.092C19.5903 9.71569 19.2843 9.40973 18.908 9.21799C18.4802 9 17.9201 9 16.8 9H7.2C6.0799 9 5.51984 9 5.09202 9.21799C4.71569 9.40973 4.40973 9.71569 4.21799 10.092C4 10.5198 4 11.0799 4 12.2V14.6C4 16.8402 4 17.9603 4.43597 18.816C4.81947 19.5686 5.43139 20.1805 6.18404 20.564C7.03968 21 8.15979 21 10.4 21Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                          </button>
-                        {% endif %}
                       <!-- 保存ボタン -->
-                        <button id="save-button-{{ post['post_id'] }}" class="extension_button">
+                        <button id="save-button-${postID}" class="extension_button">
                           <?xml version="1.0" encoding="utf-8"?>
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bookmark"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                         </button>
                       </div>
 
-                      <p class="body_text">{{ post['body_text'] }}</p>
-                      <p class="post_time">{{ post['post_time'] }}</p>
+                      <p class="body_text">${bodyText}</p>
+                      <p class="post_time">${postTime}</p>
                     </div>
 
                       <!-- コメントモーダル -->
-                      <div id="comment-modal-{{ post['post_id'] }}" class="modal">
+                      <div id="comment-modal-${postID}" class="modal">
                         <div class="modal-content">
-                          <span class="close" data-modal="comment-modal-{{ post['post_id'] }}">&times;</span>
-                          <p>{{ post['username'] }}</p>
-                          <a href="{{url_for('my_profile', id=post['id'])}}">
-                            <img src="{{ post['profile_image'] }}" alt="プロフィール画像">
+                          <span class="close" data-modal="comment-modal-${postID}">&times;</span>
+                          <p>${userName}</p>
+                          <a href="/my_profile/${postID}">
+                            <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
-                          <img src="{{ post['images'][0]['img_path'] }}" alt="test">
-                          <form action="{{url_for('submit_comment', post_id=post['post_id'])}}" method="post">
-                            <input type="text" id="comment-input-{{ post['post_id'] }}" name="comment" placeholder="コメントを入力">
-                            <button id="comment-submit-{{ post['post_id'] }}">送信する</button>
+                          <img src="${images[0].img_path}" alt="test">
+                          <form action="/submit_comment, post_id=${postID}" method="post">
+                            <input type="text" id="comment-input-${postID}" name="comment" placeholder="コメントを入力">
+                            <button id="comment-submit-${postID}">送信する</button>
                           </form>
                         </div>
                       </div>
 
                       <!-- プロダクトモーダル -->
-                      <div id="product-modal-{{ post['post_id'] }}" class="modal">
+                      <div id="product-modal-${postID}" class="modal">
                         <div class="modal-content">
-                            <span class="close" data-modal="product-modal-{{ post['post_id'] }}">&times;</span>
+                            <span class="close" data-modal="product-modal-${postID}">&times;</span>
                             <h2>プロダクト詳細を編集</h2>
-                            <form action="{{ url_for('make_post_into_product', post_id=post['post_id']) }}" method="post">
-                                <select name="category" id="category-box-{{ post['post_id'] }}">
+                            <form action="/make_post_into_product, post_id=${postID}" method="post">
+                                <select name="category" id="category-box-${postID}">
                                   <option value="tops">tops</option>
                                   <option value="pants">pants</option>
                                   <option value="items">items</option>
                                   <option value="other">other</option>
                                 </select>
-                                <input type="text" name="price" placeholder="価格を入力" id="price-box-{{ post['post_id'] }}">
-                                <input type="text" name="name" placeholder=" 商品名を入力" id="name-box-{{post['post_id'] }}">
+                                <input type="text" name="price" placeholder="価格を入力" id="price-box-${postID}">
+                                <input type="text" name="name" placeholder=" 商品名を入力" id="name-box-${postID}">
                                 <button type="submit">保存</button>
                             </form>
                         </div>
@@ -226,6 +239,7 @@ function getPostData() {
             )
             console.log(postListHTML);
             document.getElementById("recommended-contents").innerHTML += postListHTML;
+            console.log("offset:", recommendedOffset, followingOffset);
             document.querySelectorAll('.splide').forEach(function (carousel) {
               new Splide(carousel).mount();
               });
@@ -236,37 +250,27 @@ function getPostData() {
 async function loadMoreData() {
     if (!hasMoreData) {
         console.log("すべてのデータがロードされました");
+        return
     };
-    if (loading) return;
-
-    loading = true;
-    // document.getElementById("loading").style.display = "block";
 
     try {
-        let response = await fetch(`/fetch_post?offset=${offset}&limit=${limit}`);
-        let result = await response.json();
+      if (nowPlace == "following-contents") {
+        requestTo = `fetch_posts/${limit}/${followingOffset}`;
+        getPostData();
+        followingOffset += limit;
+      }else {
+        requestTo = `fetch_trending_posts/${limit}/${recommendedOffset}`;
+        getPostData();
+        recommendedOffset += limit;
+      }
 
-        if (response.ok) {
-            totalPost = result.total;
-            console.log(`合計投稿数: ${totalPost}`);
-            result.items.forEach(item => {
-                let div = document.createElement("div");
-                div.classList.add("item");
-                div.textContent = `Post: ${item}`;
-                console.log(`Post: ${item}`);
-                document.getElementById("content").appendChild(div);
-            });
-            offset += limit;
-        }
+    console.log("offset:", recommendedOffset, following);
 
-        // すべてのデータがロードされたかチェック
-        hasMoreData = result.has_more;
+    // すべてのデータがロードされたかチェック
+    hasMoreData = result.has_more;
     } catch (error) {
         console.error("データの取得に失敗しました:", error);
-    } finally {
-        loading = false;
-        // document.getElementById("loading").style.display = "none";
-    }
+    };
 }
 
 // スクロールイベントリスナー
@@ -279,13 +283,17 @@ window.addEventListener("scroll", () => {
 // おすすめボタンクリック判定
 document.getElementById('recommended-posts-button').addEventListener('click', function () {
     console.log("おすすめボタンがクリックされました");
+    requestTo = `fetch_trending_posts/${limit}/${recommendedOffset}`;
     getPostData();
     switchRecommendedArea();
-
+    recommendedOffset += limit;
 });
 
 // フォロー中ボタンクリック判定
 document.getElementById('following-posts-button').addEventListener('click', function () {
     console.log("フォロー中ボタンがクリックされました");
+    requestTo = `fetch_posts/${limit}/${followingOffset}`;
+    getPostData();
     switchFollowingArea();
+    followingOffset += limit;
 });

@@ -7,15 +7,16 @@
 
 </head>
 <body>
-    {% if not room_data%}
+    {% if not room_data %}
         <p>メッセージはまだありません</p>
     {% else %}
         {% for data in room_data %}
-        <p>{{ data.room_id }}</p>
+        <a href=" {{ url_for('display_message_by_room', room_id=data.room_id) }}">
         <p>@{{ data.username }}</p>
         <img src="{{data.profile_image}}" alt="profile_image">
         <p>{{ data.last_message}}</p>
         <p>{{ data.sent_time}}</p>
+        </a>
         {% endfor %}
     {% endif %}
 
@@ -33,6 +34,7 @@
             fetch("/api/user/followed")
                 .then(response => response.json()) // JSONデータに変換
                 .then(data => {
+                    console.log(data);
                     if (data.success && data.result.length > 0) {  // `data.result` を参照する
                         // **フォローしているユーザーリストを作成**
                         let userListHTML = `
@@ -43,7 +45,7 @@
                         data.result.forEach(user => {  // `data.result` をループ
                             userListHTML += `
                                 <li>
-                                    <a href="/message/sent/${user.id}" class="message-link">
+                                    <a href="/message/user/${user.id}" class="message-link">
                                         <img src="${user.profile_image}" alt="${user.username}">
                                         ${user.username}
                                     </a>

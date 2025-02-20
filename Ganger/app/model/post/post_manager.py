@@ -323,7 +323,8 @@ class PostManager(DatabaseManager):
                     "like_count": like_count,
                     "repost_count": repost_count,
                     "saved_count": saved_count,
-                    "comment_count": comment_count
+                    "comment_count": comment_count,
+                    "is_me": current_user_id == post.author.id
                 }
                 # Redis スコア更新
                 self.redis.add_score(ranking_key=self.trending[0], item_id=post.post_id, score=6)

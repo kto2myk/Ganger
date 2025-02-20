@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dm</title>
+</head>
+<body>
+    <h1>ここにメッセージ内容の表示</h1>
+
+    {% if message.messages %}
+        <ul>
+
+            {% for msg in message.messages %}
+            <!-- メッセージが削除されていなければ表示 -->
+                {% if not msg.status.is_deleted %}
+                    <!-- ループの最後を特定してIDを付与、既読化処理を行う -->
+                    <div class="messages" {% if loop.last %} id="message-section" {% endif %} data-message-id="{{msg.message_id}}">
+                        <!-- 自分のメッセージか判定　自分であればクラス名追加 -->
+                        {% if msg.is_me %}
+                            <li class=" message is_me ">{{ msg.content }} - {{ msg.sent_time }}</li>
+                            <!-- 既読か判定 -->
+                            {% if msg.status.is_read %}
+                                <p>既読</p>
+                            {% endif %}
+                        <!-- 自分のメッセージでなければ相手の情報とメッセージを表示 -->
+                        {% else %}
+                            <img src="{{ message.user.profile_image }}" alt="profile_image">
+                            <p>{{ message.user.username }}</p>
+                            <li class=" message ">{{ msg.content }} - {{ msg.sent_time }}</li>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>メッセージを送信してみましょう</p>
+    {% endif %}
+
+    <form method="post" action="{{url_for('send_message',user_id = message.user.id )}}">
+        <input type="text" id="input-message-text" name="message" placeholder="ここメッセージを記述">
+
+
+        <button id="message-button" type="submit" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 24 24" fill="none"><path d="M14.2199 21.63C13.0399 21.63 11.3699 20.8 10.0499 16.83L9.32988 14.67L7.16988 13.95C3.20988 12.63 2.37988 10.96 2.37988 9.78001C2.37988 8.61001 3.20988 6.93001 7.16988 5.60001L15.6599 2.77001C17.7799 2.06001 19.5499 2.27001 20.6399 3.35001C21.7299 4.43001 21.9399 6.21001 21.2299 8.33001L18.3999 16.82C17.0699 20.8 15.3999 21.63 14.2199 21.63ZM7.63988 7.03001C4.85988 7.96001 3.86988 9.06001 3.86988 9.78001C3.86988 10.5 4.85988 11.6 7.63988 12.52L10.1599 13.36C10.3799 13.43 10.5599 13.61 10.6299 13.83L11.4699 16.35C12.3899 19.13 13.4999 20.12 14.2199 20.12C14.9399 20.12 16.0399 19.13 16.9699 16.35L19.7999 7.86001C20.3099 6.32001 20.2199 5.06001 19.5699 4.41001C18.9199 3.76001 17.6599 3.68001 16.1299 4.19001L7.63988 7.03001Z" fill="#000000"/><path d="M10.11 14.4C9.92005 14.4 9.73005 14.33 9.58005 14.18C9.29005 13.89 9.29005 13.41 9.58005 13.12L13.16 9.53C13.45 9.24 13.93 9.24 14.22 9.53C14.51 9.82 14.51 10.3 14.22 10.59L10.64 14.18C10.5 14.33 10.3 14.4 10.11 14.4Z" fill="#000000"/></svg>
+
+        </button>
+    </form>
+
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const lastMessage = document.getElementById("message-section");
+    
+            if (lastMessage) {
+                const messageId = lastMessage.dataset.messageId; // 最新の message_id を取得
+    
+                // ✅ **最後のメッセージが表示されたら API に送信**
+                const observer = new IntersectionObserver(entries => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            markMessageAsRead(messageId);
+                            observer.unobserve(lastMessage); // 1回だけ実行
+                        }
+                    });
+                }, { threshold: 0.5 });
+    
+                observer.observe(lastMessage);
+            }
+    
+            // ✅ **API に送信して既読にする関数**
+            function markMessageAsRead(messageId) {
+                fetch(`/message/mark-as-read/${messageId}`, {  // `message_id` を URL に埋め込む
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTPエラー: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => console.log("既読処理:", data))
+                .catch(error => console.error("エラー:", error));
+            }
+        });
+    </script>    
+    <script>
+        const inputField = document.getElementById("input-message-text");
+        const submitButton = document.getElementById("message-button");
+
+        inputField.addEventListener('input',function(){
+            submitButton.disabled = inputField.value.trim() === "";
+        });
+    </script>
+</body>
+</html>
