@@ -128,28 +128,26 @@ def signup():
 @app.route("/home")
 def home():
     try:
-        # フィルターを設定して投稿データを取得
-        filters = {"user_id": 5}  # テスト用フィルタ
-        user_id = Validator.decrypt(session.get("id"))
-        formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id)
-        # 未読通知の数を取得
-        count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
-        return render_template("home.html", posts=formatted_posts,notification_count = count_notifications)
+        return render_template("home.html")
     except Exception as e:
         abort(404,description="投稿データの取得に失敗しました。")
         app.logger.error(f"Failed to fetch posts: {e}")
-        return redirect(url_for("login"))
     
-@app.route("/fetch_post", methods=["GET"])
-def fetch_post():
-    try:        
-        test_post = [x for x in range(1,100)]
+@app.route("/fetch_posts/<int:limit>/<int:offset>", methods=["GET"])
+def fetch_post(limit,offset):
+    try:
+            # フィルターを設定して投稿データを取得
+        filters = {"user_id": 5}  # テスト用フィルタ
+        user_id = Validator.decrypt(session.get("id"))
+        has_more = True
+        formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id,offset=offset,limit=limit)
 
-        offset = int(request.args.get("offset", 0))
-        limit = int(request.args.get("limit", 10)) + offset
-        sliced_post = test_post[offset:limit]
-        has_more = len(test_post) > limit
-        return jsonify({"items":sliced_post,"total":len(test_post),"has_more":has_more}), 200
+        #AJAX取得終了時
+        if formatted_posts is None:
+            has_more = False
+            return jsonify(has_more,{ "message": "投稿がありません", "posts": []}), 200
+        else:
+            return jsonify(has_more,{ "message": "投稿を取得しました", "posts": formatted_posts}), 200
     except Exception as e:
         return jsonify({"error":str(e)}), 500
 
@@ -530,28 +528,31 @@ def display_post(post_id):
         app.logger.error(f"Unexpected error: {e}")
         return "投稿データの取得中にエラーが発生しました。", 500
 
-@app.route("/fetch_trending_posts")
-def fetch_trending_posts():
+@app.route("/fetch_trending_posts/<int:limit>/<int:offset>")
+def fetch_trending_posts(limit,offset):
     try:
         # 現在のユーザーIDを取得（ログインしていない場合は None）
         current_user_id = session.get("id")
-
+        has_more = True
         # Redis からトレンド投稿の ID を取得
         trending_posts_ids = db_manager.redis.get_ranking_ids(
-            ranking_key=db_manager.trending[0], top_n=10
+            ranking_key=db_manager.trending[0], offset=offset,top_n=limit
         )
-
-        # 投稿データを取得
-        post_data = post_manager.get_posts_details(
-            post_ids=trending_posts_ids, current_user_id=current_user_id
-        )
+        if trending_posts_ids:
+            # 投稿データを取得
+            post_data = post_manager.get_posts_details(
+                post_ids=trending_posts_ids, current_user_id=current_user_id
+            )
+        else:
+            has_more = False
+            post_data = []
 
         # データが空なら適切なレスポンスを返す
         if not post_data:
-            return jsonify("trending_posts", {"message": "トレンド投稿がありません。", "posts": []}),200
+            return jsonify(False, {"message": "トレンド投稿がありません。", "posts": []}),200
 
         # クライアントにデータを送信
-        return jsonify("trending_posts", {"message": "トレンド投稿を取得しました", "posts": post_data}),200
+        return jsonify(has_more, {"message": "トレンド投稿を取得しました", "posts": post_data}),200
 
     except Exception as e:
         app.logger.error(f"⚠️ Error in fetch_trending_posts: {e}")
