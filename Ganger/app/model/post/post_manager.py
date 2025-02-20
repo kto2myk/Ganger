@@ -145,7 +145,7 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Unexpected error: {e}")
             return {"success": False, "error": "An unexpected error occurred"}
     
-    def get_filtered_posts_with_reposts(self, filters, current_user_id,offset = 10,limit = 5,Session=None):
+    def get_filtered_posts_with_reposts(self, filters, current_user_id,offset = 0,limit = 2,Session=None):
         try:
             Session = self.make_session(Session)
             user_id = filters.get("user_id")
@@ -193,17 +193,22 @@ class PostManager(DatabaseManager):
 
             # 🔥 `union_all()` を適用（エラーが出る場合は `list()` に切り替え）
             all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).offset(offset).limit(limit)
+            if not all_posts:
+                self.pop_and_close(Session)
+                return None
 
             # 🔥 投稿データをフォーマット
             formatted_posts = []
             for post in all_posts:
                 formatted_post = {
                     "is_me": Validator.decrypt(session['id']) == post.author.id,
-                    "id": Validator.encrypt(post.author.id),
+                    "user_info":{
+                        "id": Validator.encrypt(post.author.id),
+                        "user_id": post.author.user_id,
+                        "username": post.author.username,
+                        "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}")
+                    },
                     "post_id": Validator.encrypt(post.post_id),
-                    "user_id": post.author.user_id,
-                    "username": post.author.username,
-                    "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}"),
                     "body_text": post.body_text,
                     "post_time": Validator.calculate_time_difference(post.post_time),
                     "images": [

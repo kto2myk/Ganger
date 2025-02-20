@@ -57,7 +57,7 @@ class RedisCache:
             pass
 
 
-    def get_ranking_ids(self, ranking_key, top_n=10):
+    def get_ranking_ids(self, ranking_key,offset=0, top_n=10):
         """
         `top_n` 位までの ID 群を取得（スコア順）
         - ranking_key: 取得するランキングのキー
@@ -68,7 +68,7 @@ class RedisCache:
             return []
         try:
             # 🔹 `top_n` 件の ID を取得（スコア順・降順）
-            ranking = self.redis_client.zrevrange(ranking_key, 0, top_n - 1)
+            ranking = self.redis_client.zrevrange(ranking_key, offset, offset + top_n - 1)
 
             # 🔹 `bytes` → `str` に変換し、クエリで使える `list` を返す
             return [item_id.decode() for item_id in ranking] if ranking else []
