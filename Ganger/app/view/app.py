@@ -283,9 +283,8 @@ def fetch_followed_users():
 @app.route('/create_post', methods=['POST', 'GET'])
 def create_post():
     if request.method == 'GET':
-        if session['image_name']:
+        if session.get('image_name'):
             image_path = url_for('static', filename=f'images/temp_images/{session["image_name"]}')
-            app.logger.info(image_path)
             return render_template('create_post.html', initial_image=image_path)
         return render_template('create_post.html')
     else:
@@ -309,10 +308,8 @@ def create_post():
                 tags=tag_list)
 
             if result["success"]:
-                app.logger.info(result)
                 if session.get('image_name'):
                     delete_result = post_manager.delete_temp()
-                    app.logger.info(delete_result)
                     if delete_result['success']:
                         return jsonify(result), 200
                     else:

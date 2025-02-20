@@ -67,13 +67,13 @@ class PostManager(DatabaseManager):
         """ 一時フォルダ内の画像を削除 """
 
         # セッションから画像名を取得
+        # 画像のパスを構築
+
         image_path = os.path.join(app.config['TEMP_FOLDER'], session.get('image_name', ''))
         if not image_path:
             return{"success":False,"message":"削除する画像が見つかりません。"}
 
         try:
-            # 画像のパスを構築
-            app.logger.info(f"imgpath:{image_path}")
             # ファイルの存在確認
             if os.path.exists(image_path):
                 os.remove(image_path)  # ファイルを削除
