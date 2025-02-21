@@ -137,10 +137,8 @@ def home():
 def fetch_post(limit,offset):
     try:
             # フィルターを設定して投稿データを取得
-        filters = {"user_id": 5}  # テスト用フィルタ
-        user_id = Validator.decrypt(session.get("id"))
         has_more = True
-        formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id,offset=offset,limit=limit)
+        formatted_posts = post_manager.get_filtered_posts_with_reposts(offset=offset,limit=limit)
 
         #AJAX取得終了時
         if formatted_posts is None:
@@ -380,7 +378,7 @@ def save_design():
 @app.route('/message',methods=['GET'])
 def display_message_room():
     message_data = dm_manager.fetch_message_rooms(user_id=session['id'])
-    if message_data['result']:
+    if message_data['success']:
         return render_template("display_message_rooms.html",room_data = message_data["result"])
     else:
         abort(400,description="不正なアクセス")
