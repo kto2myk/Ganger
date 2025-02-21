@@ -13,6 +13,7 @@ from Ganger.app.model.user.user_table import UserManager
 from Ganger.app.model.post.post_manager import PostManager
 from Ganger.app.model.shop.shop_manager import ShopManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
+from Ganger.app.model.dm.message_manager import MessageManager
 
 app = Flask(__name__,
     template_folder=os.path.abspath("Ganger/app/templates"),
@@ -71,6 +72,7 @@ with app.app_context():
     post_manager = PostManager()
     shop_manager = ShopManager()
     notification_manager = NotificationManager()
+    dm_manager = MessageManager()
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -126,28 +128,24 @@ def signup():
 @app.route("/home")
 def home():
     try:
-        # フィルターを設定して投稿データを取得
-        filters = {"user_id": 5}  # テスト用フィルタ
-        user_id = Validator.decrypt(session.get("id"))
-        formatted_posts = post_manager.get_filtered_posts_with_reposts(filters=filters,current_user_id=user_id)
-        # 未読通知の数を取得
-        count_notifications = notification_manager.get_notification_count(Validator.decrypt(session.get("id")),is_read=False)
-        return render_template("home.html", posts=formatted_posts,notification_count = count_notifications)
+        return render_template("home.html")
     except Exception as e:
         abort(404,description="投稿データの取得に失敗しました。")
         app.logger.error(f"Failed to fetch posts: {e}")
-        return redirect(url_for("login"))
     
-@app.route("/fetch_post", methods=["GET"])
-def fetch_post():
-    try:        
-        test_post = [x for x in range(1,100)]
+@app.route("/fetch_posts/<int:limit>/<int:offset>", methods=["GET"])
+def fetch_post(limit,offset):
+    try:
+            # フィルターを設定して投稿データを取得
+        has_more = True
+        formatted_posts = post_manager.get_filtered_posts_with_reposts(offset=offset,limit=limit)
 
-        offset = int(request.args.get("offset", 0))
-        limit = int(request.args.get("limit", 10)) + offset
-        sliced_post = test_post[offset:limit]
-        has_more = len(test_post) > limit
-        return jsonify({"items":sliced_post,"total":len(test_post),"has_more":has_more}), 200
+        #AJAX取得終了時
+        if formatted_posts is None:
+            has_more = False
+            return jsonify(has_more,{ "message": "投稿がありません", "posts": []}), 200
+        else:
+            return jsonify(has_more,{ "message": "投稿を取得しました", "posts": formatted_posts}), 200
     except Exception as e:
         return jsonify({"error":str(e)}), 500
 
@@ -268,9 +266,24 @@ def toggle_block(user_id):
         app.logger.error(f"Error toggling block: {e}")
         return abort(500,description='Server error')
 
+@app.route("/api/user/followed",methods=["GET"])
+def fetch_followed_users():
+    try:
+        result = user_manager.get_followed_users(user_id=session['id'])
+        if result['result']:
+            return jsonify(result),200
+        else:
+            raise
+    except Exception as e:
+        app.logger.error(e)
+        return jsonify(result),500
+
 @app.route('/create_post', methods=['POST', 'GET'])
 def create_post():
     if request.method == 'GET':
+        if session.get('image_name'):
+            image_path = url_for('static', filename=f'images/temp_images/{session["image_name"]}')
+            return render_template('create_post.html', initial_image=image_path)
         return render_template('create_post.html')
     else:
         try:
@@ -293,7 +306,14 @@ def create_post():
                 tags=tag_list)
 
             if result["success"]:
-                return jsonify({"success": True, "message": "Post created successfully"}), 200            
+                if session.get('image_name'):
+                    delete_result = post_manager.delete_temp()
+                    if delete_result['success']:
+                        return jsonify(result), 200
+                    else:
+                        return jsonify(delete_result), 400
+                else:#画像がない場合 通常の処理
+                    return jsonify({"success": True, "message": "Post created successfully"}), 200            
             else:
                 return jsonify(result), 400
 
@@ -349,45 +369,82 @@ def save_design():
 
         # セッションに画像名を保存
         session['image_name'] = unique_name
-        return redirect(url_for('display'))
+        return redirect(url_for('create_post'))
     except Exception as e:
         app.logger.error(f"Error: {e}")
         return f"エラーが発生しました: {str(e)}", 500
 
-@app.route('/display', methods=['GET'])
-def display():
-    # セッションから画像名を取得
-    image_name = session.get('image_name')
-    if not image_name:
-        error = "画像が見つかりません。"
-        app.logger.error(f"Image not found: {error}")
-        return error, 404
-
-    # URLを生成してHTMLに渡す
-    image_url = url_for('static', filename=f"images/temp_images/{image_name}")
-    return render_template("image_display.html", image_url=image_url)
-
-@app.route('/delete_temp')
-def delete_temp():
-    # セッションから画像名を取得
-    image_name = session.get('image_name')
-    if not image_name:
-        return "削除する画像が見つかりません。", 404
-
-    try:
-        # 画像のパスを構築
-        image_path = os.path.join(app.config['TEMP_FOLDER'], image_name)
-
-        # ファイルの存在確認
-        if os.path.exists(image_path):
-            os.remove(image_path)  # ファイルを削除
-            session.pop('image_name', None)  # セッションから削除
-            return redirect('home')
-        else:
-            return "画像ファイルが存在しません。", 404
-    except Exception as e:
-        return f"エラーが発生しました: {str(e)}", 500
     
+@app.route('/message',methods=['GET'])
+def display_message_room():
+    message_data = dm_manager.fetch_message_rooms(user_id=session['id'])
+    if message_data['success']:
+        return render_template("display_message_rooms.html",room_data = message_data["result"])
+    else:
+        abort(400,description="不正なアクセス")
+    
+    
+
+@app.route("/message/user/<user_id>", methods=["GET"])
+def display_message_by_user(user_id):
+    try:
+        # メッセージルームのデータを取得
+        message_data = dm_manager.fetch_messages_by_user(user_id=session['id'],other_user_id=user_id)
+        app.logger.info(f"Message data: {message_data}")
+        if message_data['success']:
+            return render_template("message_room.html",message = message_data)
+        else:
+            abort(400,description="不正なアクセス")
+    except Exception as e:
+        app.logger.error(f"Error in display_message: {e}")
+        return abort(500,description="エラーが発生しました")
+
+@app.route("/message/room/<room_id>", methods=["GET"])
+def display_message_by_room(room_id):
+    try:
+        # メッセージルームのデータを取得
+        message_data = dm_manager.fetch_messages_by_room(room_id=room_id,
+                                                        user_id=session['id'])
+        app.logger.info(f"Message data: {message_data}")
+        if message_data['success']:
+            return render_template("message_room.html",message = message_data)
+        else:
+            abort(400,description="不正なアクセス")
+    except Exception as e:
+        app.logger.error(f"Error in display_message: {e}")
+        return abort(500,description="エラーが発生しました")
+
+@app.route('/message/send/<user_id>',methods=['GET','POST'])
+def send_message(user_id):
+    try:
+        if request.method == "POST":
+            message = request.form.get('message','').strip()
+            
+            if not message:
+                abort(400,description="メッセージが空です")
+            else:
+                dm_manager.send_message(sender_id=session['id'],recipient_id=user_id,content=message)
+                return redirect(url_for('send_message',user_id=user_id))
+        elif request.method == "GET":
+            return redirect(url_for('display_message_by_user',user_id=user_id))
+    except Exception as e:
+        app.logger.error(f"Error in send_message: {e}")
+        return abort(500,description="エラーが発生しました")
+
+@app.route('/message/mark-as-read/<message_id>',methods=['POST'])
+def mark_message_as_read(message_id):
+    try:
+        result = dm_manager.mark_messages_as_read_up_to(message_id=message_id,recipient_id=session['id'])
+        if result['success']:
+            return jsonify(result),200
+        else:
+            return jsonify(result),400
+    except Exception as e:
+        app.logger.error(f"Error in mark_message_as_read: {e}")
+        return jsonify({"error":"エラーが発生しました"}),500
+        
+
+
 @app.route('/search', methods=['GET'])
 def search():
     try:
@@ -446,28 +503,31 @@ def display_post(post_id):
         app.logger.error(f"Unexpected error: {e}")
         return "投稿データの取得中にエラーが発生しました。", 500
 
-@app.route("/fetch_trending_posts")
-def fetch_trending_posts():
+@app.route("/fetch_trending_posts/<int:limit>/<int:offset>")
+def fetch_trending_posts(limit,offset):
     try:
         # 現在のユーザーIDを取得（ログインしていない場合は None）
         current_user_id = session.get("id")
-
+        has_more = True
         # Redis からトレンド投稿の ID を取得
         trending_posts_ids = db_manager.redis.get_ranking_ids(
-            ranking_key=db_manager.trending[0], top_n=10
+            ranking_key=db_manager.trending[0], offset=offset,top_n=limit
         )
-
-        # 投稿データを取得
-        post_data = post_manager.get_posts_details(
-            post_ids=trending_posts_ids, current_user_id=current_user_id
-        )
+        if trending_posts_ids:
+            # 投稿データを取得
+            post_data = post_manager.get_posts_details(
+                post_ids=trending_posts_ids, current_user_id=current_user_id
+            )
+        else:
+            has_more = False
+            post_data = []
 
         # データが空なら適切なレスポンスを返す
         if not post_data:
-            return jsonify("trending_posts", {"message": "トレンド投稿がありません。", "posts": []}),200
+            return jsonify(False, {"message": "トレンド投稿がありません。", "posts": []}),200
 
         # クライアントにデータを送信
-        return jsonify("trending_posts", {"message": "トレンド投稿を取得しました", "posts": post_data}),200
+        return jsonify(has_more, {"message": "トレンド投稿を取得しました", "posts": post_data}),200
 
     except Exception as e:
         app.logger.error(f"⚠️ Error in fetch_trending_posts: {e}")

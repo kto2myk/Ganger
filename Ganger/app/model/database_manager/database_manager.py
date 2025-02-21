@@ -312,9 +312,12 @@ class DatabaseManager(DatabaseConnector):
         スタックをクリアして、セッションをロールバックします。
         """
         try:
-            cls.__multi_stuck.clear()
-            Session.rollback()
-            current_app.logger.info(f"clear the stuck,error occur {inspect.stack()[1].function},session rollback!!")
+            if Session:
+                cls.__multi_stuck.clear()
+                Session.rollback()
+                current_app.logger.info(f"clear the stuck,error occur {inspect.stack()[1].function},session rollback!!")
+            else:
+                current_app.logger.warning("セッションが無効、または既に閉じられています。")
         except Exception as e:
             current_app.logger.error(e)
             raise

@@ -139,7 +139,8 @@ class UserManager(DatabaseManager):
                 user_data = {
                     "user_id": user.user_id,
                     "username": user.username,
-                    "id": Validator.encrypt(user.id)
+                    "id": Validator.encrypt(user.id),
+                    "profile_image":url_for("static", filename=f"images/profile_images/{user.profile_image}")
                 }
                 result.append(user_data) 
 
@@ -150,7 +151,50 @@ class UserManager(DatabaseManager):
             self.app.logger.error(f"Failed to search users: {e}")
             raise
 
+    def get_followed_users(self, user_id, Session=None):
+        """
+        指定したユーザーがフォローしているユーザーを取得する。
+        フォローしている人がいない場合、ランダムで10人のユーザーを取得する。
+        """
+        Session = self.make_session(Session)
+        try:
+            user_id = Validator.decrypt(user_id)
+            # **フォローしている人がいるかを事前チェック**
+            has_follows = Session.query(exists().where(Follow.user_id == user_id)).scalar()
 
+            if has_follows:
+                # **フォローしているユーザーを取得（リレーションを活用）**
+                followed_users = (
+                    Session.query(User.id, User.username, User.profile_image)
+                    .join(Follow, Follow.follow_user_id == User.id)
+                    .filter(Follow.user_id == user_id)
+                    .order_by(func.random())
+                    .limit(10)
+                    .all()
+                )
+
+            else:
+                # **フォローが0人の場合、ランダムに10人を取得**
+                followed_users = (
+                    Session.query(User.id, User.username, User.profile_image)
+                    .order_by(func.random())  # SQLiteなら `random()`, PostgreSQLなら `RANDOM()`
+                    .limit(10)
+                    .all()
+                )
+
+            # **データを辞書リストに変換**
+            users_data = [
+                {"id": Validator.encrypt(user.id), "username": user.username, "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")}
+                for user in followed_users
+            ]
+
+            self.pop_and_close(Session)
+            return {"success": True, "result": users_data}
+
+        except Exception as e:
+            self.session_rollback(Session)
+            return {"success": False, "result": str(e)}
+            
     def updata_user_info(self,user_id=None,username=None,real_name=None,address=None,bio=None,profile_image=None,Session=None):
         """
         ユーザーの情報の更新を一括で請け負うメソッド。更新されるデータがある場合、自動でNONEが解除され更新される。
@@ -159,6 +203,8 @@ class UserManager(DatabaseManager):
         post_manager = PostManager()
         try:
             Session = self.make_session(Session)
+            user_info = [data.strip() if isinstance(data, str) else data for data in [user_id, username, real_name, address, bio] if data is not None]
+
             id = Validator.decrypt(session["id"])
 
             user = Session.query(User).filter_by(id=id).first()
@@ -168,20 +214,20 @@ class UserManager(DatabaseManager):
                 self.session_rollback(Session)
                 raise ValueError("存在しないユーザーです")
             
-            if user_id: #! 重複なしを確認
+            if user_info[0]: #! 重複なしを確認
                 Validate_user_id = Session.query(User).filter_by(user_id=user_id).first()
                 if not Validate_user_id:
-                    user.user_id = user_id
+                    user.user_id = user_info[0]
                 else:
                     raise ValueError(f"user_id{user_id}は既に存在しています。")
-            if username:
-                user.username = username
-            if real_name:
-                user.real_name = real_name
-            if address:
-                user.address = address
-            if bio:
-                user.bio = bio
+            if user_info[1]:
+                user.username = user_info[1]
+            if user_info[2]:
+                user.real_name = user_info[2]
+            if user_info[3]:
+                user.address = user_info[3]
+            if user_info[4]:
+                user.bio = user_info[4]
             if profile_image: #! 画像保存処理を作成
                 user_id = user_id if user_id else session['user_id']
                 original_filename = secure_filename(profile_image.filename)
@@ -256,14 +302,16 @@ class UserManager(DatabaseManager):
                 return profile_data
             
             result_follow = Session.query(
-                func.count(case((Follow.follow_user_id == decrypted_id, 1), else_=0)),  # フォロワー数
-                func.count(case((Follow.user_id == decrypted_id, 1), else_=0)),  # フォロー数
-                func.count(case((and_(Follow.user_id == user_id, Follow.follow_user_id == decrypted_id), 1), else_=0))  # 自分が相手をフォローしているか
+                Session.query(Follow).filter(Follow.follow_user_id == decrypted_id).count(),  # フォロワー数
+                Session.query(Follow).filter(Follow.user_id == decrypted_id).count(),  # フォロー数
+                Session.query(Follow)
+                    .filter(Follow.user_id == user_id, Follow.follow_user_id == decrypted_id)
+                    .exists()
             ).first()
 
             # データがない場合のデフォルト値を設定
             if result_follow is None:
-                result_follow = (0, 0, 0)
+                result_follow = (0, 0, False)
 
             # タプルのアンパック
             follower_count, following_count, is_follow = result_follow 

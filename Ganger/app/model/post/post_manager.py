@@ -8,7 +8,7 @@ from sqlalchemy.orm  import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
-from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost,SavedPost,Block
+from Ganger.app.model.model_manager.model import User,Post, Image,Like,TagMaster, TagPost,CategoryMaster, ProductCategory, Shop,Repost,SavedPost,Block,Follow
 from Ganger.app.model.notification.notification_manager import NotificationManager
 from flask import current_app as app, session, url_for
 from Ganger.app.model.validator import Validator
@@ -52,7 +52,9 @@ class PostManager(DatabaseManager):
         # 画像を中央配置
         paste_position = ((new_size - width) // 2, (new_size - height) // 2)
         new_img.paste(img, paste_position, img if img.mode == "RGBA" else None)  # RGBAの場合はマスクを使用
-
+        # **JPEG で保存する場合は RGB に変換**
+        if new_img.mode == "RGBA":
+            new_img = new_img.convert("RGB")
         return new_img  # 加工後の画像を返す
     
     def delete_files(self, file_list):
@@ -60,6 +62,28 @@ class PostManager(DatabaseManager):
         for file_path in file_list:
             if os.path.exists(file_path):
                 os.remove(file_path)
+
+    def delete_temp(self):
+        """ 一時フォルダ内の画像を削除 """
+
+        # セッションから画像名を取得
+        # 画像のパスを構築
+
+        image_path = os.path.join(app.config['TEMP_FOLDER'], session.get('image_name', ''))
+        if not image_path:
+            return{"success":False,"message":"削除する画像が見つかりません。"}
+
+        try:
+            # ファイルの存在確認
+            if os.path.exists(image_path):
+                os.remove(image_path)  # ファイルを削除
+                session.pop('image_name', None)  # セッションから削除
+                return {"success": True, "message": "画像を削除しました。"}
+            else:
+                return {"success":False, "message":"画像ファイルが存在しません。"}
+        except Exception as e:
+            app.logger.error(f"Failed to delete image: {e}")
+            return {"success":False,"message":str(e)}
 
                 
     def create_post(self, content, image_files, tags, Session=None):
@@ -145,12 +169,27 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Unexpected error: {e}")
             return {"success": False, "error": "An unexpected error occurred"}
     
-    def get_filtered_posts_with_reposts(self, filters, current_user_id,offset = 10,limit = 5,Session=None):
+    def get_filtered_posts_with_reposts(self, offset = 0,limit = 2,Session=None):
         try:
             Session = self.make_session(Session)
-            user_id = filters.get("user_id")
-            if not user_id:
-                raise ValueError("user_idフィルターが指定されていません。")
+            current_user_id = Validator.decrypt(session['id'])
+
+            # # フォローしているユーザーの投稿を取得
+            # following_users_subquery = (
+            #     Session.query(Follow.followed_user)
+            #     .filter(Follow.user_id == current_user_id)
+            #     .subquery()
+            #     ) or self.redis.get_ranking_ids(self.trending[4],offset=0,limit=20)
+            
+            # フォローしているユーザーIDを取得（リスト化）
+            following_users = Session.query(Follow.followed_user).filter(Follow.user_id == current_user_id).all() or []
+            following_users_id = [user[0] for user in following_users]  # `.all()` の結果をリスト化
+
+            # フォローがゼロならキャッシュを使う
+            if not following_users_id:
+                recommended_users = self.redis.get_ranking_ids(self.trending[4], offset=0, top_n=20)
+                if recommended_users:
+                    following_users_id = recommended_users
 
             liked_posts_subquery = Session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
             saved_posts_subquery = Session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
@@ -159,7 +198,7 @@ class PostManager(DatabaseManager):
 
             # 🔥 `joinedload()` を追加して関連データを事前ロード（遅延ロードを防ぐ）
             user_posts_query = Session.query(Post).filter(
-                Post.user_id == user_id,
+                Post.user_id.in_(following_users_id),
                 Post.reply_id == None,
                 ~Post.post_id.in_(select(liked_posts_subquery)),
                 ~Post.post_id.in_(select(saved_posts_subquery)),
@@ -175,7 +214,7 @@ class PostManager(DatabaseManager):
             )
 
             reposted_posts_query = Session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
-                Repost.user_id == user_id,
+                Repost.user_id.in_(following_users_id),
                 Post.reply_id == None,
                 ~Post.post_id.in_(select(liked_posts_subquery)),
                 ~Post.post_id.in_(select(saved_posts_subquery)),
@@ -192,18 +231,29 @@ class PostManager(DatabaseManager):
             )
 
             # 🔥 `union_all()` を適用（エラーが出る場合は `list()` に切り替え）
-            all_posts = user_posts_query.union_all(reposted_posts_query).order_by(Post.post_time.desc()).offset(offset).limit(limit)
+            all_posts = (user_posts_query.union_all(
+                reposted_posts_query)
+            .order_by(Post.post_time.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+            )
+            if not all_posts:
+                self.pop_and_close(Session)
+                return None
 
             # 🔥 投稿データをフォーマット
             formatted_posts = []
             for post in all_posts:
                 formatted_post = {
                     "is_me": Validator.decrypt(session['id']) == post.author.id,
-                    "id": Validator.encrypt(post.author.id),
+                    "user_info":{
+                        "id": Validator.encrypt(post.author.id),
+                        "user_id": post.author.user_id,
+                        "username": post.author.username,
+                        "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}")
+                    },
                     "post_id": Validator.encrypt(post.post_id),
-                    "user_id": post.author.user_id,
-                    "username": post.author.username,
-                    "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}"),
                     "body_text": post.body_text,
                     "post_time": Validator.calculate_time_difference(post.post_time),
                     "images": [
@@ -323,7 +373,8 @@ class PostManager(DatabaseManager):
                     "like_count": like_count,
                     "repost_count": repost_count,
                     "saved_count": saved_count,
-                    "comment_count": comment_count
+                    "comment_count": comment_count,
+                    "is_me": current_user_id == post.author.id
                 }
                 # Redis スコア更新
                 self.redis.add_score(ranking_key=self.trending[0], item_id=post.post_id, score=6)

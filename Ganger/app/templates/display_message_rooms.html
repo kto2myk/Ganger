@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>message</title>
+
+</head>
+<body>
+    {% if not room_data %}
+        <p>メッセージはまだありません</p>
+    {% else %}
+        {% for data in room_data %}
+        <a href=" {{ url_for('display_message_by_room', room_id=data.room_id) }}">
+        <p>@{{ data.username }}</p>
+        <img src="{{data.profile_image}}" alt="profile_image">
+        <p>{{ data.last_message}}</p>
+        <p>{{ data.sent_time}}</p>
+        </a>
+        {% endfor %}
+    {% endif %}
+
+    <div class="find-message-user">
+        <h2> メッセージを送ろう！</h2>
+        <p>フォローしているユーザーから選べます</p>
+        <button id="message-button">メッセージを送信</button>
+    </div>
+
+    <script>
+        document.getElementById("message-button").addEventListener("click", function() {
+            let messageDiv = document.querySelector(".find-message-user");
+    
+            // **APIエンドポイントと通信**
+            fetch("/api/user/followed")
+                .then(response => response.json()) // JSONデータに変換
+                .then(data => {
+                    console.log(data);
+                    if (data.success && data.result.length > 0) {  // `data.result` を参照する
+                        // **フォローしているユーザーリストを作成**
+                        let userListHTML = `
+                            <h2>新しいメッセージの作成！</h2>
+                            <ul>
+                        `;
+                        
+                        data.result.forEach(user => {  // `data.result` をループ
+                            userListHTML += `
+                                <li>
+                                    <a href="/message/user/${user.id}" class="message-link">
+                                        <img src="${user.profile_image}" alt="${user.username}">
+                                        ${user.username}
+                                    </a>
+                                </li>
+                            `;
+                        });
+    
+                        userListHTML += `</ul>`;
+    
+                        // **取得したデータで要素を上書き**
+                        messageDiv.innerHTML = userListHTML;
+    
+                    } else {
+                        messageDiv.innerHTML = `<p>フォローしているユーザーがいません。</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("エラー:", error);
+                    messageDiv.innerHTML = `<p>通信エラーが発生しました。</p>`;
+                });
+        });
+    </script>
+        
+</body>
+</html>

@@ -1,10 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
-
-    document.querySelectorAll('.splide').forEach(function (carousel) {
-    new Splide(carousel).mount();
-    });
+    // document.querySelectorAll('.splide').forEach(function (carousel) {
+    // new Splide(carousel).mount();
+    // });
 
     let currentUrl = location.pathname;
+    // ボタンのサイズを設定
+    if(currentUrl === '/home') {
+        setFixedSize();
+    }
 
     console.log(`現在のURL: ${currentUrl}`);
             
@@ -58,8 +61,11 @@ function setFixedSize() {
 // 初回読み込み時に設定
     
 window.onload = function() {
-    // ボタンのサイズを設定
-    setFixedSize();
+    let element = document.getElementById("loading");
+    if (element) {
+        element.id = "loaded";
+        console.log("IDが変更されました:", element.id);
+    }
 };
 
     // ロード完了時の処理

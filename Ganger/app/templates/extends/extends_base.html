@@ -56,7 +56,7 @@
                 <ol>
                     <div class="side_bar_links">
                         <a href="{{ url_for('notifications') }}">
-                            <button data-count="{{notification_count}}" id="notification">
+                            <button id="notification">
                                 <svg data-icon-name="notification-bell" data-style="line" icon_origin_id="20556" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="notification-bell" class="icon line" width="24" height="24">
                                 <path d="M19.38,14.38a2.12,2.12,0,0,1,.62,1.5h0A2.12,2.12,0,0,1,17.88,18H6.12A2.12,2.12,0,0,1,4,15.88H4a2.12,2.12,0,0,1,.62-1.5L6,13V9a6,6,0,0,1,6-6h0a6,6,0,0,1,6,6v4ZM15,18H9a3,3,0,0,0,3,3h0A3,3,0,0,0,15,18Z" id="primary"></path>
                                 </svg>                
@@ -81,7 +81,7 @@
 
                 <ol>
                     <div class="side_bar_links">
-                        <a href="">
+                        <a href="{{ url_for('display_message_room') }}">
                             <button id="message">
                                 <svg data-icon-name="email" data-style="line" icon_origin_id="20462" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="email" class="icon line" width="24" height="24">
                                 <path d="M20,19H4a1,1,0,0,1-1-1V6A1,1,0,0,1,4,5H20a1,1,0,0,1,1,1V18A1,1,0,0,1,20,19ZM3.68,5.45l7.7,6.06a1,1,0,0,0,1.24,0l7.7-6.06"></path>
