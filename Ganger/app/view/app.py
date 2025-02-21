@@ -283,6 +283,9 @@ def fetch_followed_users():
 @app.route('/create_post', methods=['POST', 'GET'])
 def create_post():
     if request.method == 'GET':
+        if session.get('image_name'):
+            image_path = url_for('static', filename=f'images/temp_images/{session["image_name"]}')
+            return render_template('create_post.html', initial_image=image_path)
         return render_template('create_post.html')
     else:
         try:
@@ -305,7 +308,14 @@ def create_post():
                 tags=tag_list)
 
             if result["success"]:
-                return jsonify({"success": True, "message": "Post created successfully"}), 200            
+                if session.get('image_name'):
+                    delete_result = post_manager.delete_temp()
+                    if delete_result['success']:
+                        return jsonify(result), 200
+                    else:
+                        return jsonify(delete_result), 400
+                else:#画像がない場合 通常の処理
+                    return jsonify({"success": True, "message": "Post created successfully"}), 200            
             else:
                 return jsonify(result), 400
 
@@ -361,44 +371,11 @@ def save_design():
 
         # セッションに画像名を保存
         session['image_name'] = unique_name
-        return redirect(url_for('display'))
+        return redirect(url_for('create_post'))
     except Exception as e:
         app.logger.error(f"Error: {e}")
         return f"エラーが発生しました: {str(e)}", 500
 
-@app.route('/display', methods=['GET'])
-def display():
-    # セッションから画像名を取得
-    image_name = session.get('image_name')
-    if not image_name:
-        error = "画像が見つかりません。"
-        app.logger.error(f"Image not found: {error}")
-        return error, 404
-
-    # URLを生成してHTMLに渡す
-    image_url = url_for('static', filename=f"images/temp_images/{image_name}")
-    return render_template("image_display.html", image_url=image_url)
-
-@app.route('/delete_temp')
-def delete_temp():
-    # セッションから画像名を取得
-    image_name = session.get('image_name')
-    if not image_name:
-        return "削除する画像が見つかりません。", 404
-
-    try:
-        # 画像のパスを構築
-        image_path = os.path.join(app.config['TEMP_FOLDER'], image_name)
-
-        # ファイルの存在確認
-        if os.path.exists(image_path):
-            os.remove(image_path)  # ファイルを削除
-            session.pop('image_name', None)  # セッションから削除
-            return redirect('home')
-        else:
-            return "画像ファイルが存在しません。", 404
-    except Exception as e:
-        return f"エラーが発生しました: {str(e)}", 500
     
 @app.route('/message',methods=['GET'])
 def display_message_room():

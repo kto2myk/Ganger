@@ -302,14 +302,16 @@ class UserManager(DatabaseManager):
                 return profile_data
             
             result_follow = Session.query(
-                func.count(case((Follow.follow_user_id == decrypted_id, 1), else_=0)),  # フォロワー数
-                func.count(case((Follow.user_id == decrypted_id, 1), else_=0)),  # フォロー数
-                func.count(case((and_(Follow.user_id == user_id, Follow.follow_user_id == decrypted_id), 1), else_=0))  # 自分が相手をフォローしているか
+                Session.query(Follow).filter(Follow.follow_user_id == decrypted_id).count(),  # フォロワー数
+                Session.query(Follow).filter(Follow.user_id == decrypted_id).count(),  # フォロー数
+                Session.query(Follow)
+                    .filter(Follow.user_id == user_id, Follow.follow_user_id == decrypted_id)
+                    .exists()
             ).first()
 
             # データがない場合のデフォルト値を設定
             if result_follow is None:
-                result_follow = (0, 0, 0)
+                result_follow = (0, 0, False)
 
             # タプルのアンパック
             follower_count, following_count, is_follow = result_follow 
