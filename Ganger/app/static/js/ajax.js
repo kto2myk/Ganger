@@ -103,7 +103,7 @@ function getPostData() {
                       `;
                     };
 
-                    console.log(`text"${bodyText}", commentCount"${commentCount}", imagepath"${images}", likeCount"${likeCount}", postID"${postID}", repostCount"${repostCount}", savedCount"${savedCount}", userInfo"${userInfo}", imageAreaHTML"${imageAreaHTML}"`);
+                    // console.log(`text"${bodyText}", commentCount"${commentCount}", imagepath"${images}", likeCount"${likeCount}", postID"${postID}", repostCount"${repostCount}", savedCount"${savedCount}", userInfo"${userInfo}", imageAreaHTML"${imageAreaHTML}"`);
 
                     // 投稿データHTML生成
                     postListHTML += `
@@ -216,7 +216,7 @@ function getPostData() {
                     `;
                   }// end of data.forEach
             )
-            console.log(postListHTML);
+            // console.log(postListHTML);
             document.getElementById(`${nowPlace}`).innerHTML += postListHTML;
             console.log("offset:", recommendedOffset, followingOffset);
             document.querySelectorAll('.splide').forEach(function (carousel) {
@@ -243,7 +243,7 @@ async function loadMoreData() {
         recommendedOffset += limit;
       }
 
-    console.log("offset:", recommendedOffset, following);
+    console.log("offset:", recommendedOffset, followingOffset);
 
     // すべてのデータがロードされたかチェック
     hasMoreData = result.has_more;
