@@ -321,7 +321,8 @@ class ShopManager(DatabaseManager):
         """
         try:
             Session = self.make_session(Session)
-            user_id = Validator.decrypt(user_id)
+            if isinstance(user_id, str):
+                user_id = Validator.decrypt(user_id)
 
             # ユーザーのカートを取得し、一括ロードを適用
             cart = (
@@ -369,37 +370,52 @@ class ShopManager(DatabaseManager):
             app.logger.error(f"カートアイテム取得エラー: {e}")
             return False, None
 
-    def update_cart_quantity(self, user_id, product_id, new_quantity,Session=None):
+    def update_cart_quantity(self, item_id, new_quantity,Session=None):
         """
         カート内の商品数量を更新
 
-        :param user_id: ユーザーID
+        :param item_id: アイテムID
         :param product_id: 商品ID
         :param new_quantity: 新しい数量
         :return: 更新結果（成功/失敗）
         """
         try:
             Session = self.make_session()
-            product_id = Validator.decrypt(product_id)
+            if isinstance(item_id, str):               
+                item_id = Validator.decrypt(item_id)
 
             if new_quantity <= 0: #新しい個数が0の場合。
-                self.delete_cart_items(product_ids=product_id,Session=Session)
-                self.make_commit_or_flush(Session)
-                return {"success": True, "message": "カート内の商品が削除されました"}
+                # self.delete_cart_items(product_ids=product_id,Session=Session)
+                # self.make_commit_or_flush(Session)
+                # return {"success": True, "message": "カート内の商品が削除されました"}
+                return {"success": False, "message": "1個未満は指定できません"} # delete_cart_itemsがあるので機能が重複している
             
-            cart_item = Session.query(CartItem).filter_by(user_id=user_id, product_id=product_id).first()
-            if cart_item and cart_item.quantity == new_quantity:
-                self.pop_and_close(Session)
-                return {"success": True, "message": "個数が同じなため、変更なし。"}
+            cart_item = Session.query(CartItem).filter_by(item_id=item_id).first()
+
+
             
-            elif cart_item: #個数変更ありの場合
-                cart_item.quantity = new_quantity
-                self.make_commit_or_flush(Session)
-                return {"success": True, "message": "カートの数量が更新されました"}
-            else:
+            if not cart_item:
                 self.pop_and_close(Session)
                 return {"success": False, "message": "商品がカートに見つかりません"}
+
+            if cart_item.quantity == new_quantity:
+                self.pop_and_close(Session)
+                return {"success": True, "message": "個数が同じなため、変更なし。"}
+
+            # ログにデバッグ情報を追加
+            print(f"[DEBUG] 更新前の数量: {cart_item.quantity}, 更新後の数量: {new_quantity}")
+
+            cart_item.quantity = new_quantity
+            self.make_commit_or_flush(Session)
+
+            # 更新後のデータを取得してログに出力
+            updated_item = Session.query(CartItem).filter_by(item_id=item_id).first()
+            print(f"[DEBUG] 更新成功: {updated_item.quantity}")
+
+            return {"success": True, "message": "カートの数量が更新されました"}
+
         except Exception as e:
+            print(f"[ERROR] update_cart_quantity に失敗: {str(e)}")
             self.session_rollback(Session)
             return {"success": False, "message": f"エラー: {str(e)}"}
 
@@ -487,7 +503,7 @@ class ShopManager(DatabaseManager):
                 self.session_rollback(Session)
                 app.logger.error("Failed to delete cart items")
                 raise Exception("カートアイテムの削除に失敗しました")
-            
+
             # 6. トランザクションの確定
             self.redis.add_score(ranking_key=self.trending[2],item_id=selected_cart_item_ids,score=15)
             self.make_commit_or_flush(Session)
@@ -614,7 +630,7 @@ class ShopManager(DatabaseManager):
                         "post_time": Validator.calculate_time_difference(post_time),
                         "category_name": category_name,
                         "image_url": url_for('static', filename=f"images/post_images/{img_path}") if img_path else None
-                    }                    
+                    }                   
 
             # カテゴリー結果に紐づく投稿を挿入
             for category in category_results:

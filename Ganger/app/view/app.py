@@ -676,29 +676,29 @@ def display_cart():
 def update_cart_quantity():
     try:
         data = request.get_json()
-        product_id = data.get("product_id")
-        change = int(data.get("change"))
+        item_id = request.json["item_id"]
+        new_quantity = int(request.json["newQuantity"])
 
-        if not product_id:
+        if not item_id:
             return jsonify({"message": "無効な商品IDです"}), 400
 
-        user_id = Validator.decrypt(session.get("id"))
-        product_id = Validator.decrypt(product_id)
+        user_id = session.get("id")
+        if isinstance(user_id, str):
+            user_id = Validator.decrypt(user_id)
 
-        success = shop_manager.update_cart_quantity(user_id, product_id, change)
+        result = shop_manager.update_cart_quantity(item_id=item_id, new_quantity=new_quantity)
 
-        if success:
-            # セッションのカート情報を更新
-            cart = session.get("cart", {})
-            if product_id in cart:
-                cart[product_id] += change
-                if cart[product_id] < 1:
-                    cart[product_id] = 1  # 数量が1未満にならないようにする
-            else:
-                cart[product_id] = 1  # カートに存在しない場合は1に設定
-            session["cart"] = {Validator.encrypt(k): v for k, v in cart.items()}
+        if result is None:
+            app.logger.error("update_cart_quantity の戻り値が None です")
+            return jsonify({"message": "内部エラーが発生しました"}), 500
+        
+        if result.get("success"):
+            
+            # データベースから最新のカート情報を取得し、セッションを更新
+            success, updated_cart_items = shop_manager.fetch_cart_items(user_id)
+            session["cart"] = {Validator.decrypt(str(item['product_id'])): item['quantity'] for item in updated_cart_items}
 
-            return jsonify({"message": "数量が更新されました"}), 200
+            return jsonify({"message": result["message"], "cart": session["cart"]}), 200
         else:
             return jsonify({"message": "数量更新に失敗しました"}), 400
 
@@ -713,18 +713,34 @@ def update_cart_quantity():
 def remove_from_cart():
     try:
         data = request.get_json()
-        product_id = data.get("product_id")
+        item_id = data.get("item_id")
 
-        if not product_id:
+        if item_id is None:
             return jsonify({"message": "無効な商品IDです"}), 400
+        user_id = Validator.decrypt(session.get("id"))
+       
 
-        cart = session.get("cart", {})
-        if product_id in cart:
-            cart.pop(product_id)  # セッションから削除
-            session["cart"] = cart
-            return jsonify({"message": "カートから削除されました"}), 200
-        else:
-            return jsonify({"message": "商品がカートに存在しません"}), 400
+        # データベースから削除
+        shop_manager.delete_cart_items(item_id=item_id)
+
+        # 最新のカート情報を取得
+        updated_cart_items = shop_manager.get_cart_items(user_id)
+
+        # セッションのカートを更新
+        session_cart = {Validator.encrypt(str(item.product_id)): item.quantity for item in updated_cart_items}
+        session["cart"] = session_cart
+
+        return jsonify({"message": "カートから削除されました", "cart": session_cart}), 200
+
+
+
+    #     cart = session.get("cart", {})
+    #     if product_id in cart:
+    #         cart.pop(product_id)
+    #         session["cart"] = cart
+    #         return jsonify({"message": "カートから削除されました"}), 200
+    #     else:
+    #         return jsonify({"message": "商品がカートに存在しません"}), 400
 
     except Exception as e:
         app.logger.error(e)
