@@ -1,4 +1,62 @@
-<div class="trend_container">
-</div>
+<div id="products_container"></div>
+
 <script>
+async function getItemData() {
+    let products = await fetch(`/fetch_trending_products`);
+    let productJson = await products.json();
+    console.log(`productJson:`)
+    console.log(productJson)
+    let productData = productJson[1];
+    console.log(`productData`)
+    console.log(productData)
+    let productInfo = productData["products"];
+    console.log(`productInfo`)
+    console.log(productInfo)
+    let errormessage = "";
+
+
+    // if (productData.message) {
+    //     console.log(productData.message)
+    //     return
+    // }else{
+    //     errormessage = "商品がありません"
+    // };
+
+// memo:href="/display_product/${productID}"
+
+    let productsListHTML = "";
+    let imagePaths = [];
+
+        productsListHTML += `
+
+            <div class="splide">
+                <div class="splide__track">
+                    <ul class="splide__list">
+                    ${productInfo.map((product, index) => `
+                        <li class="splide__slide">
+                            <section id="image-carousel-${product.post_id}">
+                                <a href="display_post/${product.product_id}">
+                                    <div class="wrapper">
+                                        <img src="${product.images[0].img_path}" alt="投稿画像">
+                                    </div>
+                                </a>
+                                <div class="product-info">
+                                    <p>${product.name}</p>
+                                    <p>${product.price}</p>
+                                </div>
+                            </section>
+                        </li>
+                    `).join("")}
+                    </ul>
+                </div>
+            </div>
+        `;
+
+    document.getElementById("products_container").innerHTML += productsListHTML;
+
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    getItemData()
+})
 </script>

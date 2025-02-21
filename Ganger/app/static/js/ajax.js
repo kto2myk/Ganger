@@ -7,27 +7,6 @@ let totalPost = 0;
 let nowPlace = "following-contents";
 let requestTo = "";
 
-
-// postデータ取得関数   ※未テストのためコメントアウト
-// function getPostData() {
-//     fetch('/fetch_post')
-//         .then(response => response.json())
-//         .then(data => {
-//             console.log(data);
-//             data.forEach(item => {
-//                 let div = document.createElement("div");
-//                 div.classList.add("item");
-//                 div.textContent = `Post: ${item}`;
-//                 console.log(`Post: ${item}`);
-//                 document.getElementById("content").appendChild(div);
-//             });
-//         })
-//         .catch(error => {
-//             console.error("データの取得に失敗しました:", error);
-//         });
-// }
-
-
 // スクロールが一番下に到達したかを判定する関数
 function isBottomReached() {
     return window.innerHeight + window.scrollY >= document.body.offsetHeight;
@@ -124,7 +103,7 @@ function getPostData() {
                       `;
                     };
 
-                    // console.log(`text"${bodyText}", commentCount"${commentCount}", imagepath"${images}", likeCount"${likeCount}", postID"${postID}", repostCount"${repostCount}", savedCount"${savedCount}", userInfo"${userInfo}", imageAreaHTML"${imageAreaHTML}"`);
+                    console.log(`text"${bodyText}", commentCount"${commentCount}", imagepath"${images}", likeCount"${likeCount}", postID"${postID}", repostCount"${repostCount}", savedCount"${savedCount}", userInfo"${userInfo}", imageAreaHTML"${imageAreaHTML}"`);
 
                     // 投稿データHTML生成
                     postListHTML += `
@@ -238,7 +217,7 @@ function getPostData() {
                   }// end of data.forEach
             )
             console.log(postListHTML);
-            document.getElementById("recommended-contents").innerHTML += postListHTML;
+            document.getElementById(`${nowPlace}`).innerHTML += postListHTML;
             console.log("offset:", recommendedOffset, followingOffset);
             document.querySelectorAll('.splide').forEach(function (carousel) {
               new Splide(carousel).mount();
@@ -276,8 +255,17 @@ async function loadMoreData() {
 // スクロールイベントリスナー
 window.addEventListener("scroll", () => {
     if (isBottomReached()) {
-        loadMoreData();
+      loadMoreData();
     }
+});
+
+
+// 初回読み込み時に実行
+document.addEventListener("DOMContentLoaded", () => {
+    requestTo = `fetch_posts/${limit}/${followingOffset}`;
+    getPostData();
+    switchFollowingArea();
+    followingOffset += limit;
 });
 
 // おすすめボタンクリック判定

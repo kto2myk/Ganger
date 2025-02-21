@@ -246,12 +246,19 @@ button.saved {
     border-radius: 5vh;
 }
 
-.trend_container {
+#products_container {
     margin: 2%;
     width: 90%;
-    height: 50dvh;
+    height: 30dvh;
     border: solid 1px #ddd;
     border-radius: 2%;
+}
+
+.product-info {
+    width: 100%;
+    height: 10dvh;
+    display: flex;
+    text-align: left;
 }
 
 
