@@ -6,6 +6,7 @@ const limit = 2;
 let totalPost = 0;
 let nowPlace = "following-contents";
 let requestTo = "";
+let dataType ="";
 
 // スクロールが一番下に到達したかを判定する関数
 function isBottomReached() {
@@ -43,7 +44,10 @@ function getPostData() {
               let repostUserName      = "";
               // リポストユーザー情報解凍(リポストされていない場合はnull)
               repostMessage ="";
-              
+
+                dataType = data[0];
+                console.log(dataType);
+
                 data[1].posts.forEach(postData => {
                     bodyText        = postData.body_text;
                     commentCount    = postData.comment_count;
@@ -114,7 +118,7 @@ function getPostData() {
 
                         <!-- 投稿主のアイコン画像とユーザー名 -->
                         <div class="account_info">
-                          <a href="/my_profile/${postID}">
+                          <a href="/my_profile/${userID_unique}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
                           <p>${userName}</p>
@@ -122,7 +126,7 @@ function getPostData() {
 
                         <!-- 投稿画像エリア -->
                         <div class="image_area">
-                          <section id="image-carousel-${postID}" class="splide">
+                          <section>
                             <div class="splide__track">
                               <ul class="splide__list">
                                 ${imageAreaHTML}
@@ -227,7 +231,7 @@ function getPostData() {
 
 // データを非同期に取得
 async function loadMoreData() {
-    if (!hasMoreData) {
+    if (!dataType) {
         console.log("すべてのデータがロードされました");
         return
     };
@@ -245,8 +249,6 @@ async function loadMoreData() {
 
     console.log("offset:", recommendedOffset, followingOffset);
 
-    // すべてのデータがロードされたかチェック
-    hasMoreData = result.has_more;
     } catch (error) {
         console.error("データの取得に失敗しました:", error);
     };

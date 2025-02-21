@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // ボタンのサイズを設定
-    setFixedSize();
-
-    document.querySelectorAll('.splide').forEach(function (carousel) {
-    new Splide(carousel).mount();
-    });
+    // document.querySelectorAll('.splide').forEach(function (carousel) {
+    // new Splide(carousel).mount();
+    // });
 
     let currentUrl = location.pathname;
+    // ボタンのサイズを設定
+    if(currentUrl === '/home') {
+        setFixedSize();
+    }
 
     console.log(`現在のURL: ${currentUrl}`);
             

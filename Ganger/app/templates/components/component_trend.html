@@ -34,17 +34,15 @@ async function getItemData() {
                     <ul class="splide__list">
                     ${productInfo.map((product, index) => `
                         <li class="splide__slide">
-                            <section id="image-carousel-${product.post_id}">
-                                <a href="display_post/${product.product_id}">
+                                <a class="products-link" href="display_post/${product.product_id}">
                                     <div class="wrapper">
                                         <img src="${product.images[0].img_path}" alt="投稿画像">
                                     </div>
+                                    <div class="product-info">
+                                        <p>${product.name}</p>
+                                        <p>${product.price}</p>
+                                    </div>
                                 </a>
-                                <div class="product-info">
-                                    <p>${product.name}</p>
-                                    <p>${product.price}</p>
-                                </div>
-                            </section>
                         </li>
                     `).join("")}
                     </ul>
