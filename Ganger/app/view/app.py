@@ -56,15 +56,16 @@ app.config["CACHE_DEFAULT_TIMEOUT"] = 3600 * 12
 # Flask-Sessionを適用（Flask-Redisの初期化後に適用）
 Session(app)
 
-# @app.before_request
-# def check_session():
-#     if id in session:
-#         return redirect(url_for("home"))
-#     elif request.endpoint not in ["login", "signup", "password_reset"]:
-#             return redirect(url_for("login"))
-#     return None
-# def make_session_permanent(): #sessionの一括永続化
-#     session.permanent = True
+@app.before_request
+def check_session():
+    if request.endpoint and request.endpoint.startswith("static"):
+        return  # `static` ディレクトリのリクエストはスルー
+
+    if request.endpoint and request.endpoint not in ["login", "signup", "password_reset"]:
+        if not session.get("id"):  # セッションがなければログインページへ
+            return redirect(url_for("login"))
+def make_session_permanent(): #sessionの一括永続化
+    session.permanent = True
 
 with app.app_context():
     db_manager = DatabaseManager(app)
@@ -778,13 +779,13 @@ def remove_from_cart():
         if item_id is None:
             return jsonify({"message": "無効な商品IDです"}), 400
         user_id = Validator.decrypt(session.get("id"))
-       
+    
 
         # データベースから削除
         shop_manager.delete_cart_items(item_id=item_id)
 
         # 最新のカート情報を取得
-        updated_cart_items = shop_manager.get_cart_items(user_id)
+        updated_cart_items = shop_manager.fetch_cart_items(user_id)
 
         # セッションのカートを更新
         session_cart = {Validator.encrypt(str(item.product_id)): item.quantity for item in updated_cart_items}
@@ -843,6 +844,11 @@ def complete_checkout():
 @app.route("/test")
 def test():
     return render_template("test.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("id", None)
+    return redirect(url_for('login'))
     
 if __name__ == "__main__":
     try:
