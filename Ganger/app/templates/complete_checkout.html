@@ -133,15 +133,15 @@
     </style>
 </head>
 <body>
-    <div class="complete-container">
-        <div class="complete-icon"></div>
-        <h1>ご注文ありがとうございます</h1>
-        <p class="order-number">注文番号：{{ order_number }}</p>
-        <div class="message">
-            <p>ご注文の確認メールをお送りしました。</p>
-            <p>商品の発送準備が整い次第、発送のお知らせメールをお送りいたします。</p>
-        </div>
-
+    {% if after_checkout %}
+        <div class="complete-container">
+            <div class="complete-icon"></div>
+            <h1>ご注文ありがとうございます</h1>
+            <p class="order-number">注文番号：{{ order_number }}</p>
+            <div class="message">
+                <p>ご注文の確認メールをお送りしました。</p>
+                <p>商品の発送準備が整い次第、発送のお知らせメールをお送りいたします。</p>
+            </div>
         <!-- <div class="order-details">
             <h2>ご注文内容</h2>
             <div class="detail-row">
@@ -153,11 +153,12 @@
             </div>
         </div> -->
 
-        <div class="button-group">
-            <a href="{{ url_for('shop_page') }}" class="btn btn-primary">ショップに戻る</a>
-            <a href="{{ url_for('home') }}" class="btn btn-secondary">ホームに戻る</a>
+            <div class="button-group">
+                <a href="{{ url_for('shop_page') }}" class="btn btn-primary">ショップに戻る</a>
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">ホームに戻る</a>
+            </div>
         </div>
-    </div>
+    {% endif %}
 
     <h2>購入履歴</h2>
     {% for sale in history %}

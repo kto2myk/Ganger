@@ -805,7 +805,7 @@ def check_out():
             app.logger.info(check_out_items)
             result = shop_manager.check_out(selected_cart_item_ids=check_out_items,user_id=user_id,payment_method="credit card")
             if result['success']:
-                return redirect(url_for("complete_checkout"))
+                return redirect(url_for("complete_checkout",after_checkout=True))
             else:
                 abort(400,description="チェックアウトに失敗しました")
         else:
@@ -814,14 +814,20 @@ def check_out():
         app.logger.error(f"エラー: {e}")
         return abort(500,description="チェックアウトに失敗しました")
     
-@app.route("/complete_checkout")
-def complete_checkout():
+@app.route("/complete_checkout/<after_checkout>",methods=["GET"])
+def complete_checkout(after_checkout):
     try:
         user_id = session.get("id")
         result = shop_manager.fetch_sales_history(user_id=user_id)
-        if not result:
-            return render_template("complete_checkout.html",history = None)
-        return render_template("complete_checkout.html",history = result)
+        if after_checkout == "True" or after_checkout == True:
+            after_checkout = True
+
+        else:
+            after_checkout = False
+            if not result:
+                return render_template("complete_checkout.html",history = None,after_checkout=after_checkout)
+        return render_template("complete_checkout.html",history = result,after_checkout=after_checkout)
+
 
     except Exception as e:
         app.logger.error(f"エラー: {e}")
