@@ -776,38 +776,21 @@ def update_cart_quantity():
 def remove_from_cart():
     try:
         data = request.get_json()
-        item_id = data.get("item_id")
+        product_id = data.get('product_id')
 
-        if item_id is None:
+        if product_id is None:
             return jsonify({"message": "無効な商品IDです"}), 400
-        user_id = Validator.decrypt(session.get("id"))
     
-
         # データベースから削除
-        shop_manager.delete_cart_items(item_id=item_id)
-
-        # 最新のカート情報を取得
-        updated_cart_items = shop_manager.fetch_cart_items(user_id)
-
-        # セッションのカートを更新
-        session_cart = {Validator.encrypt(str(item.product_id)): item.quantity for item in updated_cart_items}
-        session["cart"] = session_cart
-
-        return jsonify({"message": "カートから削除されました", "cart": session_cart}), 200
-
-
-
-    #     cart = session.get("cart", {})
-    #     if product_id in cart:
-    #         cart.pop(product_id)
-    #         session["cart"] = cart
-    #         return jsonify({"message": "カートから削除されました"}), 200
-    #     else:
-    #         return jsonify({"message": "商品がカートに存在しません"}), 400
+        result = shop_manager.delete_cart_items(product_ids=product_id)
+        if not result['status']:
+            raise
+        else:
+            return jsonify(result['message']), 200
 
     except Exception as e:
         app.logger.error(e)
-        return jsonify({"message": "エラーが発生しました", "error": str(e)}), 500
+        return jsonify(result['message']), 500
 
 
 
@@ -818,7 +801,8 @@ def check_out():
         if request.method == "POST":
             user_id = Validator.decrypt(session.get("id"))
             #payment_method = request.form.get("payment_method") credit card
-            check_out_items = map(Validator.decrypt,request.form.getlist("selected_products"))
+            check_out_items = list(map(Validator.decrypt,request.form.getlist("selected_products")))
+            app.logger.info(check_out_items)
             result = shop_manager.check_out(selected_cart_item_ids=check_out_items,user_id=user_id,payment_method="credit card")
             if result['success']:
                 return redirect(url_for("complete_checkout"))

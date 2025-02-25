@@ -23,13 +23,17 @@
             <div class="cart-content">
                 <div class="cart-items">
                     {% for item in cart_items %}
+<<<<<<< HEAD
                     <div class="cart-item" data-price="{{ item.price * item.quantity }}" data-product-id="{{ item.product_id }}">
+=======
+                    <div class="cart-item" data-price="{{ item.price * item.quantity }}" data-product_id = "{{ item.product_id}}">
+>>>>>>> e322903bd4f391d947d6f283a48842863a3d800d
                         <div class="checkbox-wrapper">
                             <input type="checkbox" 
-                                   name="selected_products" 
-                                   value="{{ item.item_id }}" 
-                                   class="custom-checkbox item-checkbox"
-                                   checked>
+                                    name="selected_products" 
+                                    value="{{ item.item_id }}" 
+                                    class="custom-checkbox item-checkbox"
+                                    checked>
                         </div>
                         <img src="{{ item.image_path or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ item.product_name }}" class="item-image">
                         <div class="item-details">
@@ -90,6 +94,130 @@
         </div>
         {% endif %}
     </div>
+<<<<<<< HEAD
     <script src="../static/js/cart.js"></script>
+=======
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            const totalAmountElement = document.getElementById('total-amount');
+            const selectedCountElement = document.getElementById('selected-count');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            function updateTotal() {
+                let total = 0;
+                let selectedCount = 0;
+                itemCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const price = parseFloat(checkbox.closest('.cart-item').dataset.price);
+                        total += price;
+                        selectedCount++;
+                    }
+                });
+                totalAmountElement.textContent = `￥${total.toLocaleString()}`;
+                selectedCountElement.textContent = selectedCount;
+                checkoutBtn.disabled = selectedCount === 0;
+            }
+
+            selectAllCheckbox.addEventListener('change', function() {
+                itemCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateTotal();
+            });
+
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    selectAllCheckbox.checked = Array.from(itemCheckboxes)
+                        .every(cb => cb.checked);
+                    updateTotal();
+                });
+            });
+
+            // 数量変更ボタンの処理
+            document.querySelectorAll('.quantity-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const cartItem = this.closest('.cart-item');
+                    const itemId = cartItem.querySelector('.item-checkbox').value;
+                    const isIncrease = this.classList.contains('increase-btn');
+                    const change = isIncrease ? 1 : -1;
+
+                    const quantityDisplay = cartItem.querySelector('.quantity-display');
+                    const currentQuantity = parseInt(quantityDisplay.textContent);
+
+                    if (currentQuantity + change < 1) {
+                        return; // 数量が1未満にならないようにする
+                    }
+
+                    try {
+                        const response = await fetch('/update_cart_quantity', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ item_id: itemId, newQuantity: currentQuantity + change })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const newQuantity = currentQuantity + change;
+                            quantityDisplay.textContent = newQuantity;
+
+                            // 合計金額の更新
+                            const unitPrice = parseFloat(cartItem.querySelector('.item-unit-price').textContent.replace('￥', '').replace(',', ''));
+                            const newPrice = unitPrice * newQuantity;
+                            cartItem.querySelector('.item-price').textContent = `￥${newPrice.toLocaleString()}`;
+                            cartItem.dataset.price = newPrice;
+                            updateTotal();
+                        } else {
+                            console.error('数量更新に失敗しました');
+                        }
+                    } catch (error) {
+                        console.error('数量更新エラー:', error);
+                    }
+                });
+            });
+
+            // 削除ボタンの処理
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    if (confirm('この商品をカートから削除しますか？')) {
+                        const cartItem = this.closest('.cart-item');
+                        const productId = cartItem.dataset.product_id;
+
+                        try {
+                            const response = await fetch('/remove_from_cart', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ product_id: productId })
+                            });
+
+                            if (response.ok) {
+                                cartItem.remove();
+                                updateTotal();
+
+                                // カートが空になった場合
+                                if (document.querySelectorAll('.cart-item').length === 0) {
+                                    location.reload(); // ページをリロードして空のカート表示に
+                                }
+                            } else {
+                                console.error('削除に失敗しました');
+                            }
+                        } catch (error) {
+                            console.error('削除エラー:', error);
+                        }
+                    }
+                });
+            });
+
+            // 初期表示時の合計計算
+            updateTotal();
+        });
+    </script>
+>>>>>>> e322903bd4f391d947d6f283a48842863a3d800d
 </body>
 </html>
