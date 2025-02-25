@@ -194,29 +194,78 @@ body {
     margin: 20px;
     font-size: 18px;
     text-align: center;
-    margin-right: 55px; /* ハンバーガーメニューの基本幅分 */
+    margin-left: 55px; /* 右マージンを左マージンに変更 */
+    margin-right: 0; /* 右マージンをリセット */
     position: relative;
     transition: none; /* トランジションを無効化 */
     margin-top: 20px; /* category-navとの間隔を確保 */
 }
 
-.swiper-slide img {
-    max-width: 100%;
-    height: auto;
-    display: block;
+/* スライダーのコンテナのサイズを固定 */
+.swiper {
+    width: 100%;
+    max-width: 1200px;
+    height: 365px;
     margin: 0 auto;
 }
 
+.swiper-wrapper {
+    height: 100%;
+}
+
+.swiper-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 365px;
+}
+
+.swiper-slide img {
+    width: 305px; /* 画像の幅を固定 */
+    height: 305px; /* 画像の高さを固定 */
+    object-fit: contain; /* 画像全体を表示し、アスペクト比を維持 */
+    
+}
+/* .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-width: 400px;
+    max-height: 365px;
+} */
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .swiper {
+        height: 300px;
+    }
+    
+    .swiper-slide img {
+        max-width: 100%;
+    }
+}
 
 
 .main_content{
     display: flex;
     display: grid;
+    margin: 35px 10px 0px 10px;
+    padding: 40px 0px 30px 0px;
+    width: calc(100% - 55px); /* ハンバーガーメニューの幅分を引く */
+    position: relative;
+    transition: none; /* トランジションを無効化 */
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(5, 1fr);
     grid-column-gap: 0px;
     grid-row-gap: 0px;
+    color: #333;
+    margin-left: 60px; /* 右マージンを左マージンに変更 */
+    margin-right: 10px; /* 右マージンを調整 */
+    transition: margin-left .2s linear; /* 右から左に変更 */
 }
+
+
 
 .serch_item { grid-area: 1 / 1 / 6 / 2; }
     .populer_item { grid-area: 1 / 2 / 6 / 5; }
@@ -267,13 +316,6 @@ body {
     font-weight: bold;
 }
 
-.main_content {
-    margin: 35px 10px 0px 10px;
-    padding: 40px 0px 30px 0px;
-    width: calc(100% - 55px); /* ハンバーガーメニューの幅分を引く */
-    position: relative;
-    transition: none; /* トランジションを無効化 */
-}
 
 .search_item {
     width: 180px;
@@ -316,5 +358,33 @@ body {
 
 /* ハンバーガーメニュー展開時 */
 .main_content.menu-expanded {
-    margin-right: 55px;
+    margin-left: 55px; /* 右マージンを左マージンに変更 */
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .main_content.menu-expanded {
+        margin-left: 200px; /* 右マージンを左マージンに変更 */
+    }
+}
+
+/* ユーザー情報のスタイリング */
+.user {
+    display: flex;          /* 横並びにする */
+    align-items: center;    /* 垂直方向の中央揃え */
+    padding: 10px 15px;     /* 内側の余白 */
+    gap: 10px;             /* 要素間の隙間 */
+}
+
+.user img {
+    width: 40px;           /* アイコンのサイズを調整 */
+    height: 40px;
+    border-radius: 50%;    /* 円形にする */
+    object-fit: cover;     /* 画像のアスペクト比を保持 */
+}
+
+.user h5 {
+    margin: 0;            /* デフォルトのマージンを削除 */
+    font-size: 14px;      /* ユーザー名のフォントサイズ */
+    color: #333;          /* テキストカラー */
 }

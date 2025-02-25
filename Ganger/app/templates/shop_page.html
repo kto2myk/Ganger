@@ -12,6 +12,10 @@
 <!-- ハンバーガーメニューの追加 -->
 <nav class="main-menu">
     <div class="scrollbar" id="style-1">
+        <a href="{{ url_for('home') }}" class="header_logo">
+            <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-shop-site" class="shop_button">
+            <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-sns-site" class="sns_button">
+        </a>
         <ul>
             <li>                                   
                 <a href="{{url_for('home')}}">
@@ -27,7 +31,7 @@
             </li>
             <!-- 他のメニュー項目... -->
             <li>                                   
-                <a href="{#{{url_for('******')}}#}">
+                <a href="{{ url_for('complete_checkout', after_checkout=False )}}">
                     <i class="fa fa-tshirt fa-lg"></i>
                     <span class="nav-text">トップス</span>
                 </a>
@@ -103,92 +107,29 @@
     </div>
 
     <div class="main_content">
-
-        <div class="serch_item">
-            <h2>探す</h2>
-            <ul>
-                <li>
-                    <a href=""><p>製作者</p></a>
-                    <a href=""><p>ジャンル</p></a>
-                    <a href=""><p>ランキング</p></a>
-                    <a href=""><p>古着</p></a>
-                </li>
-            </ul>
-        </div>
             
         <div class="populer_item">
-            <h2>人気アイテム</h2>
+            <h2>トレンドアイテム</h2>
             <div class="shop_select">
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
+                {% for product in trending_products %}
+                    <div class="goods">
+                        <div>
+                            <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                            <img src="{{ product.images[0].img_path }}" alt="product.name">
+                            </a>
+                        </div>
+                        <div class="user">
+                            <img src="{{ product.author.profile_image}}" alt="{{  product.author.username }} さんのアイコン">
+                            <h5>{{ product.author.username }}</h5>
+                        </div>
+                        <div>
+                            <p>{{ product.category.category_name }}</p>
+                        </div>
+                        <div>
+                            <h4>{{ product.price }}円</h4>
+                        </div>
                     </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>￥値段</h4>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
         <div class="div3"></div>

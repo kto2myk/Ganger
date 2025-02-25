@@ -187,14 +187,18 @@ class ShopManager(DatabaseManager):
         
     def fetch_multiple_products_images(self, product_ids, Session=None):
         try:
-            product_ids = Validator.ensure_list(product_ids) #単一値でもリスト化
+            product_ids = Validator.ensure_list(product_ids)  # 単一値でもリスト化
             product_ids = [Validator.decrypt(pid) if len(pid) >= 5 else pid for pid in product_ids]
             Session = self.make_session(Session)
 
-            # 一括でデータ取得（JOIN で関連する post, images も取得）
+            # 一括でデータ取得（JOIN で関連する post, images, user, category も取得）
             products = (
                 Session.query(Shop)
-                .options(joinedload(Shop.post).joinedload(Post.images))
+                .options(
+                    joinedload(Shop.post).joinedload(Post.images),  # 投稿と画像をJOIN
+                    joinedload(Shop.post).joinedload(Post.author),  # 投稿者情報をJOIN
+                    joinedload(Shop.categories).joinedload(ProductCategory.category)  # カテゴリ情報をJOIN
+                )
                 .filter(Shop.product_id.in_(product_ids))
                 .all()
             )
@@ -207,6 +211,15 @@ class ShopManager(DatabaseManager):
                     "name": product.name,
                     "price": float(product.price),
                     "created_at": Validator.calculate_time_difference(product.created_at),
+                    "author": {
+                        "user_id": Validator.encrypt(product.post.author.id),
+                        "username": product.post.author.username,
+                        "profile_image": url_for("static", filename=f"images/profile_images/{product.post.author.profile_image}")
+                    } if product.post.author else None,
+                    "category": {
+                        "category_id": product.categories[0].category_id,
+                        "category_name": product.categories[0].category.category_name
+                    } if product.categories else None,
                     "images": [
                         {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
                         for image in product.post.images
@@ -226,7 +239,7 @@ class ShopManager(DatabaseManager):
             self.session_rollback(Session)
             app.logger.error(f"error発生: {e}")
             return []
-        
+    
     def add_cart_item(self, user_id, product_id, quantity,Session=None):
         try:
             user_id = Validator.decrypt(user_id)
@@ -284,8 +297,8 @@ class ShopManager(DatabaseManager):
             # 単一値の場合、リストに変換
             product_ids = Validator.ensure_list(product_ids)
 
-            # 各要素が5文字以上なら復号化、そうでなければそのまま
-            product_ids = [Validator.decrypt(pid) if len(pid) >= 5 else pid for pid in product_ids]
+            # 各要素が文字列なら復号化、そうでなければそのまま
+            product_ids = [Validator.decrypt(pid) if isinstance(pid, str) else pid for pid in product_ids]
 
 
             # 指定されたカートアイテムを削除
@@ -302,14 +315,14 @@ class ShopManager(DatabaseManager):
                 # すべての商品が削除された場合、カート自体を削除
                 self.delete(model=Cart,filters={"user_id": user_id},Session=Session)
                 self.make_commit_or_flush(Session)
-                return {"status": "success", "message": "カートが削除されました"}
+                return {"status": True, "message": "カートが削除されました"}
             self.make_commit_or_flush(Session)
-            return {"status": "success", "message": f"{deleted_count} アイテムが削除されました"}
+            return {"status": True, "message": f"{deleted_count} アイテムが削除されました"}
 
         except SQLAlchemyError as e:
             app.logger.error(f"カートアイテム削除中にエラーが発生しました: {e}")
             Session.rollback()
-            return None   
+            return {"status": False, "message": f"{str(e)}"}   
         
     def fetch_cart_items(self, user_id, Session=None):
         """
@@ -321,7 +334,8 @@ class ShopManager(DatabaseManager):
         """
         try:
             Session = self.make_session(Session)
-            user_id = Validator.decrypt(user_id)
+            if isinstance(user_id, str):
+                user_id = Validator.decrypt(user_id)
 
             # ユーザーのカートを取得し、一括ロードを適用
             cart = (
@@ -337,11 +351,11 @@ class ShopManager(DatabaseManager):
             )
 
             if not cart:
-                self.session_rollback(Session)
+                self.pop_and_close(Session)
                 return True, []  # カートが存在しない場合
 
             if not cart.cart_items:
-                self.session_rollback(Session)
+                self.pop_and_close(Session)
                 return True, []  # カートはあるが商品が入っていない
 
             # カートデータの整形
@@ -367,39 +381,54 @@ class ShopManager(DatabaseManager):
         except SQLAlchemyError as e:
             self.session_rollback(Session)
             app.logger.error(f"カートアイテム取得エラー: {e}")
-            return False, None
+            return False, str(e)
 
-    def update_cart_quantity(self, user_id, product_id, new_quantity,Session=None):
+    def update_cart_quantity(self, item_id, new_quantity,Session=None):
         """
         カート内の商品数量を更新
 
-        :param user_id: ユーザーID
+        :param item_id: アイテムID
         :param product_id: 商品ID
         :param new_quantity: 新しい数量
         :return: 更新結果（成功/失敗）
         """
         try:
             Session = self.make_session()
-            product_id = Validator.decrypt(product_id)
+            if isinstance(item_id, str):               
+                item_id = Validator.decrypt(item_id)
 
             if new_quantity <= 0: #新しい個数が0の場合。
-                self.delete_cart_items(product_ids=product_id,Session=Session)
-                self.make_commit_or_flush(Session)
-                return {"success": True, "message": "カート内の商品が削除されました"}
+                # self.delete_cart_items(product_ids=product_id,Session=Session)
+                # self.make_commit_or_flush(Session)
+                # return {"success": True, "message": "カート内の商品が削除されました"}
+                return {"success": False, "message": "1個未満は指定できません"} # delete_cart_itemsがあるので機能が重複している
             
-            cart_item = Session.query(CartItem).filter_by(user_id=user_id, product_id=product_id).first()
-            if cart_item and cart_item.quantity == new_quantity:
-                self.pop_and_close(Session)
-                return {"success": True, "message": "個数が同じなため、変更なし。"}
+            cart_item = Session.query(CartItem).filter_by(item_id=item_id).first()
+
+
             
-            elif cart_item: #個数変更ありの場合
-                cart_item.quantity = new_quantity
-                self.make_commit_or_flush(Session)
-                return {"success": True, "message": "カートの数量が更新されました"}
-            else:
+            if not cart_item:
                 self.pop_and_close(Session)
                 return {"success": False, "message": "商品がカートに見つかりません"}
+
+            if cart_item.quantity == new_quantity:
+                self.pop_and_close(Session)
+                return {"success": True, "message": "個数が同じなため、変更なし。"}
+
+            # ログにデバッグ情報を追加
+            print(f"[DEBUG] 更新前の数量: {cart_item.quantity}, 更新後の数量: {new_quantity}")
+
+            cart_item.quantity = new_quantity
+            self.make_commit_or_flush(Session)
+
+            # 更新後のデータを取得してログに出力
+            updated_item = Session.query(CartItem).filter_by(item_id=item_id).first()
+            print(f"[DEBUG] 更新成功: {updated_item.quantity}")
+
+            return {"success": True, "message": "カートの数量が更新されました"}
+
         except Exception as e:
+            print(f"[ERROR] update_cart_quantity に失敗: {str(e)}")
             self.session_rollback(Session)
             return {"success": False, "message": f"エラー: {str(e)}"}
 
@@ -481,13 +510,13 @@ class ShopManager(DatabaseManager):
                 return {"success": False, "message": "購入処理中にエラーが発生しました。"}
 
             # 5. カートアイテムの削除
-            delete_result = self.delete_cart_items(user_id=user_id, product_ids=[item.product_id for item in cart_items], Session=Session)
+            delete_result = self.delete_cart_items(product_ids=[item.product_id for item in cart_items], Session=Session)
 
-            if not delete_result or delete_result["status"] != "success":
+            if not delete_result or delete_result["status"] != True:
                 self.session_rollback(Session)
                 app.logger.error("Failed to delete cart items")
                 raise Exception("カートアイテムの削除に失敗しました")
-            
+
             # 6. トランザクションの確定
             self.redis.add_score(ranking_key=self.trending[2],item_id=selected_cart_item_ids,score=15)
             self.make_commit_or_flush(Session)
@@ -495,10 +524,12 @@ class ShopManager(DatabaseManager):
             return {"success": True, "message": "購入が完了しました。", "sale_id": sale['sale_id']}
         
         except SQLAlchemyError as e:
+            app.logger.error(str(e))
             self.session_rollback(Session)
             return {"success": False, "message": f"購入処理中にエラーが発生しました: {str(e)}"}
 
         except Exception as e:
+            app.logger.error(str(e))
             self.session_rollback(Session)
             return {"success": False, "message": f"予期しないエラー: {str(e)}"}
 
@@ -614,7 +645,7 @@ class ShopManager(DatabaseManager):
                         "post_time": Validator.calculate_time_difference(post_time),
                         "category_name": category_name,
                         "image_url": url_for('static', filename=f"images/post_images/{img_path}") if img_path else None
-                    }                    
+                    }                   
 
             # カテゴリー結果に紐づく投稿を挿入
             for category in category_results:

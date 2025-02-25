@@ -56,15 +56,16 @@ app.config["CACHE_DEFAULT_TIMEOUT"] = 3600 * 12
 # Flask-Sessionを適用（Flask-Redisの初期化後に適用）
 Session(app)
 
-# @app.before_request
-# def check_session():
-#     if id in session:
-#         return redirect(url_for("home"))
-#     elif request.endpoint not in ["login", "signup", "password_reset"]:
-#             return redirect(url_for("login"))
-#     return None
-# def make_session_permanent(): #sessionの一括永続化
-#     session.permanent = True
+@app.before_request
+def check_session():
+    if request.endpoint and request.endpoint.startswith("static"):
+        return  # `static` ディレクトリのリクエストはスルー
+
+    if request.endpoint and request.endpoint not in ["login", "signup", "password_reset"]:
+        if not session.get("id"):  # セッションがなければログインページへ
+            return redirect(url_for("login"))
+def make_session_permanent(): #sessionの一括永続化
+    session.permanent = True
 
 with app.app_context():
     db_manager = DatabaseManager(app)
@@ -680,10 +681,12 @@ def make_post_into_product(post_id):
 def shop_page():
     shop_data = shop_manager.get_shop_with_images(limit=10)
 
+    trending_product_ids = shop_manager.redis.get_ranking_ids(ranking_key=shop_manager.trending[2])
+    trending_products =  shop_manager.fetch_multiple_products_images(product_ids=trending_product_ids)
     if shop_data is None:
         abort(404, description="ショップページが見つかりません")
 
-    return render_template("shop_page.html", products=shop_data)      
+    return render_template("shop_page.html", products=shop_data,trending_products =trending_products)      
 
 @app.route("/display_product/<product_id>")
 def display_product(product_id):
@@ -736,29 +739,29 @@ def display_cart():
 def update_cart_quantity():
     try:
         data = request.get_json()
-        product_id = data.get("product_id")
-        change = int(data.get("change"))
+        item_id = request.json["item_id"]
+        new_quantity = int(request.json["newQuantity"])
 
-        if not product_id:
+        if not item_id:
             return jsonify({"message": "無効な商品IDです"}), 400
 
-        user_id = Validator.decrypt(session.get("id"))
-        product_id = Validator.decrypt(product_id)
+        user_id = session.get("id")
+        if isinstance(user_id, str):
+            user_id = Validator.decrypt(user_id)
 
-        success = shop_manager.update_cart_quantity(user_id, product_id, change)
+        result = shop_manager.update_cart_quantity(item_id=item_id, new_quantity=new_quantity)
 
-        if success:
-            # セッションのカート情報を更新
-            cart = session.get("cart", {})
-            if product_id in cart:
-                cart[product_id] += change
-                if cart[product_id] < 1:
-                    cart[product_id] = 1  # 数量が1未満にならないようにする
-            else:
-                cart[product_id] = 1  # カートに存在しない場合は1に設定
-            session["cart"] = {Validator.encrypt(k): v for k, v in cart.items()}
+        if result is None:
+            app.logger.error("update_cart_quantity の戻り値が None です")
+            return jsonify({"message": "内部エラーが発生しました"}), 500
+        
+        if result.get("success"):
+            
+            # データベースから最新のカート情報を取得し、セッションを更新
+            success, updated_cart_items = shop_manager.fetch_cart_items(user_id)
+            session["cart"] = {Validator.decrypt(str(item['product_id'])): item['quantity'] for item in updated_cart_items}
 
-            return jsonify({"message": "数量が更新されました"}), 200
+            return jsonify({"message": result["message"], "cart": session["cart"]}), 200
         else:
             return jsonify({"message": "数量更新に失敗しました"}), 400
 
@@ -773,22 +776,21 @@ def update_cart_quantity():
 def remove_from_cart():
     try:
         data = request.get_json()
-        product_id = data.get("product_id")
+        product_id = data.get('product_id')
 
-        if not product_id:
+        if product_id is None:
             return jsonify({"message": "無効な商品IDです"}), 400
-
-        cart = session.get("cart", {})
-        if product_id in cart:
-            cart.pop(product_id)  # セッションから削除
-            session["cart"] = cart
-            return jsonify({"message": "カートから削除されました"}), 200
+    
+        # データベースから削除
+        result = shop_manager.delete_cart_items(product_ids=product_id)
+        if not result['status']:
+            raise
         else:
-            return jsonify({"message": "商品がカートに存在しません"}), 400
+            return jsonify(result['message']), 200
 
     except Exception as e:
         app.logger.error(e)
-        return jsonify({"message": "エラーが発生しました", "error": str(e)}), 500
+        return jsonify(result['message']), 500
 
 
 
@@ -799,10 +801,11 @@ def check_out():
         if request.method == "POST":
             user_id = Validator.decrypt(session.get("id"))
             #payment_method = request.form.get("payment_method") credit card
-            check_out_items = map(Validator.decrypt,request.form.getlist("selected_products"))
+            check_out_items = list(map(Validator.decrypt,request.form.getlist("selected_products")))
+            app.logger.info(check_out_items)
             result = shop_manager.check_out(selected_cart_item_ids=check_out_items,user_id=user_id,payment_method="credit card")
             if result['success']:
-                return redirect(url_for("complete_checkout"))
+                return redirect(url_for("complete_checkout",after_checkout=True))
             else:
                 abort(400,description="チェックアウトに失敗しました")
         else:
@@ -811,14 +814,20 @@ def check_out():
         app.logger.error(f"エラー: {e}")
         return abort(500,description="チェックアウトに失敗しました")
     
-@app.route("/complete_checkout")
-def complete_checkout():
+@app.route("/complete_checkout/<after_checkout>",methods=["GET"])
+def complete_checkout(after_checkout):
     try:
         user_id = session.get("id")
         result = shop_manager.fetch_sales_history(user_id=user_id)
-        if not result:
-            return render_template("complete_checkout.html",history = None)
-        return render_template("complete_checkout.html",history = result)
+        if after_checkout == "True" or after_checkout == True:
+            after_checkout = True
+
+        else:
+            after_checkout = False
+            if not result:
+                return render_template("complete_checkout.html",history = None,after_checkout=after_checkout)
+        return render_template("complete_checkout.html",history = result,after_checkout=after_checkout)
+
 
     except Exception as e:
         app.logger.error(f"エラー: {e}")
@@ -827,6 +836,11 @@ def complete_checkout():
 @app.route("/test")
 def test():
     return render_template("test.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("id", None)
+    return redirect(url_for('login'))
     
 if __name__ == "__main__":
     try:
