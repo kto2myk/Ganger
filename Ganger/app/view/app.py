@@ -681,10 +681,12 @@ def make_post_into_product(post_id):
 def shop_page():
     shop_data = shop_manager.get_shop_with_images(limit=10)
 
+    trending_product_ids = shop_manager.redis.get_ranking_ids(ranking_key=shop_manager.trending[2])
+    trending_products =  shop_manager.fetch_multiple_products_images(product_ids=trending_product_ids)
     if shop_data is None:
         abort(404, description="ショップページが見つかりません")
 
-    return render_template("shop_page.html", products=shop_data)      
+    return render_template("shop_page.html", products=shop_data,trending_products =trending_products)      
 
 @app.route("/display_product/<product_id>")
 def display_product(product_id):

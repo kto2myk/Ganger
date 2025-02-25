@@ -105,78 +105,27 @@
     <div class="main_content">
             
         <div class="populer_item">
-            <h2>人気アイテム</h2>
+            <h2>トレンドアイテム</h2>
             <div class="shop_select">
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
+                {% for product in trending_products %}
+                    <div class="goods">
+                        <div>
+                            <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
+                            <img src="{{ product.images[0].img_path }}" alt="product.name">
+                            </a>
+                        </div>
+                        <div>
+                            <img src="{{ product.author.profile_image}}" alt="{{  product.author.username }} さんのアイコン" style= "width:50px; height:50px;">
+                            <h5>{{ product.author.username }}</h5>
+                        </div>
+                        <div>
+                            <p>{{ product.category.category_name }}</p>
+                        </div>
+                        <div>
+                            <h4>{{ product.price }}円</h4>
+                        </div>
                     </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>値段</h4>
-                    </div>
-                </div>
-                <div class="goods">
-                    <div>
-                        <img src="../static/images/logo_images/Ganger.png" alt="">
-                    </div>
-                    <div>
-                        <h5>製作者</h5>
-                    </div>
-                    <div>
-                        <p>ジャンル</p>
-                    </div>
-                    <div>
-                        <h4>￥値段</h4>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
         <div class="div3"></div>
