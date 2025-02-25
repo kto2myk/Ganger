@@ -291,13 +291,13 @@
             <div class="cart-content">
                 <div class="cart-items">
                     {% for item in cart_items %}
-                    <div class="cart-item" data-price="{{ item.price * item.quantity }}">
+                    <div class="cart-item" data-price="{{ item.price * item.quantity }}" data-product_id = "{{ item.product_id}}">
                         <div class="checkbox-wrapper">
                             <input type="checkbox" 
-                                   name="selected_products" 
-                                   value="{{ item.item_id }}" 
-                                   class="custom-checkbox item-checkbox"
-                                   checked>
+                                    name="selected_products" 
+                                    value="{{ item.item_id }}" 
+                                    class="custom-checkbox item-checkbox"
+                                    checked>
                         </div>
                         <img src="{{ item.image_path or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ item.product_name }}" class="item-image">
                         <div class="item-details">
@@ -445,7 +445,7 @@
                 btn.addEventListener('click', async function() {
                     if (confirm('この商品をカートから削除しますか？')) {
                         const cartItem = this.closest('.cart-item');
-                        const itemId = cartItem.querySelector('.item-checkbox').value;
+                        const productId = cartItem.dataset.product_id;
 
                         try {
                             const response = await fetch('/remove_from_cart', {
@@ -453,7 +453,7 @@
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
-                                body: JSON.stringify({ item_id: itemId })
+                                body: JSON.stringify({ product_id: productId })
                             });
 
                             if (response.ok) {
