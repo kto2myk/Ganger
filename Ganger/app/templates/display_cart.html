@@ -23,11 +23,7 @@
             <div class="cart-content">
                 <div class="cart-items">
                     {% for item in cart_items %}
-<<<<<<< HEAD
-                    <div class="cart-item" data-price="{{ item.price * item.quantity }}" data-product-id="{{ item.product_id }}">
-=======
                     <div class="cart-item" data-price="{{ item.price * item.quantity }}" data-product_id = "{{ item.product_id}}">
->>>>>>> e322903bd4f391d947d6f283a48842863a3d800d
                         <div class="checkbox-wrapper">
                             <input type="checkbox" 
                                     name="selected_products" 
