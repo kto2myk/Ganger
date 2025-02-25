@@ -187,14 +187,18 @@ class ShopManager(DatabaseManager):
         
     def fetch_multiple_products_images(self, product_ids, Session=None):
         try:
-            product_ids = Validator.ensure_list(product_ids) #単一値でもリスト化
+            product_ids = Validator.ensure_list(product_ids)  # 単一値でもリスト化
             product_ids = [Validator.decrypt(pid) if len(pid) >= 5 else pid for pid in product_ids]
             Session = self.make_session(Session)
 
-            # 一括でデータ取得（JOIN で関連する post, images も取得）
+            # 一括でデータ取得（JOIN で関連する post, images, user, category も取得）
             products = (
                 Session.query(Shop)
-                .options(joinedload(Shop.post).joinedload(Post.images))
+                .options(
+                    joinedload(Shop.post).joinedload(Post.images),  # 投稿と画像をJOIN
+                    joinedload(Shop.post).joinedload(Post.author),  # 投稿者情報をJOIN
+                    joinedload(Shop.categories).joinedload(ProductCategory.category)  # カテゴリ情報をJOIN
+                )
                 .filter(Shop.product_id.in_(product_ids))
                 .all()
             )
@@ -207,6 +211,15 @@ class ShopManager(DatabaseManager):
                     "name": product.name,
                     "price": float(product.price),
                     "created_at": Validator.calculate_time_difference(product.created_at),
+                    "author": {
+                        "user_id": Validator.encrypt(product.post.author.id),
+                        "username": product.post.author.username,
+                        "profile_image": url_for("static", filename=f"images/profile_images/{product.post.author.profile_image}")
+                    } if product.post.author else None,
+                    "category": {
+                        "category_id": product.categories[0].category_id,
+                        "category_name": product.categories[0].category.category_name
+                    } if product.categories else None,
                     "images": [
                         {"img_path": url_for("static", filename=f"images/post_images/{image.img_path}")}
                         for image in product.post.images
@@ -226,7 +239,7 @@ class ShopManager(DatabaseManager):
             self.session_rollback(Session)
             app.logger.error(f"error発生: {e}")
             return []
-        
+    
     def add_cart_item(self, user_id, product_id, quantity,Session=None):
         try:
             user_id = Validator.decrypt(user_id)
