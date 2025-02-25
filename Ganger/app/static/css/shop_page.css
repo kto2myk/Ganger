@@ -194,7 +194,8 @@ body {
     margin: 20px;
     font-size: 18px;
     text-align: center;
-    margin-right: 55px; /* ハンバーガーメニューの基本幅分 */
+    margin-left: 55px; /* 右マージンを左マージンに変更 */
+    margin-right: 0; /* 右マージンをリセット */
     position: relative;
     transition: none; /* トランジションを無効化 */
     margin-top: 20px; /* category-navとの間隔を確保 */
@@ -259,6 +260,9 @@ body {
     grid-column-gap: 0px;
     grid-row-gap: 0px;
     color: #333;
+    margin-left: 60px; /* 右マージンを左マージンに変更 */
+    margin-right: 10px; /* 右マージンを調整 */
+    transition: margin-left .2s linear; /* 右から左に変更 */
 }
 
 
@@ -354,5 +358,33 @@ body {
 
 /* ハンバーガーメニュー展開時 */
 .main_content.menu-expanded {
-    margin-right: 55px;
+    margin-left: 55px; /* 右マージンを左マージンに変更 */
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .main_content.menu-expanded {
+        margin-left: 200px; /* 右マージンを左マージンに変更 */
+    }
+}
+
+/* ユーザー情報のスタイリング */
+.user {
+    display: flex;          /* 横並びにする */
+    align-items: center;    /* 垂直方向の中央揃え */
+    padding: 10px 15px;     /* 内側の余白 */
+    gap: 10px;             /* 要素間の隙間 */
+}
+
+.user img {
+    width: 40px;           /* アイコンのサイズを調整 */
+    height: 40px;
+    border-radius: 50%;    /* 円形にする */
+    object-fit: cover;     /* 画像のアスペクト比を保持 */
+}
+
+.user h5 {
+    margin: 0;            /* デフォルトのマージンを削除 */
+    font-size: 14px;      /* ユーザー名のフォントサイズ */
+    color: #333;          /* テキストカラー */
 }

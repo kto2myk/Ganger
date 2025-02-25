@@ -12,10 +12,6 @@
 <!-- ハンバーガーメニューの追加 -->
 <nav class="main-menu">
     <div class="scrollbar" id="style-1">
-        <a href="{{ url_for('home') }}" class="header_logo">
-            <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-shop-site" class="shop_button">
-            <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-sns-site" class="sns_button">
-        </a>
         <ul>
             <li>                                   
                 <a href="{{url_for('home')}}">
@@ -91,21 +87,6 @@
 </nav>
 
 <main id="content">
-    <div class="swiper">
-        <div class="swiper-wrapper">
-            {% for product in products %}
-                <div class="swiper-slide">
-                    <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
-                        <img src="{{ product['img_path'] }}" alt="商品画像">
-                    </a>
-                </div>
-            {% endfor %}        
-        </div>
-        <div class="swiper-pagination"></div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
-    </div>
-
     <div class="main_content">
             
         <div class="populer_item">
@@ -118,8 +99,8 @@
                             <img src="{{ product.images[0].img_path }}" alt="product.name">
                             </a>
                         </div>
-                        <div class="user">
-                            <img src="{{ product.author.profile_image}}" alt="{{  product.author.username }} さんのアイコン">
+                        <div>
+                            <img src="{{ product.author.profile_image}}" alt="{{  product.author.username }} さんのアイコン"">
                             <h5>{{ product.author.username }}</h5>
                         </div>
                         <div>
