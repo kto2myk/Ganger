@@ -1,3 +1,11 @@
+function fetchData(callback) {
+  setTimeout(() => {
+    console.log("データ取得完了");
+    callback(); // コールバック関数を実行
+  }, 2000);
+}
+
+
 let loading = false;
 let hasMoreData = true;
 let followingOffset = 0;
@@ -75,7 +83,7 @@ function getPostData() {
                       repostUserName      = repost_user.username
                       
                       repostMessage = `
-                        <a class="reposted_massage" href="ここ聞くこと！！！">
+                        <a class="reposted_massage" href="/my_profile/${repostUserID_unique}">
                           ${repostUserName}さんがリポストしました
                         </a>
                       `;
@@ -121,7 +129,7 @@ function getPostData() {
                           <a href="/my_profile/${userID_unique}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
-                          <p>${userName}</p>
+                          <a id="user-name" href "/my_profile/${userID_unique}>${userName}</a>
                         </div>
 
                         <!-- 投稿画像エリア -->
@@ -222,6 +230,9 @@ function getPostData() {
             )
             // console.log(postListHTML);
             document.getElementById(`${nowPlace}`).innerHTML += postListHTML;
+            fetchData(() => {
+              console.log("innerHTML処理完了を検知");
+            });
             console.log("offset:", recommendedOffset, followingOffset);
             document.querySelectorAll('.splide').forEach(function (carousel) {
               new Splide(carousel).mount();
@@ -287,3 +298,6 @@ document.getElementById('following-posts-button').addEventListener('click', func
     switchFollowingArea();
     followingOffset += limit;
 });
+
+
+

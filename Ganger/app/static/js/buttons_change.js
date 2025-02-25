@@ -1,10 +1,12 @@
-document.addEventListener('DOMContentLoaded', () => {
+function buttonSetup() {
     // 共通のAPIリクエスト処理
     async function handleRequest(url, method = 'POST') {
         const response = await fetch(url, { method });
         if (!response.ok) {
+            console.log("error!!");
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        console.log(`response:${response}`);
         return response.json();
     }
 
@@ -29,11 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 各投稿の処理を初期化
-    document.querySelectorAll('[data-post-id]').forEach(post => {
+    document.querySelectorAll("post_buttons button").forEach(post => {
+        console.log('post:', post);
         const postId = post.dataset.postId;
 
         // いいねボタンの処理
         setupButtonAction(
+            console.log(`like-button-${postId}`),
             `like-button-${postId}`,
             `/like/${postId}`,
             (result, button) => {
@@ -134,4 +138,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
     });
-});
+};

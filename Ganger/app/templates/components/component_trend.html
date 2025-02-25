@@ -51,6 +51,9 @@ async function getItemData() {
         `;
 
     document.getElementById("products_container").innerHTML += productsListHTML;
+    document.querySelectorAll('.splide').forEach(function (carousel) {
+        new Splide(carousel).mount();
+    });
 
 }
 

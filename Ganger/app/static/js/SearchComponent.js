@@ -78,6 +78,7 @@ class SearchComponent {
         this.searchBox.addEventListener("focus", () => {
             this.updateSearchHistory();
             this.searchHistoryContainer.style.display = "block";
+            document.getElementById("search-results-container").classList.add("results-active");
         });
 
         this.searchBox.addEventListener("input", () => {
