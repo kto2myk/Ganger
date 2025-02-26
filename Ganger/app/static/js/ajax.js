@@ -1,10 +1,4 @@
-function fetchData(callback) {
-  setTimeout(() => {
-    console.log("データ取得完了");
-    callback(); // コールバック関数を実行
-  }, 2000);
-}
-
+import { initializePostButtons } from "/static/js/buttons_change.js"; // ✅ ./ を忘れない！
 
 let loading = false;
 let hasMoreData = true;
@@ -51,36 +45,36 @@ function getPostData() {
               let repostUserID        = "";
               let repostUserName      = "";
               // リポストユーザー情報解凍(リポストされていない場合はnull)
-              repostMessage ="";
+              let repostMessage ="";
 
                 dataType = data[0];
                 console.log(dataType);
 
                 data[1].posts.forEach(postData => {
-                    bodyText        = postData.body_text;
-                    commentCount    = postData.comment_count;
-                    images          = postData.images;
-                    isMe            = postData.is_me;
-                    likeCount       = postData.like_count;
-                    postID          = postData.post_id;
-                    postTime        = postData.post_time;
-                    repostCount     = postData.repost_count;
-                    savedCount      = postData.saved_count;
+                    let bodyText        = postData.body_text;
+                    let commentCount    = postData.comment_count;
+                    let images          = postData.images;
+                    let isMe            = postData.is_me;
+                    let likeCount       = postData.like_count;
+                    let postID          = postData.post_id;
+                    let postTime        = postData.post_time;
+                    let repostCount     = postData.repost_count;
+                    let savedCount      = postData.saved_count;
 
 
                     // ユーザー情報解凍
-                    userInfo        = postData.user_info;   //id, profile_image, username　番目がそれぞれ存在
-                    userID_unique        = userInfo.id;
-                    profileImagePath = userInfo.profile_image;
-                    userID          = userInfo.user_id;
-                    userName        = userInfo.username;
+                    let userInfo        = postData.user_info;   //id, profile_image, username　番目がそれぞれ存在
+                    let userID_unique        = userInfo.id;
+                    let profileImagePath = userInfo.profile_image;
+                    let userID          = userInfo.user_id;
+                    let userName        = userInfo.username;
 
 
                     // リポストされている場合はリポストしたユーザー名を表示
                     if (postData.repost_user) {
-                      repostUserID_unique = repost_user.id;
-                      repostUserID        = repost_user.user_id;
-                      repostUserName      = repost_user.username
+                      let repostUserID_unique = repost_user.id;
+                      let repostUserID        = repost_user.user_id;
+                      let repostUserName      = repost_user.username
                       
                       repostMessage = `
                         <a class="reposted_massage" href="/my_profile/${repostUserID_unique}">
@@ -230,9 +224,7 @@ function getPostData() {
             )
             // console.log(postListHTML);
             document.getElementById(`${nowPlace}`).innerHTML += postListHTML;
-            fetchData(() => {
-              console.log("innerHTML処理完了を検知");
-            });
+            initializePostButtons();
             console.log("offset:", recommendedOffset, followingOffset);
             document.querySelectorAll('.splide').forEach(function (carousel) {
               new Splide(carousel).mount();

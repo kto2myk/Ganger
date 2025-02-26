@@ -508,7 +508,6 @@ def display_post(post_id):
 def fetch_trending_posts(limit,offset):
     try:
         # 現在のユーザーIDを取得（ログインしていない場合は None）
-        current_user_id = session.get("id")
         has_more = True
         # Redis からトレンド投稿の ID を取得
         trending_posts_ids = db_manager.redis.get_ranking_ids(
@@ -517,8 +516,7 @@ def fetch_trending_posts(limit,offset):
         if trending_posts_ids:
             # 投稿データを取得
             post_data = post_manager.get_posts_details(
-                post_ids=trending_posts_ids, current_user_id=current_user_id
-            )
+                post_ids=trending_posts_ids)
         else:
             has_more = False
             post_data = []
@@ -541,14 +539,14 @@ def fetch_trending_tags():
         if trending_tag_ids:
             trending_tags = post_manager.get_tags_by_ids(tag_ids=trending_tag_ids)
             if trending_tags:
-                return jsonify("trending_tags",{"message":"トレンドタグ取得","tags":trending_tags}),200
+                return jsonify({"tags":trending_tags}),200
             else:
-                return  jsonify("trending_tags",{"message":"トレンドタグなし","tags":[]}),200
+                return  jsonify({"tags":[]}),200
         else:
             raise Exception("トレンドなし")
     except Exception as e:
             app.logger.error(f"⚠️ Error in fetch_trending_tags: {e}")
-            return jsonify("error", {"message": "トレンド投稿の取得に失敗しました。"}),500
+            return jsonify({"message": "トレンド投稿の取得に失敗しました。"}),500
 
 @app.route("/fetch_trending_products")
 def fetch_trending_products():
@@ -738,7 +736,6 @@ def display_cart():
 @app.route("/update_cart_quantity", methods=["POST"])
 def update_cart_quantity():
     try:
-        data = request.get_json()
         item_id = request.json["item_id"]
         new_quantity = int(request.json["newQuantity"])
 
