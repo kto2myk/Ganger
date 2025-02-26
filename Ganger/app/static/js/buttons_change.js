@@ -20,19 +20,28 @@ function setupButtonAction(buttonId, actionUrl, onSuccess) {
             } catch (error) {
                 console.error(`Error with button ${buttonId}:`, error);
                 alert('操作中にエラーが発生しました。');
-            } finally {
-                button.disabled = false;
             }
         });
     }
 }
 
-export function initializePostButtons() {
+export function initializePostButtons(postStatuses) {
     // 各投稿の処理を初期化
     console.log("✅ initializePostButtons() 実行開始");
     document.querySelectorAll(".post_buttons button").forEach(post => {
         const postId = post.dataset.postId || post.closest('.post_buttons')?.dataset.postId;
+        if (!postId) return;
 
+        // postStatuses 配列から対応する投稿データを探す
+        const postStatus = postStatuses.find(status => status.postId === postId) || {};
+        const liked = postStatus.liked || false;
+        const saved = postStatus.saved || false;
+        const reposted = postStatus.reposted || false;
+        const productized = postStatus.productized || false;  
+        
+        console.log(`✅ postId: ${postId}, liked: ${liked}, saved: ${saved}, reposted: ${reposted}, productized: ${productized}`);
+
+        
         // いいねボタンの処理
         setupButtonAction(
             `like-button-${postId}`,
@@ -53,24 +62,41 @@ export function initializePostButtons() {
                             <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z"></path>
                         </svg>`;
                 }
+            button.disabled = false;
             }
         );
 
         // リポストボタンの処理
+
+        // ✅ リポストボタンを無効化
+        const repostButton = document.getElementById(`repost-button-${postId}`);
+        if (repostButton && reposted) {
+            repostButton.classList.add('reposted');
+        }
+        
         setupButtonAction(
             `repost-button-${postId}`,
             `/repost/${postId}`,
             (result, button) => {
-                if (result.success) {
+                if (result.status === 'added') {
                     alert('リポストが完了しました！');
-                    button.disabled = true;
+                    button.classList.add('reposted');
+                } else if (result.status === 'removed') {
+                    alert('リポストを解除しました！');
+                    button.classList.remove('reposted');
                 } else {
                     alert(result.message || 'リポストに失敗しました。');
-                }
+                } button.disabled = false;
             }
         );
 
         // 保存ボタンの処理
+        // ✅ 保存ボタンに `saved` クラスを追加
+        const saveButton = document.getElementById(`save-button-${postId}`);
+        if (saveButton && saved) {
+            saveButton.classList.add('saved');
+        }
+        
         setupButtonAction(
             `save-button-${postId}`,
             `/save_post/${postId}`,
@@ -83,7 +109,7 @@ export function initializePostButtons() {
                         alert('保存を解除しました！');
                         button.classList.remove('saved');
                     }
-                }
+                } button.disabled = false;
             }
         );
 
@@ -112,6 +138,12 @@ export function initializePostButtons() {
         }
         // プロダクトボタンの処理
         const productButton = document.getElementById(`product-button-${postId}`);
+
+        // ✅ プロダクト化ボタンを無効化
+        if (productButton && productized) {
+            productButton.style.pointerEvents = "none";
+        }
+
         const productModal = document.getElementById(`product-modal-${postId}`);
         const closeProductModal = productModal?.querySelector('.close');
     

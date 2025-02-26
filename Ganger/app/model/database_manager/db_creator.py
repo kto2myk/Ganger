@@ -109,6 +109,7 @@ if __name__ == "__main__":
     table_manager = TableManager()
     # table_manager.drop_table(table_name="sales_items")
     # テーブル作成
+    table_manager.drop_tables(Base)
     table_manager.create_tables(Base)
 
     conn = None

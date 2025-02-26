@@ -85,6 +85,12 @@ header {
 
 
 /* 投稿表示エリア */ 
+#following-contents h1, #recommended-contents h1{
+    text-align: center;
+    font-size: 190%;
+    margin-bottom: 10vh;
+
+}
 #following-contents {
     padding-top: 15dvh;
     padding-left: 19vw;
@@ -174,13 +180,14 @@ header {
 }
 
 .post_buttons {
-    width:40%;
+    width:100%;
     display: flex;
-    justify-content: space-between;
+    position: relative;
+    justify-content: baseline;
     padding-top: 3%;
 }
 
-.extension_button {
+.extension_button , .product_extension_button{
     cursor: pointer;
     padding: 0;
     width: 16px;
@@ -188,7 +195,10 @@ header {
     border: none;
     transition: all 0.2s;
 }
-
+.product_extension_button{
+    position: absolute;
+    right: 0;
+}
 .extension_button :hover {
     scale: 1.2;
 }
@@ -208,7 +218,7 @@ header {
 }
 
 .svg-filled {
-    fill: red;
+    fill: #a46a9a;
 }
 
 @media (max-width: 1200px) {
@@ -219,10 +229,18 @@ header {
 }
 
   /* 保存済みボタンのスタイル */
-button.saved {
+.saved svg{
   /* background-color: #007bff; */
-    color: #007bff;
+    color: #a46a9a;
+    fill:#a46a9a;
   /* border: 1px solid #007bff; */
+}
+
+/* .reposted{
+    background-color: aqua;
+} */
+.reposted svg path,.reposted svg polyline{
+    stroke: #a46a9a !important;
 }
 
 #no_result {

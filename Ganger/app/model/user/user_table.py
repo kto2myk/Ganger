@@ -16,6 +16,7 @@ import uuid # ランダムID生成用
 class UserManager(DatabaseManager):
     def __init__(self,app=None):
         super().__init__(app)
+        self.notification_manager = NotificationManager()
 
 
     def create_user(self, username: str, email: str, password: str,Session=None):
@@ -380,6 +381,14 @@ class UserManager(DatabaseManager):
             if existing_follow:
                 # フォローが存在する場合は削除
                 self.delete(model=Follow, filters=data, Session=Session)
+                self.notification_manager.delete_notification(
+                    related_item_id=sender_id,
+                    related_item_type="user",
+                    type_name="follow",
+                    sender_id=sender_id,
+                    recipient_id=followed_user_id,
+                    Session=Session
+                )
                 self.app.logger.info(f"Follow removed: followed_user={sender_id}, user_id={sender_id}")
                 self.redis.add_score(ranking_key=self.trending[4],item_id=followed_user_id,score=-15)
                 result = {"status": "unfollowed"}
@@ -387,6 +396,15 @@ class UserManager(DatabaseManager):
                 # フォローが存在しない場合は作成
                 self.insert(model=Follow, data=data, Session=Session)
                 self.app.logger.info(f"Follow added: followed_user={followed_user_id}, user_id={sender_id}")
+                self.notification_manager.create_full_notification(
+                    sender_id=sender_id,
+                    recipient_ids=followed_user_id,
+                    type_name="follow",
+                    contents=f"{session.get('username')}さんがあなたをフォローしました。",
+                    related_item_id=sender_id,
+                    related_item_type="user",
+                    Session=Session
+                )
                 self.redis.add_score(ranking_key=self.trending[4],item_id=followed_user_id,score=15)
                 result = {"status": "followed"}
 
@@ -437,7 +455,6 @@ class UserManager(DatabaseManager):
         ブロック時に関連データをすべて削除する（手動で削除）
         """
         try:
-            notification_manager = NotificationManager()
             Session = self.make_session(Session)
             #  フォロー解除（相互フォローも含めて削除）
             Session.query(Follow).filter(
@@ -487,7 +504,7 @@ class UserManager(DatabaseManager):
                 Post.reply_id.isnot(None)  # ルート投稿は削除しない
             ).delete(synchronize_session=False)
             
-            notification_manager.delete_notifications(user_id=user_id,blocked_user_id=blocked_user_id,Session=Session)
+            self.notification_manager.delete_notifications(user_id=user_id,blocked_user_id=blocked_user_id,Session=Session)
 
             self.make_commit_or_flush(Session)
             return True

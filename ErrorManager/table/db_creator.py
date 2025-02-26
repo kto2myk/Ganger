@@ -37,4 +37,5 @@ class TableCreator(TableConnector):
 
 if __name__ == "__main__":
     creator = TableCreator()
+    creator.drop_tables()
     creator.create_tables()

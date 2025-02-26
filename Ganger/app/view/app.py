@@ -239,7 +239,7 @@ def my_profile(id):
         return ("ユーザーデータの取得に失敗しました。")
     
 
-@app.route("/user/update_info",methods = ["GET","POST"])
+@app.route("/my_profile/update_info",methods = ["GET","POST"])
 def update_info():
     if request.method == "GET":
         user = db_manager.fetch_one(model=User,filters={"id":Validator.decrypt(session['id'])})
@@ -606,8 +606,8 @@ def repost(post_id):
 
         result = post_manager.create_repost(post_id=post_id, user_id=sender_id)
         # 成功時の応答
-        if result:
-            return jsonify({'success': True, 'message': 'リポストが完了しました！'}), 200
+        if result['success']:
+            return jsonify(result), 200
         else:
             return jsonify({'success': False, 'message': 'リポストに失敗しました。'}), 400
         
