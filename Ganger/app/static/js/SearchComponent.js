@@ -218,3 +218,9 @@ document.addEventListener("DOMContentLoaded", () => {
         apiEndpoint: "/search" // 統一エンドポイント
     });
 });
+
+document.addEventListener("click", (event) => {
+    if (event.target.id === "search-candidates") {
+        document.getElementById("search-candidates").style.display = "none";
+    }
+})
