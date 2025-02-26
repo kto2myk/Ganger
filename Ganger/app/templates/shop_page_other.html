@@ -12,6 +12,10 @@
 <!-- ハンバーガーメニューの追加 -->
 <nav class="main-menu">
     <div class="scrollbar" id="style-1">
+        <a href="{{ url_for('home') }}" class="header_logo">
+            <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-sns-site" class="sns_button">
+            <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-shop-site" class="shop_button">
+        </a>
         <ul>
             <li>                                   
                 <a href="{{url_for('home')}}">
@@ -25,31 +29,18 @@
                     <span class="nav-text">Profile</span>
                 </a>
             </li>
-            <!-- 他のメニュー項目... -->
             <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-tshirt fa-lg"></i>
-                    <span class="nav-text">トップス</span>
+                <a href="{{ url_for('complete_checkout', after_checkout=False )}}">
+                    <i class="fa fa-clock fa-lg"></i>
+                    <span class="nav-text">購入履歴</span>
                 </a>
             </li>   
             <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-coat fa-lg"></i>
-                    <span class="nav-text">ジャケット/アウター</span>
+                <a href="{#{{url_for('cloces')}}#}">
+                    <i class="fa fa-t-shirt fa-lg"></i>
+                    <span class="nav-text">衣類</span>
                 </a>
-            </li>   
-            <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-trousers fa-lg"></i>
-                    <span class="nav-text">パンツ</span>
-                </a>
-            </li>   
-            <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-skert fa-lg"></i>
-                    <span class="nav-text">スカート</span>
-                </a>
-            </li>   
+            </li>    
             <li>                                   
                 <a href="{#{{url_for('******')}}#}">
                     <i class="fa fa-shoe-prints fa-lg"></i>
@@ -72,25 +63,12 @@
     </div>
 </nav>
 
-<nav class="category-nav">
-    <a href="{# {{ url_for(######) }} #}"><button data-category="all">すべてのアイテム</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="accessories">アクセサリー</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="web-items">ウェブアイテム</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="shoes">シューズ</button></a>
-</nav>
-
-<nav class="link-nav">
-    <a href="#" data-link="all" class="active">すべて</a>
-    <a href="#" data-link="men">メンズ</a>
-    <a href="#" data-link="women">レディース</a>
-    <a href="#" data-link="kids">キッズ</a>
-</nav>
 
 <main id="content">
     <div class="main_content">
             
         <div class="populer_item">
-            <h2>トレンドアイテム</h2>
+            <h2>{# category_name #}</h2>
             <div class="shop_select">
                 {% for product in trending_products %}
                     <div class="goods">
@@ -120,75 +98,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/hamburger_menu.js') }}"></script>
-<script>
-    /*カテゴリー別ページ*/
-    document.querySelectorAll('.category-nav button').forEach(button => {
-        button.addEventListener('click', () => {
-            const category = button.getAttribute('data-category');
-            const content = document.getElementById('content');
-            
-            switch(category) {
-                case 'all':
-                    content.innerHTML = '<p>すべてのアイテムが表示されます。</p>';
-                    break;
-                case 'accessories':
-                    content.innerHTML = '<p>アクセサリーが表示されます。</p>';
-                    break;
-                case 'web-items':
-                    content.innerHTML = '<p>ウェブアイテムが表示されます。</p>';
-                    break;
-                case 'shoes':
-                    content.innerHTML = '<p>シューズが表示されます。</p>';
-                    break;
-                default:
-                    content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
-            }
-        });
-    });
-
-    /*性別*/
-    document.querySelectorAll('.link-nav a').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.querySelectorAll('.link-nav a').forEach(a => a.classList.remove('active'));
-            link.classList.add('active');
-        });
-    });
-
-    /*スライドショー*/
-    document.addEventListener('DOMContentLoaded', function() {
-        const swiper = new Swiper('.swiper', {
-            loop: true,
-            autoplay: {
-                delay: 5000,
-                disableOnInteraction: false,
-            },
-            direction: 'horizontal',
-            slidesPerView: 3,
-            centeredSlides: true,
-            spaceBetween: 10,
-            
-            pagination: {
-                el: '.swiper-pagination',
-                clickable: true,
-            },
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            
-            breakpoints: {
-                768: {
-                    slidesPerView: 1,
-                },
-                769: {
-                    slidesPerView: 3,
-                }
-            }
-        });
-    });
-</script>
 {% endblock %}

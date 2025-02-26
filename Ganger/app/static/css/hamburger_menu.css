@@ -14,7 +14,7 @@ body {
     transition: 0.3s;
 }
   
-  .sns_button {
+  .shop_button {
     position: absolute;
     left: 10px;
     top: 40px;
@@ -32,7 +32,7 @@ body {
     height: 100%;
   }
   
-  .header_logo:hover .sns_button {
+  .header_logo:hover .shop_button {
     background-color: #a46a9a;
     opacity: 1;
     width: 80px;
@@ -41,7 +41,7 @@ body {
     z-index: 10001;
   }
   
-  .shop_button {
+  .sns_button {
     position: absolute;
     left: 60px;
     top: 10px;
@@ -57,7 +57,7 @@ body {
     height: 100%;
   }
   
-  .header_logo:hover .shop_button {
+  .header_logo:hover .sns_button {
     opacity: 0.7;
     width: 100px;
     left: 10px;
@@ -68,15 +68,16 @@ body {
 
 /* スクロールバー */
 .scrollbar {
-    height: 90%;
+    height: 100%;
     width: 100%;
     overflow-y: hidden;
     overflow-x: hidden;
-    float: left;  /* rightから leftに変更 */
+    float: left;
+    margin-top: 0;
 }
 
 .scrollbar:hover {
-    height: 90%;
+    height: 100%;
     width: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -117,9 +118,9 @@ body {
 .main-menu {
     background: #F7F7F7;
     position: fixed; 
-    top: 60px; 
+    top: 0px; 
     bottom: 0;
-    height: calc(100% - 60px); /* ヘッダーの高さを考慮 */
+    height: 100vh; /* ヘッダーの高さを考慮 */
     right: auto; 
     left: 0; 
     width: 55px;

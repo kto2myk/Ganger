@@ -50,14 +50,7 @@ body {
     height: 40px;
 }
 
-.search-bar {
-    flex: 0 1 600px;
-    margin: 0 20px;
-    padding: 8px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
+
 
 .nav-links {
     position: absolute;

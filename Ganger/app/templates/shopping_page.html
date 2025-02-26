@@ -168,15 +168,9 @@
       </div>
     </div>
     <div class="product-info-section">
-      <h2 class="product-name">商品名{{product['name']}}<i class="far fa-heart like"></i></h2>
+      <h2 class="product-name">商品名{{product['name']}}</h2>
       <p class="product-price">値段　￥{{ product['price'] }}</p>
       <p>作成時間　{{ product['created_at'] }}</p>
-      <div class="product-sizes">
-        <span>サイズ：</span>
-        <button class="size-option">S</button>
-        <button class="size-option">M</button>
-        <button class="size-option">L</button>
-      </div>
       <div class="quantity">
         <button class="decrease">-</button>
         <span class="quantity-value">1</span>
@@ -192,19 +186,6 @@
 
 {% block scripts %}
 <script>
-    // いいねアイコンの動作
-    document.querySelector('.like').addEventListener('click', function() {
-      this.classList.toggle('liked');
-    });
-  
-    // サイズ選択の動作
-    document.querySelectorAll('.size-option').forEach(button => {
-      button.addEventListener('click', function() {
-        document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('selected'));
-        this.classList.add('selected');
-      });
-    });
-  
     // 購入数の増減
     const quantityValue = document.querySelector('.quantity-value');
     document.querySelector('.increase').addEventListener('click', () => {
