@@ -1,7 +1,8 @@
 {% extends "extends/extends_base.html" %}
 {% block title %}Search/Ganger{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="../static/css/search.css">
+<link rel="stylesheet" href="../static/css/profile.css">
+<link rel="stylesheet" href="../static/css/home.css">
 <!-- <script src="../static/js/ajax.js"></script> -->
 {% endblock %}
 {% block content %}
@@ -9,12 +10,14 @@
     {% include 'components/component_search.html' %}
 
     <div id="search-tabs">
-        <a href="javascript:void(0);" data-tab="USER" class="tab-link {% if tab == 'USER' %}active{% endif %}">アカウント</a>
-        <a href="javascript:void(0);" data-tab="TAG" class="tab-link {% if tab == 'TAG' %}active{% endif %}">タグ</a>
-        <a href="javascript:void(0);" data-tab="CATEGORY" class="tab-link {% if tab == 'CATEGORY' %}active{% endif %}">カテゴリー</a>
+        <div id="search-tabs-container">
+            <a href="javascript:void(0);" data-tab="USER" class="tab-link {% if tab == 'USER' %}active{% endif %}">アカウント</a>
+            <a href="javascript:void(0);" data-tab="TAG" class="tab-link {% if tab == 'TAG' %}active{% endif %}">タグ</a>
+            <a href="javascript:void(0);" data-tab="CATEGORY" class="tab-link {% if tab == 'CATEGORY' %}active{% endif %}">カテゴリー</a>
+        </div>
     </div>
 
-    <div id="search-results-container">
+    <div class="search-view-results">
         {% if query %}
             <h1>検索結果: "{{ query }}"</h1>
             {% if tab == 'USER' %}
@@ -31,25 +34,22 @@
                     <p>該当するユーザーは見つかりませんでした。</p>
                 {% endif %}
             {% elif tab == 'TAG' %}
-                <h2>タグ</h2>
+                <!-- <h2>タグ</h2> -->
                 {% if results.tags %}
                     <ul>
                         {% for tag in results.tags %}
                             <li>
-                                <h3>{{ tag.tag_text }} ({{ tag.post_count }}件)</h3>
-                                {% if tag.posts %}
-                                    <ul>
-                                        {% for post in tag.posts %}
-                                            <ol>
-                                                <a href="{{ url_for('display_post', post_id=post.post_id) }}">
-                                                    <img src="{{ post.image_url }}" alt="投稿画像">
-                                                </a>
-                                            </ol>
-                                        {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    <p>このタグには投稿がありません。</p>
-                                {% endif %}
+                                <!-- <h3>{{ tag.tag_text }} ({{ tag.post_count }}件)</h3> -->
+                                {% for post in tag.posts %}
+                                    <ol>
+                                        <a href="{{ url_for('display_post', post_id=post.post_id) }}">
+                                            <img src="{{ post.image_url }}" alt="投稿画像">
+                                        </a>
+                                    </ol>
+                                    {% if loop.index % 3 == 0 %}
+                                    <div class="clear"></div>
+                                    {% endif %}
+                                {% endfor %}
                             </li>
                         {% endfor %}
                     </ul>
@@ -94,16 +94,28 @@
             {% else %}
                 <p>適切なタブを選択してください。</p>
             {% endif %}
-        {% else %}
-            <h1>検索してみましょう。</h1>
+    </div>
+
+
+
+
+
+
+
+
+        <!-- トレンドタグ表示 -->
+        {% if trending_tags %}
+            {%for tag in trending_tags %}
+                <a href="{{ url_for('search', query=tag, tab='TAG') }}">
+                    <div class="trend-tag">
+                        <p>{{ tag }}</p>
+                    </div>
+                </a>
+            {% endfor %}
         {% endif %}
-    </div>
-    <div class="trend">
-        {% include 'components/component_trend.html' %}
-    </div>
-    <div class="right_bar">
-        {% include 'components/component_recommended.html' %}
-    </div>
+</div>
+<div class="right_bar" style="margin-top: 10dvh;">
+    {% include 'components/component_trend.html' %}
 </div>
     <script src="{{ url_for('static', filename='js/SearchPage.js') }}"></script>
 {% endblock %}

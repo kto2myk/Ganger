@@ -1,39 +1,41 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // 共通のAPIリクエスト処理
-    async function handleRequest(url, method = 'POST') {
-        const response = await fetch(url, { method });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
+// 共通のAPIリクエスト処理
+async function handleRequest(url, method = 'POST') {
+    const response = await fetch(url, { method });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
+    return response.json();
+}
 
-    // ボタンに対する共通のイベント設定
-    function setupButtonAction(buttonId, actionUrl, onSuccess) {
-        const button = document.getElementById(buttonId);
-        if (button) {
-            button.addEventListener('click', async () => {
-                if (button.disabled) return; // ボタンが無効化されていたらスキップ
-                button.disabled = true;
-                try {
-                    const result = await handleRequest(actionUrl);
-                    onSuccess(result, button);
-                } catch (error) {
-                    console.error(`Error with button ${buttonId}:`, error);
-                    alert('操作中にエラーが発生しました。');
-                } finally {
-                    button.disabled = false;
-                }
-            });
-        }
+// ボタンに対する共通のイベント設定
+function setupButtonAction(buttonId, actionUrl, onSuccess) {
+    const button = document.getElementById(buttonId);
+    if (button) {
+        button.addEventListener('click', async () => {
+            if (button.disabled) return; // ボタンが無効化されていたらスキップ
+            button.disabled = true;
+            try {
+                const result = await handleRequest(actionUrl);
+                onSuccess(result, button);
+            } catch (error) {
+                console.error(`Error with button ${buttonId}:`, error);
+                alert('操作中にエラーが発生しました。');
+            } finally {
+                button.disabled = false;
+            }
+        });
     }
+}
 
+export function initializePostButtons() {
     // 各投稿の処理を初期化
-    document.querySelectorAll('[data-post-id]').forEach(post => {
+    document.querySelectorAll("post_buttons button").forEach(post => {
+        console.log('post:', post);
         const postId = post.dataset.postId;
 
         // いいねボタンの処理
         setupButtonAction(
+            console.log(`like-button-${postId}`),
             `like-button-${postId}`,
             `/like/${postId}`,
             (result, button) => {
@@ -134,4 +136,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
     });
-});
+}
