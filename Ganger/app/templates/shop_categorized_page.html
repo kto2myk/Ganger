@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shop_page</title>
+</head>
+<body>
+    
+    <div class="main_content">
+        
+        <div class="populer_item">
+            
+            <div class="shop_select">
+                {% for product in products %}
+                    <p>{{ product.category_name }}</p> <!-- ✅ カテゴリー名を表示 -->
+                    
+                    {% for pd in product.posts %} <!-- ✅ product["posts"] のリストを展開 -->
+                        <div class="goods">
+                            <div>
+                                <a href="{{ url_for('display_product', product_id=pd['product_id']) }}">
+                                    <img src="{{ pd.image_url }}" alt="product.name">
+                                </a>
+                            </div>
+                            <div class="user">
+                                <img src="{{ pd.profile_image }}" alt="{{ pd.username }} さんのアイコン">
+                                <h5>{{ pd.username }}</h5>
+                            </div>
+                            <div>
+                                <p>{{ pd.category_name }}</p>
+                            </div>
+                            <div>
+                                <h4>{{ pd.price }}円</h4>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            
+</body>
+</html>

@@ -692,6 +692,19 @@ def shop_page():
 
     return render_template("shop_page.html", products=shop_data,trending_products =trending_products)      
 
+@app.route("/shop/fetch_products_by_category/<category_name>")
+def fetch_products_by_category(category_name):
+    try:
+        # カテゴリ名に基づいて商品を取得
+        products = shop_manager.search_categories(query=category_name)
+
+        if not products:
+            abort(404,description = "商品が見つかりません")
+
+        return render_template("shop_categorized_page.html", products=products)
+    except Exception as e:
+        app.logger.error(f"Error in fetch_products_by_category: {e}")
+        abort(500,description = "エラーが発生しました")
 @app.route("/display_product/<product_id>")
 def display_product(product_id):
     product = shop_manager.fetch_multiple_products_images(product_ids=product_id)
