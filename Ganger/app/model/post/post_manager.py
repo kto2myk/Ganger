@@ -3,7 +3,7 @@ import uuid
 from PIL import Image as PILImage
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select,exists
 from sqlalchemy.orm  import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
@@ -331,7 +331,13 @@ class PostManager(DatabaseManager):
 
             # クエリ作成（リレーションも一括取得）
             posts = (
-                Session.query(Post).filter(
+                Session.query(
+                    Post,
+                    exists().where((Like.post_id == Post.post_id) & (Like.user_id == user_id)).label("liked"),
+                    exists().where((SavedPost.post_id == Post.post_id) & (SavedPost.user_id == user_id)).label("saved"),
+                    exists().where((Repost.post_id == Post.post_id) & (Repost.user_id == user_id)).label("reposted"),
+                    exists().where(Shop.post_id == Post.post_id).label("productized")
+                ).filter(
                     Post.post_id.in_(decrypted_ids),  # 指定されたpost_idの投稿のみ取得
                     ~Post.user_id.in_(select(blocked_users_subquery)),  # 自分がブロックしたユーザーの投稿を除外
                     ~Post.user_id.in_(select(blocked_by_subquery))
@@ -352,7 +358,7 @@ class PostManager(DatabaseManager):
                 raise ValueError("投稿が見つかりません。")
 
             formatted_posts = []
-            for post in posts:
+            for post, liked, saved, reposted, productized in posts:
                 # 各カウントを取得（リレーションの `.or []` で NoneType エラー回避）
                 like_count = len(post.likes or [])
                 repost_count = len(post.reposts or [])
@@ -378,7 +384,11 @@ class PostManager(DatabaseManager):
                     "repost_count": repost_count,
                     "saved_count": saved_count,
                     "comment_count": comment_count,
-                    "is_me": user_id == post.author.id
+                    "is_me": user_id == post.author.id,
+                    "liked": liked,
+                    "saved": saved,
+                    "reposted": reposted,
+                    "productized": productized
                 }
                 # Redis スコア更新
                 self.redis.add_score(ranking_key=self.trending[0], item_id=post.post_id, score=6)

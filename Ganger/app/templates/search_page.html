@@ -99,6 +99,24 @@
         {% else %}
             <h1>検索してみましょう。</h1>
         {% endif %}
+
+
+
+
+
+
+
+
+        <!-- トレンドタグ表示 -->
+        {% if trending_tags %}
+            {%for tag in trending_tags %}
+                <a href="{{ url_for('search', query=tag, tab='TAG') }}">
+                    <div class="trend-tag">
+                        <p>{{ tag }}</p>
+                    </div>
+                </a>
+            {% endfor %}
+        {% endif %}
 </div>
 <div class="right_bar" style="margin-top: 10dvh;">
     {% include 'components/component_trend.html' %}

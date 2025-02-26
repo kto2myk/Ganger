@@ -6,6 +6,7 @@ from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
 import subprocess
+import requests
 from Ganger.app.model.model_manager.model import User
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
@@ -474,7 +475,14 @@ def search():
         if request.headers.get('Accept') == 'application/json':
             return jsonify(results), 200
         else:
-            return render_template('search_page.html', query=query, tab=tab, results=results)
+            # トレンドタグを取得
+            trending_tag_ids = db_manager.redis.get_ranking_ids(ranking_key=db_manager.trending[1],top_n=10)
+            if trending_tag_ids:
+                trending_tags = post_manager.get_tags_by_ids(tag_ids=trending_tag_ids)
+            else:
+                trending_tags = []
+            print(trending_tags)
+            return render_template('search_page.html', query=query, tab=tab, results=results,trending_tags=trending_tags)
 
     except Exception as e:
         app.logger.error(f"Error occurred: {e}", exc_info=True)
@@ -488,8 +496,6 @@ def display_post(post_id):
 
     try:
         # デバッグ用ログ
-        app.logger.info(f"Fetching post with post_id: {post_id}")
-
         # 投稿データを取得
         post_details = post_manager.get_posts_details(post_id)
         app.logger.info(f"Post details: {post_details}")
