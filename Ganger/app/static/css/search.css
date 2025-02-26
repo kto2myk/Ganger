@@ -1,8 +1,11 @@
+html body {
+    min-height: 100vh;
+}
+
 .contents {
     padding-left: 19vw;
     height: auto;
     width: 60dvw;
-    background-color: #fff;
     /* border: solid 1px #999; */
 }
 
@@ -10,22 +13,103 @@
 /* 検索ボックス */
 #search-container {
     margin: 2%;
-    width: 60%;
+    width: 50dvh;
+    position: relative;
+
 }
 
 #search-container div input {
     width: 90%;
     height: 5dvh;
-    background-color: #fff;
     padding-left: 5%;
     padding-right: 5%;
 }
 
 #search-box {
     height: 3vh;
-    background-color: #eee;
-    border: solid 1px #ddd;
+    border: solid 1px #ccc;
     border-radius: 5vh;
+}
+
+#search-results-container {
+    position: absolute;
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 5%;
+    z-index: 9999;
+    border-radius: 0 0 10px 10px;
+}
+
+#search-results {
+    width: 100%;
+    background-color: #fff;
+    z-index: 9998;
+}
+
+.results-active {
+    border-radius: 0 0 10px 10px;
+    border: solid 1px #ccc;
+    background-color: #fff;
+}
+
+.search-view-results {
+    z-index: 9000;
+}
+
+/* #search-history-container {
+    border: solid 1px #ddd;
+} */
+
+#search-candidates li {
+    cursor: pointer;
+    transition: all;
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+
+#search-candidates li:hover {
+    background-color: #ccc;
+}
+
+#search-history-container {
+    width: 100%;
+}
+
+#search-history-list {
+    width: 100%;
+    cursor: pointer;
+}
+
+#search-history-list:hover {
+    background-color: #ccc;
+}
+
+.search-history-list div {
+    position: relative;
+}
+
+.delete-item-btn {
+    position: absolute;
+    right: 0;
+    all: unset;
+    cursor: pointer;
+}
+
+.delete-item-btn:hover {
+    color: red;
+}
+
+#clear-history-btn {
+    all: unset;
+    cursor: pointer;
+    margin-top: 2dvh;
+    padding: 0.5dvh;
+    border: solid 1px #ddd;
+    border-radius: 2dvh;
+}
+
+#clear-history-btn:hover {
+    background-color: #ccc;
 }
 
 .account_info {

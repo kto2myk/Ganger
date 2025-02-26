@@ -77,7 +77,7 @@ function getPostData() {
                       let repostUserName      = repost_user.username
                       
                       repostMessage = `
-                        <a class="reposted_massage" href="ここ聞くこと！！！">
+                        <a class="reposted_massage" href="/my_profile/${repostUserID_unique}">
                           ${repostUserName}さんがリポストしました
                         </a>
                       `;
@@ -123,7 +123,7 @@ function getPostData() {
                           <a href="/my_profile/${userID_unique}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
-                          <p>${userName}</p>
+                          <a id="user-name" href "/my_profile/${userID_unique}>${userName}</a>
                         </div>
 
                         <!-- 投稿画像エリア -->
@@ -290,3 +290,6 @@ document.getElementById('following-posts-button').addEventListener('click', func
     switchFollowingArea();
     followingOffset += limit;
 });
+
+
+

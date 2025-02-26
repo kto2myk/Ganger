@@ -29,11 +29,13 @@ function setupButtonAction(buttonId, actionUrl, onSuccess) {
 
 export function initializePostButtons() {
     // 各投稿の処理を初期化
-    document.querySelectorAll('[data-post-id]').forEach(post => {
+    document.querySelectorAll("post_buttons button").forEach(post => {
+        console.log('post:', post);
         const postId = post.dataset.postId;
 
         // いいねボタンの処理
         setupButtonAction(
+            console.log(`like-button-${postId}`),
             `like-button-${postId}`,
             `/like/${postId}`,
             (result, button) => {

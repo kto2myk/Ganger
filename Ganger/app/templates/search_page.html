@@ -2,6 +2,7 @@
 {% block title %}Search/Ganger{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="../static/css/search.css">
+<link rel="stylesheet" href="../static/css/home.css">
 <!-- <script src="../static/js/ajax.js"></script> -->
 {% endblock %}
 {% block content %}
@@ -14,7 +15,7 @@
         <a href="javascript:void(0);" data-tab="CATEGORY" class="tab-link {% if tab == 'CATEGORY' %}active{% endif %}">カテゴリー</a>
     </div>
 
-    <div id="search-results-container">
+    <div class="search-view-results">
         {% if query %}
             <h1>検索結果: "{{ query }}"</h1>
             {% if tab == 'USER' %}
@@ -94,16 +95,13 @@
             {% else %}
                 <p>適切なタブを選択してください。</p>
             {% endif %}
+    </div>
         {% else %}
             <h1>検索してみましょう。</h1>
         {% endif %}
-    </div>
-    <div class="trend">
-        {% include 'components/component_trend.html' %}
-    </div>
-    <div class="right_bar">
-        {% include 'components/component_recommended.html' %}
-    </div>
+</div>
+<div class="right_bar" style="margin-top: 10dvh;">
+    {% include 'components/component_trend.html' %}
 </div>
     <script src="{{ url_for('static', filename='js/SearchPage.js') }}"></script>
 {% endblock %}
