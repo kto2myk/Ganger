@@ -128,7 +128,7 @@
             <a href="/my_profile/{{ post.user_info.id }}">
             <img src="{{ post.user_info.profile_image }}" alt="プロフィール画像">
             </a>
-            <form action="/submit_comment, post_id={{ post.post_id }}" method="post">
+            <form action="/submit_comment/{{ post.post_id }}" method="post">
             <input type="text" id="comment-input-{{ post.post_id }}" name="comment" placeholder="コメントを入力">
             <button id="comment-submit-{{ post.post_id }}">送信する</button>
             </form>

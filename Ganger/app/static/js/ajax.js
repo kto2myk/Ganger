@@ -150,7 +150,7 @@ function getPostData() {
                           <a href="/my_profile/${userID_unique}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
-                          <a id="user-name" href "/my_profile/${userID_unique}>${userName}</a>
+                          <a id="user-name" href = "/my_profile/${userID_unique}">${userName}</a>
                         </div>
 
                         <!-- 投稿画像エリア -->
@@ -221,7 +221,7 @@ function getPostData() {
                           <a href="/my_profile/${postID}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
-                          <form action="/submit_comment, post_id=${postID}" method="post">
+                          <form action="/submit_comment/${postID}" method="post">
                             <input type="text" id="comment-input-${postID}" name="comment" placeholder="コメントを入力">
                             <button id="comment-submit-${postID}">送信する</button>
                           </form>
