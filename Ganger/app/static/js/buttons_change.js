@@ -27,7 +27,6 @@ function setupButtonAction(buttonId, actionUrl, onSuccess) {
 
 export function initializePostButtons(postStatuses) {
     // 各投稿の処理を初期化
-    console.log("✅ initializePostButtons() 実行開始");
     document.querySelectorAll(".post_buttons button").forEach(post => {
         const postId = post.dataset.postId || post.closest('.post_buttons')?.dataset.postId;
         if (!postId) return;
@@ -38,10 +37,7 @@ export function initializePostButtons(postStatuses) {
         const saved = postStatus.saved || false;
         const reposted = postStatus.reposted || false;
         const productized = postStatus.productized || false;  
-        
-        console.log(`✅ postId: ${postId}, liked: ${liked}, saved: ${saved}, reposted: ${reposted}, productized: ${productized}`);
 
-        
         // いいねボタンの処理
         setupButtonAction(
             `like-button-${postId}`,
@@ -141,6 +137,7 @@ export function initializePostButtons(postStatuses) {
 
         // ✅ プロダクト化ボタンを無効化
         if (productButton && productized) {
+            productButton.style.display = "none";
             productButton.style.pointerEvents = "none";
         }
 
