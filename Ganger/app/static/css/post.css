@@ -1,0 +1,27 @@
+.contents {
+    width: 26dvw;
+    height: auto;
+    margin-left: 19dvw;
+    padding-top: 10dvh;
+    padding-left: 17.5dvw;
+    padding-right: 37.5dvw;
+}
+
+.account_info {
+    display: flex;
+    align-items: center;
+}
+
+#user-image {
+    display: block;
+    width: auto;
+    height: 90%;
+}
+
+#user-name {
+    display: block;
+}
+
+.post_time {
+    right: 37.5dvw;
+}

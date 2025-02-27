@@ -1,35 +1,34 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Post</title>
-</head>
-<body>
-    <header>
-        <h1>新しい投稿を作成</h1>
-    </header>
+{% extends "extends/extends_base.html" %}
+{% block title %}投稿を作成{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="../static/css/create_post.css">
+{% endblock %}
+{% block content %}
+<div class="contents">
     <main>
         <form id="post-form" enctype="multipart/form-data">
-            <div>
+            <div class="image-area">
+                <label for="images">画像をアップロード (最大6枚):</label>
+                <input type="file" id="images" name="images" accept="image/*" multiple required>
+                <p id="image-error" style="color: red; display: none;">画像は最大6枚までアップロードできます。</p>
+                <div class="preview-area">
+                    <ul id="image-preview"></ul>
+                </div>
+            </div>
+
+            <div class="text-content-area">
                 <label for="content">内容:</label>
                 <textarea id="content" name="content" rows="5" required></textarea>
                 <ul id="tag-suggestions" style="display: none; border: 1px solid #ccc; padding: 5px; position: absolute; background: #fff;"></ul>
                 <input type="hidden" id="tag-list" name="tags">
             </div>
-            <div>
-                <label for="images">画像をアップロード (最大6枚):</label>
-                <input type="file" id="images" name="images" accept="image/*" multiple required>
-                <p id="image-error" style="color: red; display: none;">画像は最大6枚までアップロードできます。</p>
-            </div>
-            <div>
-                <ul id="image-preview"></ul>
-            </div>
-            <div>
+
+            <div class="post-button">
                 <button type="submit">投稿する</button>
             </div>
         </form>
     </main>
+</div>
 
     <!-- <script>
         const contentInput = document.getElementById('content');
@@ -215,7 +214,7 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 const listItem = document.createElement('li');
-                listItem.innerHTML = `<img src="${e.target.result}" alt="画像${index + 1}" style="width: 100px; height: 100px; object-fit: cover; margin: 5px;">`;
+                listItem.innerHTML = `<img src="${e.target.result}" alt="画像${index + 1}">`;
                 previewContainer.appendChild(listItem);
             };
             reader.readAsDataURL(file);
@@ -356,6 +355,4 @@
         });
     });    
 </script>
-
-</body>
-</html>
+{% endblock %}

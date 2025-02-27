@@ -9,6 +9,12 @@
     font-weight: 400;
 }
 
+.contents h2 {
+    margin-left: 5dvw;
+    
+}
+
+
 .notification-container {
     width: 100%;
     height: 12dvh;

@@ -6,7 +6,9 @@
 {% block content %}
 <div class="main-contents">
     {% if not room_data %}
-        <p>メッセージはまだありません</p>
+        <div class="to-message-room">
+            <p>メッセージはまだありません</p>
+        </div>
     {% else %}
         <div class="to-message-room">
             <h2>Messages</h2>

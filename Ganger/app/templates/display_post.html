@@ -1,14 +1,12 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>display_post</title>
+{% extends "extends/extends_base.html" %}
+{% block title %}{{ post.user_info.username }}の投稿{% endblock %}
+{% block head %}
     <link rel="stylesheet" href="../static/css/style.css">
     <link rel="stylesheet" href="../static/css/splide.min.css">
     <link rel="stylesheet" href="../static/css/cssanimation.min.css">
     <link rel="stylesheet" href="../static/css/modal.css">
     <link rel="stylesheet" href="../static/css/home.css">
+    <link rel="stylesheet" href="../static/css/post.css">
     <script type="text/javascript" src="../static/js/main.js"></script>
     <script src="../static/js/node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
     <script>
@@ -36,14 +34,15 @@
             }];
             initializePostButtons(postStatuses);
         });
-    </script></head>
-<body>
+    </script>
+{% endblock %}
+{% block content %}
 <div class="contents">
     <div class="account_info">
-        <h1>{{ post.user_info.username }}の投稿</h1>
-        <a href="{{ url_for('my_profile',id = post.user_info.id)}}">
+        <a id="user-image" href="{{ url_for('my_profile',id = post.user_info.id)}}">
             <img src="{{ post.user_info.profile_image }}" alt="プロフィール画像">
         </a>
+        <a id="user-name"><p>{{ post.user_info.username }}</p></a>
     </div>
     <div class="post_container">
         <div class="image_area">
@@ -59,8 +58,8 @@
         </div>
     </div>
 
-    <p>{{ post.body_text }}</p>
-    <p>投稿時間: {{ post.post_time }}</p>
+    <p class="body_text">{{ post.body_text }}</p>
+    <p class="post_time">投稿時間: {{ post.post_time }}</p>
 
     <div class="post_buttons" data-post-id="{{ post.post_id }}">
         <!-- いいねボタン -->
@@ -145,7 +144,7 @@
                     <option value="clothes">clothes</option>
                     <option value="cap">caps</option>
                     <option value="shoes">shoes</option>
-                    <option value="accessory">accessory</option>
+                    <option value="accessories">accessories</option>
                 </select>
                 <input type="text" name="price" placeholder="価格を入力" id="price-box-{{ post.post_id }}">
                 <input type="text" name="name" placeholder=" 商品名を入力" id="name-box-{{ post.post_id }}">
@@ -155,5 +154,4 @@
     </div>
 
 </div>
-</body>
-</html>
+{% endblock %}

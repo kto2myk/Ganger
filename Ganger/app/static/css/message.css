@@ -5,6 +5,11 @@
     position: relative;
 }
 
+.main-contents p {
+    width: 100%;
+    text-align: center;
+}
+
 .to-message-room {
     position: absolute;
     width: 20dvw;

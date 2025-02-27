@@ -147,10 +147,10 @@ function getPostData() {
 
                         <!-- 投稿主のアイコン画像とユーザー名 -->
                         <div class="account_info">
-                          <a href="/my_profile/${userID_unique}">
+                          <a id="user-image" href="/my_profile/${userID_unique}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
-                          <a id="user-name" href = "/my_profile/${userID_unique}">${userName}</a>
+                          <a id="user-name" href = "/my_profile/${userID_unique}"><p>${userName}</p></a>
                         </div>
 
                         <!-- 投稿画像エリア -->

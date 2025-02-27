@@ -1,0 +1,27 @@
+.contents {
+    margin-left: 19dvw;
+    min-height: 100vh;
+    padding-left: 2vw;
+}
+
+#post-form {
+    width: 40dvw;
+    height: auto;
+    border: solid 1px #ddd;
+    border-radius: 50px;
+}
+
+.image-area {
+    width: 100%;
+    height: auto;
+}
+
+#image-preview li {
+    list-style: none;
+}
+
+#image-preview li img {
+    width: 500px;
+    height: 500px;
+    object-fit: contain;
+}
