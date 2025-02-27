@@ -23,7 +23,7 @@ html body {
     align-items: center;
 }
 
-#search-tabs a {
+.tab-link {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37,8 +37,15 @@ html body {
     transition: all, 0.2s;
 }
 
-#search-tabs a:hover { 
+.tab-link:hover { 
     background-color: #ddd;
+}
+
+.active {
+    cursor: none;
+    pointer-events: none;
+    background-color: #a46a9a;
+    color: #fff;
 }
 
 
@@ -82,10 +89,6 @@ html body {
     border-radius: 0 0 10px 10px;
     border: solid 1px #ccc;
     background-color: #fff;
-}
-
-.search-view-results {
-    z-index: 9000;
 }
 
 /* #search-history-container {
@@ -145,6 +148,129 @@ html body {
 #clear-history-btn:hover {
     background-color: #ccc;
 }
+
+/* end 検索ボックス */
+
+/* 検索結果 */
+
+/* 共通箇所 */
+
+.search-view-results {
+    width: 80dvh;
+    height: auto;
+    z-index: 9000;
+}
+
+.results-container {
+    width: 100%;
+    height: auto;
+}
+
+/* end 共通箇所 */
+
+
+/* ユーザー検索 */
+
+.user-info-container {
+    width: 90%;
+    height: 15dvh;
+    padding: 0;
+    border: solid 1px #ddd;
+}
+
+.user-info-container a {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: baseline;
+    text-decoration: none;
+    color: #000;
+}
+
+.user-info-container a:hover {
+    background-color: #eee;
+}
+
+.user-info-container a img {
+    width: auto;
+    height: 80%;
+    margin-left: 5%;
+    border: solid 1px #ddd;
+    border-radius: 50%;
+}
+
+/* end ユーザー検索 */
+
+/* タグ検索 */
+
+.tag-info-container, .category-info-container {
+    width: 100%;
+    height: auto;
+    margin-bottom: 3dvh;    
+    margin-top: 10dvh;
+}
+
+.tag-info-container h3, small, .category-info-container h3, small {
+    width: 30%;
+    display: inline;
+}
+
+.triple-tag-image, .triple-category-image {
+    display: flex;
+    width: 100%;
+    height: auto;
+    flex-wrap: wrap;
+}
+
+.image-box {
+    width: 32%;
+    margin:0.5%;
+    aspect-ratio: 1 / 1;
+    border: solid 1px #ddd;
+}
+
+.image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* end タグ検索 */
+
+/* トレンドタグ一覧 */
+
+.trend-tags-container {
+    width: 80%;
+    height: auto;
+    margin-top: 10dvh;
+    margin-bottom: 10dvh;
+}
+
+.trend-tags-container a {
+    display: flex;
+    align-items: center;
+    justify-content: first baseline;
+    width: 100%;
+    height: 10dvh;
+    margin-left: 5dvh;
+    border: solid 1px #ddd;
+    text-decoration: none;
+    color:#000;
+}
+
+.trend-tags-container a:hover {
+    background-color: #eee;
+}
+
+/* end トレンドタグ */
+
+
+
+
+/* end 検索結果 */
+
+/* 右コンテンツ */
 
 .account_info {
     display: flex;

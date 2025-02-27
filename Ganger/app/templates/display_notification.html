@@ -1,35 +1,38 @@
 {% extends "extends/extends_base.html" %}
 {% block title %}Notifications/Ganger{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="../static/css/notification.css">
+{% endblock %}
 {% block content %}
 <div class="contents">
-    <h1>Notifications</h1>
+    <h1>&ensp;&ensp;お知らせ</h1>
     {% if notifications %}
         {% for notification in notifications %}
-            <div class="notification">
-                <p><strong>{{ notification.notification_type }}</strong></p>
-                <p>{{ notification.contents }}</p>
-                <small>送信日時: {{ notification.sent_time }}</small>
-                
-                {% for detail in notification.details %}
-                    <div>
-                        <a href="{{ url_for('my_profile', id = detail.sender.id) }}">
+            {% for detail in notification.details %}
+                <div class="notification-container">
+                    {% if detail.related_item_type == "post" %}
+                        <a class="profile" href="{{ url_for('my_profile', id = detail.sender.id) }}">
+                            <img src="{{ detail.sender.profile_image}}" alt="">
+                            <p>&ensp;{{ detail.sender.username }}</p>
+                        </a>
+                        <a class="post-noti" href="{{ url_for('display_post', post_id = detail.related_item_id)}}">
+                            <p>{{ notification.contents }}</p>
+                            <small>送信日時: {{ notification.sent_time }}</small>
+                        </a>
+                    {% elif detail.related_item_type == "user" %}
+                        <a class="profile" href="{{ url_for('my_profile', id = detail.sender.id) }}">
                             <img src="{{ detail.sender.profile_image}}" alt="">
                             <p>{{ detail.sender.username }}</p>
                         </a>
-                        {% if detail.related_item_type == "post" %}
-                            <p>関連項目: 
-                                <a href="{{ url_for('display_post', post_id = detail.related_item_id)}}">投稿詳細 (ID: {{ detail.related_item_id }})</a>
-                            </p>
-                        {% elif detail.related_item_type == "user" %}
-                            <p>関連項目: 
-                                <a href="{{url_for('my_profile', id = detail.related_item_id) }}">ユーザープロフィール (ID: {{ detail.related_item_id }})</a>
-                            </p>
-                        {% else %}
-                            <p>関連項目: 不明なタイプ</p>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
+                        <a class="post-noti" href="{{url_for('my_profile', id = detail.related_item_id) }}">ユーザープロフィール (ID: {{ detail.related_item_id }})
+                            <p>{{ notification.contents }}</p>
+                            <small>送信日時: {{ notification.sent_time }}</small>
+                        </a>
+                    {% else %}
+                        <p>関連項目: 不明なタイプ</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
         {% endfor %}
     {% else %}
         <p>通知はありません。</p>

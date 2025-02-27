@@ -1,20 +1,39 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>myinfo</title>
-</head>
-<body>
-    <form method="POST" enctype="multipart/form-data">
-        <input type="text" name="user_id" value=" {{ user.user_id}}">
-        <input type="text" name="username" value=" {{ user.username}}">
-        <input type="text" name="real_name" value="{{ user.real_name}} ">
-        <input type="text" name="address" id=" " value="{{ user.address}} ">
-        <input type="text" name="bio" id="" value="{{ user.bio}}">
-        <img src="{{ session.get('profile_image') }}" alt=""> 
-        <input type="file" name="profile_image">
-        <button type="submit"> 送信　</button>
-    </form>
-</body>
-</html>
+{% extends"extends/extends_base.html" %}
+{% block title %}Account Settings/Ganger{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="../static/css/my_info.css">
+{% endblock %}
+{% block content %}
+    <div class="contents">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="each-settings">
+                <label>ID：</label><input type="text" name="user_id" value=" {{ user.user_id}}">
+            </div>
+
+            <div class="each-settings">
+                <label>ユーザーネーム：</label><input type="text" name="username" value=" {{ user.username or '' }}">
+            </div>
+
+            <div class="each-settings">
+                <label>お名前：</label><input type="text" name="real_name" value="{{ user.real_name or '' }} ">
+            </div>
+            
+            <div class="each-settings">
+                <label>住所：</label><input type="text" name="address" id=" " value="{{ user.address or '' }} ">
+            </div>
+            
+            <div class="each-settings" id="bio">
+                <label>自己紹介：</label><input type="text" name="bio" id="" value="{{ user.bio or ''}}">
+            </div>
+            
+            <div class="image-settings">
+                <img src="{{ session.get('profile_image') }}" alt=""> 
+                <div class="edit-icon">
+                    <input type="file" name="profile_image">
+                </div>
+            </div>
+            
+            <button type="submit">変更を適用</button>
+        </form>
+    </div>
+{% endblock %}

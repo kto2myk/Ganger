@@ -1,0 +1,38 @@
+.contents {
+    padding-left: 19vw;
+    height: auto;
+    width: 60dvw;
+    background-color: #fff;
+}
+
+.each-settings {
+    width: 100%;
+    height: auto;
+    margin-bottom: 5vh;
+}
+
+.each-settings label {
+    display: block;
+    width: 100%;
+}
+
+.each-settings input {
+    width: 30vw;
+    height: 5vh;
+    border: solid 1px #ccc;
+    border-radius: 0.5vh;
+}
+
+#bio input {
+    height: 15vh !important;
+}
+
+.edit-icon {
+    width: 3vw;
+    height: 3dvw;
+    background-color: aqua;
+}
+
+.image-settings input {
+    opacity: 0;
+}
