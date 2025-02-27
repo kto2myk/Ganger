@@ -217,13 +217,15 @@ function getPostData() {
                       <div id="comment-modal-${postID}" class="modal">
                         <div class="modal-content">
                           <span class="close" data-modal="comment-modal-${postID}">&times;</span>
-                          <p>${userName}</p>
-                          <a href="/my_profile/${postID}">
+                          <a id="modal-user" href="/my_profile/${postID}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
+                            <p>${userName}</p>
                           </a>
-                          <form action="/submit_comment/${postID}" method="post">
+                          <form class="comment-input" action="/submit_comment/${postID}" method="post">
                             <input type="text" id="comment-input-${postID}" name="comment" placeholder="コメントを入力" required>
-                            <button id="comment-submit-${postID}">送信する</button>
+                            <button id="comment-submit-${postID}">
+                              <img src="../static/images/templates_images/message-icon.svg"></img>
+                            </button>
                           </form>
                         </div>
                       </div>

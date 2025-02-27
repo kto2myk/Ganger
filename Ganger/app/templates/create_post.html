@@ -5,6 +5,7 @@
 {% endblock %}
 {% block content %}
 <div class="contents">
+    <h1>投稿を作成</h1>
     <main>
         <form id="post-form" enctype="multipart/form-data">
             <div class="image-area">
@@ -17,14 +18,14 @@
             </div>
 
             <div class="text-content-area">
-                <label for="content">内容:</label>
+                <label for="content">アピールしよう！</label>
                 <textarea id="content" name="content" rows="5" required></textarea>
                 <ul id="tag-suggestions" style="display: none; border: 1px solid #ccc; padding: 5px; position: absolute; background: #fff;"></ul>
                 <input type="hidden" id="tag-list" name="tags">
             </div>
 
             <div class="post-button">
-                <button type="submit">投稿する</button>
+                <button type="submit">POST</button>
             </div>
         </form>
     </main>

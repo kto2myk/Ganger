@@ -76,7 +76,7 @@
                 {% endif %}
             </div>
         </button>
-        <small>{{ post.like_count }}</small>
+        <small class="extension-counter">{{ post.like_count }}</small>
     
         <!-- コメントボタン -->
         <button id="comment-button-{{ post.post_id }}" class="extension_button">
@@ -87,8 +87,8 @@
                 </g>
                 </g>
             </svg>
-            </button>
-            <small>{{ post.comment_count }}</small>
+        </button>
+        <small class="extension-counter">{{ post.comment_count }}</small>
 
         <!-- リポストボタン -->
         <button id="repost-button-{{ post.post_id }}" class="extension_button">
@@ -100,14 +100,14 @@
                 <polyline id="primary-4" data-name="primary" points="16 12 18 10 20 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
             </svg>
             </button>
-            <small>{{ post.repost_count }}</small>
+            <small class="extension-counter">{{ post.repost_count }}</small>
 
         <!-- 保存ボタン -->
         <button id="save-button-{{ post.post_id }}" class="extension_button">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bookmark">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
             </svg>
-        </button>
+        </button class="extension-counter">
 
         {% if post.is_me %}
             <!-- プロダクトボタン -->
@@ -118,6 +118,7 @@
                 </svg>
             </button>
         {% endif %}
+    </div>
 
     <!-- コメントモーダル -->
     <div id="comment-modal-{{ post.post_id }}" class="modal">
@@ -154,25 +155,31 @@
     </div>
     <!-- コメントがあれば表示 -->
     {% if comments %}
+    <div class="custom-summary" onclick="document.getElementById('comment-container').open = !document.getElementById('comment-container').open;">
+        コメント: {{comment_count}}
+    </div>
         <!-- 各ユーザーのコメントとユーザー情報の表示 -->
-        {% for comment in comments%}
-            <details>
-                <summary>コメントを表示 {{comment_count}}</summary>
-                <div class="detail-contents">
-                    <a href="{{ url_for('my_profile', id=comment.id) }} ">
-                        <img src="{{comment.profile_image}}" alt="{{comment.username}}さんのプロフィールイメージ">
-                        <p>{{comment.username}}</p>
-                    </a>
-                    <p>{{comment.comment_text}}</p>
-                    <small>{{comment.comment_time}}</small>
-                </div>
+            <details id="comment-container">
+                <div class="comment-tag"><h3>コメント</h3></div>
+                <ul class="detail-contents">
+                    {% for comment in comments%}
+                        <ol id="account-area">
+                            <a href="{{ url_for('my_profile', id=comment.id) }} ">
+                                <img src="{{comment.profile_image}}" alt="{{comment.username}}さんのプロフィールイメージ">
+                                <p>&ensp;{{comment.username}}</p>
+                            </a>
+                            
+                            <small>{{comment.comment_time}}&ensp;</small>
+                            <div class="comment-text">
+                                <p>{{comment.comment_text}}</p>
+                            </div>
+                        </ol>
+                    {% endfor %}
+                </ul>
+                <summary></summary>
             </details>
-        {% endfor %}
     {% endif %}
     
-    t@t.t
-    tomoya
-    でログインして
     <!-- detailsとsummary,矢印CSSの例
     <style>
         /* `details` 全体のスタイル */
