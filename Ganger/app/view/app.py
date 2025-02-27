@@ -494,16 +494,16 @@ def search():
         
 @app.route('/display_post/<post_id>', methods=['GET'])
 def display_post(post_id):
-
     try:
         # デバッグ用ログ
         # 投稿データを取得
         post_details = post_manager.get_posts_details(post_id)
+        comments,comment_count = post_manager.get_post_comments(post_id)
         app.logger.info(f"Post details: {post_details}")
         # テンプレートにデータを渡す
         if post_details:
             post_details = post_details[0]
-        return render_template("display_post.html", post=post_details)
+        return render_template("display_post.html", post=post_details, comments = comments,comment_count=comment_count)
     except ValueError as e:
         app.logger.error(f"ValueError: {e}")
         return "指定された投稿が見つかりませんでした。", 404
@@ -656,13 +656,8 @@ def make_post_into_product(post_id):
         product_name = request.form.get('name')
 
         # バリデーション
-        if not selected_category:
-            return jsonify({"status": False, "message": "カテゴリを選択してください。"}), 400
-        if not price or not price.isdigit() or int(price) <= 0:
-            return jsonify({"status": False, "message": "価格を正しく入力してください（正の整数）。"}), 400
-        if not product_name or len(product_name) < 3:
-            return jsonify({"status": False, "message": "商品名は3文字以上で入力してください。"}), 400
-
+        if not selected_category or not price or not price.isdigit() or int(price) <= 0 or not product_name:
+            raise Exception("不正なリクエスト")
         # 商品化処理
         result = shop_manager.create_product(
             post_id=post_id,
@@ -673,13 +668,13 @@ def make_post_into_product(post_id):
 
         # 結果に基づいてレスポンスを生成
         if result["status"]:
-            return jsonify(result), 200
+            return redirect(url_for('display_product',product_id=result['product']['product_id']))
         else:
-            return jsonify(result), 400
+            raise Exception("データ形式が不正です")
 
     except Exception as e:
         app.logger.error(f"Error in make_post_into_product: {e}")
-        return jsonify({"status": False, "message": "内部エラーが発生しました。"}), 500
+        abort(400, description=str(e))        
 
 
 @app.route("/shop_page")
