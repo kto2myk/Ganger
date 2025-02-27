@@ -24,7 +24,16 @@
                             <img src="{{ detail.sender.profile_image}}" alt="">
                             <p>{{ detail.sender.username }}</p>
                         </a>
-                        <a class="post-noti" href="{{url_for('my_profile', id = detail.related_item_id) }}">ユーザープロフィール (ID: {{ detail.related_item_id }})
+                        <a class="post-noti" href="{{url_for('my_profile', id = detail.related_item_id) }}">
+                            <p>{{ notification.contents }}</p>
+                            <small>送信日時: {{ notification.sent_time }}</small>
+                        </a>
+                    {% elif detail.related_item_type == "shop" %}
+                        <a class="profile" href="{{ url_for('my_profile', id = detail.sender.id) }}">
+                            <img src="{{ detail.sender.profile_image}}" alt="">
+                            <p>{{ detail.sender.username }}</p>
+                        </a>
+                        <a class="product-noti" href="{{url_for('display_product', product_id = detail.related_item_id) }}">
                             <p>{{ notification.contents }}</p>
                             <small>送信日時: {{ notification.sent_time }}</small>
                         </a>

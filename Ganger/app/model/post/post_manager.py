@@ -36,7 +36,7 @@ class PostManager(DatabaseManager):
             img = self.make_square(img)  # **ここで正方形に加工**
             img.save(file_path, quality=95, optimize=True)  # 高品質保存
 
-    def make_square(self, img, background_color=(255, 255, 255)):
+    def make_square(self, img, background_color=(0, 0, 0)):
         """ 画像のアスペクト比を維持したまま、余白を追加して正方形にする """
         width, height = img.size
         new_size = max(width, height)  # 正方形のサイズ
@@ -190,7 +190,7 @@ class PostManager(DatabaseManager):
                 recommended_users = self.redis.get_ranking_ids(self.trending[4], offset=0, top_n=20)
                 if recommended_users:
                     following_users_id = recommended_users
-
+            
             liked_posts_subquery = Session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
             saved_posts_subquery = Session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
             reposted_posts_subquery = Session.query(Repost.post_id).filter(Repost.user_id == current_user_id).subquery()
@@ -198,7 +198,8 @@ class PostManager(DatabaseManager):
             blocked_by_subquery = Session.query(Block.user_id).filter(Block.blocked_user == current_user_id).subquery()
 
             # 🔥 `joinedload()` を追加して関連データを事前ロード（遅延ロードを防ぐ）
-            user_posts_query = Session.query(Post).filter(
+            user_posts_query = Session.query(Post,
+                exists().where(Shop.post_id == Post.post_id).label("productized")).filter(
                 Post.user_id.in_(following_users_id),
                 Post.reply_id == None,
                 ~Post.post_id.in_(select(liked_posts_subquery)),
@@ -215,7 +216,9 @@ class PostManager(DatabaseManager):
                 joinedload(Post.replies)
             )
 
-            reposted_posts_query = Session.query(Post).join(Repost, Repost.post_id == Post.post_id).filter(
+            reposted_posts_query = Session.query(Post,
+                exists().where(Shop.post_id == Post.post_id).label("productized")).join(
+                Repost, Repost.post_id == Post.post_id).filter(
                 Repost.user_id.in_(following_users_id),
                 Post.reply_id == None,
                 ~Post.post_id.in_(select(liked_posts_subquery)),
@@ -246,7 +249,7 @@ class PostManager(DatabaseManager):
 
             # 🔥 投稿データをフォーマット
             formatted_posts = []
-            for post in all_posts:
+            for post,productized in all_posts:
                 formatted_post = {
                     "is_me": Validator.decrypt(session['id']) == post.author.id,
                     "user_info":{
@@ -255,6 +258,7 @@ class PostManager(DatabaseManager):
                         "username": post.author.username,
                         "profile_image": url_for("static", filename=f"images/profile_images/{post.author.profile_image}")
                     },
+                    "productized":productized,
                     "post_id": Validator.encrypt(post.post_id),
                     "body_text": post.body_text,
                     "post_time": Validator.calculate_time_difference(post.post_time),
@@ -308,16 +312,12 @@ class PostManager(DatabaseManager):
         try:
             Session = self.make_session(Session)
             user_id = Validator.decrypt(session['id'])
-            print(user_id)
             post_ids = Validator.ensure_list(post_ids)
-            # post_ids を動的復号化
-            print(post_ids)
             # post_ids を動的復号化（整数っぽい値はそのまま int に変換）
             decrypted_ids = [
                 Validator.decrypt(post_id) if isinstance(post_id, str) and not post_id.isdigit() else int(post_id)
                 for post_id in post_ids
             ]
-            print(decrypted_ids)
             # ブロック関連のサブクエリ
             blocked_users_subquery = (
                 Session.query(Block.blocked_user)

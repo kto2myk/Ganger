@@ -85,7 +85,7 @@ function getPostData() {
                       reposted: reposted,
                       productized: productized
                     });
-                    
+                    console.log(`ステータス${JSON.stringify(postStatuses)}`)
                     // リポストされている場合はリポストしたユーザー名を表示
                     if (postData.repost_user) {
                       let repostUserID_unique = postData.repost_user.id;  // ✅ `postData.repost_user` を参照
@@ -238,7 +238,7 @@ function getPostData() {
                                   <option value="clothes">clothes</option>
                                   <option value="cap">caps</option>
                                   <option value="shoes">shoes</option>
-                                  <option value="accessory">accessory</option>
+                                  <option value="accessories">accessories</option>
                                 </select>
                                 <input type="text" name="price" placeholder="価格を入力" id="price-box-${postID}">
                                 <input type="text" name="name" placeholder=" 商品名を入力" id="name-box-${postID}">
@@ -251,11 +251,11 @@ function getPostData() {
             )
             // console.log(postListHTML);
             document.getElementById(`${nowPlace}`).innerHTML += postListHTML;
-            setTimeout(() => {
-              initializePostButtons(postStatuses)
-              console.log("遅延処理の実行")
-            },1000);
-            // initializePostButtons(postStatuses);
+            // setTimeout(() => {
+            //   initializePostButtons(postStatuses)
+            //   console.log("遅延処理の実行")
+            // },1000);
+            initializePostButtons(postStatuses);
             console.log("offset:", recommendedOffset, followingOffset);
             document.querySelectorAll('.splide').forEach(function (carousel) {
               new Splide(carousel).mount();

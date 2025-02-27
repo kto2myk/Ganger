@@ -66,7 +66,7 @@ class ShopManager(DatabaseManager):
             user_ids = [like.user_id for like in self.fetch(model=Like, filters={"post_id": post_id}, Session=Session)]
             if user_ids:
                 self.__notification_manager.create_full_notification(
-                    sender_id=3,  # session ID の復号化などが必要
+                    sender_id=Validator.decrypt(session['id']),  # session ID の復号化などが必要
                     recipient_ids=user_ids,
                     type_name="Productized",
                     contents=f"あなたが「いいね」した投稿が商品化されました: {name}",
