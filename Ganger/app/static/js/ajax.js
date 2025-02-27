@@ -50,16 +50,24 @@ function getPostData() {
                 dataType = data[0];
                 console.log(dataType);
 
+                const postStatuses = [];
+                if (data[1].posts.length === 0) {
+                  postListHTML = "<h1>投稿がありません</h1>";
+                };
                 data[1].posts.forEach(postData => {
                     let bodyText        = postData.body_text;
                     let commentCount    = postData.comment_count;
                     let images          = postData.images;
                     let isMe            = postData.is_me;
                     let likeCount       = postData.like_count;
+                    let liked           = postData.liked;
                     let postID          = postData.post_id;
                     let postTime        = postData.post_time;
                     let repostCount     = postData.repost_count;
+                    let reposted        = postData.reposted;
                     let savedCount      = postData.saved_count;
+                    let saved           = postData.saved;
+                    let productized     = postData.productized;
 
 
                     // ユーザー情報解凍
@@ -69,13 +77,21 @@ function getPostData() {
                     let userID          = userInfo.user_id;
                     let userName        = userInfo.username;
 
-
+                    // 各投稿のデータを配列に追加
+                    postStatuses.push({
+                      postId: postID,
+                      liked: liked,
+                      saved: saved,
+                      reposted: reposted,
+                      productized: productized
+                    });
+                    
                     // リポストされている場合はリポストしたユーザー名を表示
                     if (postData.repost_user) {
-                      let repostUserID_unique = repost_user.id;
-                      let repostUserID        = repost_user.user_id;
-                      let repostUserName      = repost_user.username
-                      
+                      let repostUserID_unique = postData.repost_user.id;  // ✅ `postData.repost_user` を参照
+                      let repostUserID        = postData.repost_user.user_id;
+                      let repostUserName      = postData.repost_user.username;
+
                       repostMessage = `
                         <a class="reposted_massage" href="/my_profile/${repostUserID_unique}">
                           ${repostUserName}さんがリポストしました
@@ -100,7 +116,7 @@ function getPostData() {
                     let isMeAreaHTML = "";
                     if (isMe) {
                       isMeAreaHTML = `
-                        <button id="product-button-${postID}" class="extension_button" popovertarget="product-popover-${postID}">
+                        <button id="product-button-${postID}" class="product_extension_button" popovertarget="product-popover-${postID}">
                             <?xml version="1.0" encoding="utf-8"?>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M9 11V6C9 4.34315 10.3431 3 12 3C13.6569 3 15 4.34315 15 6V10.9673M10.4 21H13.6C15.8402 21 16.9603 21 17.816 20.564C18.5686 20.1805 19.1805 19.5686 19.564 18.816C20 17.9603 20 16.8402 20 14.6V12.2C20 11.0799 20 10.5198 19.782 10.092C19.5903 9.71569 19.2843 9.40973 18.908 9.21799C18.4802 9 17.9201 9 16.8 9H7.2C6.0799 9 5.51984 9 5.09202 9.21799C4.71569 9.40973 4.40973 9.71569 4.21799 10.092C4 10.5198 4 11.0799 4 12.2V14.6C4 16.8402 4 17.9603 4.43597 18.816C4.81947 19.5686 5.43139 20.1805 6.18404 20.564C7.03968 21 8.15979 21 10.4 21Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -108,6 +124,17 @@ function getPostData() {
                           </button>
                       `;
                     };
+                    let isLikedHtml
+                    if (liked){
+                      isLikedHtml = ` <svg viewBox="0 0 24 24" class="svg-filled" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Z"></path>
+                        </svg>`;
+                    }else{
+                      isLikedHtml = `
+                            <svg viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z"></path>
+                        </svg>`;
+                    }
 
                     // console.log(`text"${bodyText}", commentCount"${commentCount}", imagepath"${images}", likeCount"${likeCount}", postID"${postID}", repostCount"${repostCount}", savedCount"${savedCount}", userInfo"${userInfo}", imageAreaHTML"${imageAreaHTML}"`);
 
@@ -142,12 +169,10 @@ function getPostData() {
                         <!-- いいねボタン -->
                         <button id="like-button-${postID}" class="extension_button">
                           <div class="svg-container">
-                            <svg viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Zm-3.585,18.4a2.973,2.973,0,0,1-3.83,0C4.947,16.006,2,11.87,2,8.967a4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,11,8.967a1,1,0,0,0,2,0,4.8,4.8,0,0,1,4.5-5.05A4.8,4.8,0,0,1,22,8.967C22,11.87,19.053,16.006,13.915,20.313Z"></path>
-                            </svg>
+                            ${isLikedHtml}
                           </div>
                         </button>
-                        
+                        <small>${likeCount}</small>
                         
                         <!-- コメントボタン -->
                         <button id="comment-button-${postID}" class="extension_button" popovertarget="comment-popover-${postID}">
@@ -159,7 +184,8 @@ function getPostData() {
                             </g>
                           </svg>
                         </button>
-                        
+                        <small>${commentCount}</small>
+
                         
                         <!-- リポストボタン -->
                         <button id="repost-button-${postID}" class="extension_button">
@@ -171,15 +197,17 @@ function getPostData() {
                             <polyline id="primary-4" data-name="primary" points="16 12 18 10 20 12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5;"></polyline>
                           </svg>
                         </button>
-
-                        ${isMeAreaHTML}
+                        <small>${repostCount}</small>
 
                       <!-- 保存ボタン -->
                         <button id="save-button-${postID}" class="extension_button">
                           <?xml version="1.0" encoding="utf-8"?>
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bookmark"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                         </button>
+                        <small>${savedCount}</small>
+                        ${isMeAreaHTML}
                       </div>
+                      
 
                       <p class="body_text">${bodyText}</p>
                       <p class="post_time">${postTime}</p>
@@ -193,7 +221,6 @@ function getPostData() {
                           <a href="/my_profile/${postID}">
                             <img src="${profileImagePath}" alt="プロフィール画像">
                           </a>
-                          <img src="${images[0].img_path}" alt="test">
                           <form action="/submit_comment, post_id=${postID}" method="post">
                             <input type="text" id="comment-input-${postID}" name="comment" placeholder="コメントを入力">
                             <button id="comment-submit-${postID}">送信する</button>
@@ -206,12 +233,12 @@ function getPostData() {
                         <div class="modal-content">
                             <span class="close" data-modal="product-modal-${postID}">&times;</span>
                             <h2>プロダクト詳細を編集</h2>
-                            <form action="/make_post_into_product, post_id=${postID}" method="post">
+                            <form action="/make_post_into_product/${postID}" method="post">
                                 <select name="category" id="category-box-${postID}">
-                                  <option value="tops">tops</option>
-                                  <option value="pants">pants</option>
-                                  <option value="items">items</option>
-                                  <option value="other">other</option>
+                                  <option value="clothes">clothes</option>
+                                  <option value="cap">caps</option>
+                                  <option value="shoes">shoes</option>
+                                  <option value="accessory">accessory</option>
                                 </select>
                                 <input type="text" name="price" placeholder="価格を入力" id="price-box-${postID}">
                                 <input type="text" name="name" placeholder=" 商品名を入力" id="name-box-${postID}">
@@ -224,7 +251,11 @@ function getPostData() {
             )
             // console.log(postListHTML);
             document.getElementById(`${nowPlace}`).innerHTML += postListHTML;
-            initializePostButtons();
+            setTimeout(() => {
+              initializePostButtons(postStatuses)
+              console.log("遅延処理の実行")
+            },1000);
+            // initializePostButtons(postStatuses);
             console.log("offset:", recommendedOffset, followingOffset);
             document.querySelectorAll('.splide').forEach(function (carousel) {
               new Splide(carousel).mount();

@@ -8,8 +8,10 @@
     border-bottom: 1px solid #ddd;
     position: fixed;
     width: 100%;
+    height: 50px;
     top: 0;
     z-index: 1000;
+    left: 0;
 }
 
 .shop-header-left {
@@ -66,6 +68,11 @@
     color: #a46a9a;
 }
 
+/* メインコンテンツ用のマージンを追加 */
+body {
+    margin-top: 70px; /* ヘッダーの高さ + 余白 */
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .shop-header {
@@ -78,4 +85,7 @@
         flex-wrap: wrap;
         justify-content: center;
     }
-} 
+    body {
+        margin-top: 90px; /* ヘッダーが大きくなる場合の調整 */
+    }
+}

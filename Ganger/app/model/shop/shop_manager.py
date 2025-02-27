@@ -1,6 +1,6 @@
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
-from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like,Cart,CartItem,Sale,SalesItem,Image
+from Ganger.app.model.model_manager.model import CategoryMaster,ProductCategory,Shop,Post,Like,Cart,CartItem,Sale,SalesItem,Image,User
 from Ganger.app.model.validator.validate import Validator
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
@@ -609,10 +609,10 @@ class ShopManager(DatabaseManager):
             category_results = [{"category_name": category.category_name, "post_count": 0, "posts": []} for category in categories]
 
             category_ids = [category.category_id for category in categories]
-            self.redis.add_score(ranking_key=self.trending[3],item_id=category_ids,score=7)
+            self.redis.add_score(ranking_key=self.trending[3], item_id=category_ids, score=7)
             app.logger.info(f"Category IDs found: {category_ids}")
 
-            # 2. カテゴリーに紐づく投稿を画像とともに一括取得
+            # 2. カテゴリーに紐づく投稿を画像とともに一括取得（作成者情報・価格を追加）
             results = (
                 Session.query(
                     CategoryMaster.category_name,
@@ -620,11 +620,15 @@ class ShopManager(DatabaseManager):
                     Post.post_id,
                     Post.body_text,
                     Post.post_time,
-                    Image.img_path
+                    Image.img_path,
+                    User.username,         # ✅ 作成者の username
+                    User.profile_image,    # ✅ 作成者の profile image
+                    Shop.price             # ✅ 商品の価格
                 )
                 .join(ProductCategory, CategoryMaster.category_id == ProductCategory.category_id)
                 .join(Shop, Shop.product_id == ProductCategory.product_id)
                 .join(Post, Post.post_id == Shop.post_id)
+                .join(User, User.id == Post.user_id)  # ✅ 投稿者情報を取得
                 .outerjoin(Image, Image.post_id == Post.post_id)  # 画像がない場合も考慮
                 .filter(CategoryMaster.category_id.in_(category_ids))
                 .order_by(Image.img_order)
@@ -635,22 +639,26 @@ class ShopManager(DatabaseManager):
 
             # 投稿データの整形
             post_data = {}
-            for category_name, product_id,post_id, body_text, post_time, img_path  in results:
+            for category_name, product_id, post_id, body_text, post_time, img_path, username, profile_image, price in results:
                 if post_id not in post_data:
-                    self.redis.add_score(ranking_key=self.trending[2],item_id=product_id,score=5)
+                    self.redis.add_score(ranking_key=self.trending[2], item_id=product_id, score=5)
                     post_data[post_id] = {
                         "post_id": Validator.encrypt(post_id),
                         "product_id": Validator.encrypt(product_id),
                         "body_text": body_text,
                         "post_time": Validator.calculate_time_difference(post_time),
                         "category_name": category_name,
-                        "image_url": url_for('static', filename=f"images/post_images/{img_path}") if img_path else None
+                        "image_url": url_for('static', filename=f"images/post_images/{img_path}") if img_path else None,
+                        "username": username,  # ✅ 追加
+                        "profile_image": url_for('static', filename=f"images/profile_images/{profile_image}") if profile_image else None,  # ✅ 追加
+                        "price": price  # ✅ 追加
                     }                   
 
             # カテゴリー結果に紐づく投稿を挿入
             for category in category_results:
                 category["posts"] = [post for post in post_data.values() if post["category_name"] == category["category_name"]]
                 category["post_count"] = len(category["posts"])
+
             self.pop_and_close(Session)
             app.logger.info(f"Final formatted results: {len(category_results)} categories")
 

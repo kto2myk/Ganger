@@ -239,7 +239,7 @@ def my_profile(id):
         return ("ユーザーデータの取得に失敗しました。")
     
 
-@app.route("/user/update_info",methods = ["GET","POST"])
+@app.route("/my_profile/update_info",methods = ["GET","POST"])
 def update_info():
     if request.method == "GET":
         user = db_manager.fetch_one(model=User,filters={"id":Validator.decrypt(session['id'])})
@@ -606,8 +606,8 @@ def repost(post_id):
 
         result = post_manager.create_repost(post_id=post_id, user_id=sender_id)
         # 成功時の応答
-        if result:
-            return jsonify({'success': True, 'message': 'リポストが完了しました！'}), 200
+        if result['success']:
+            return jsonify(result), 200
         else:
             return jsonify({'success': False, 'message': 'リポストに失敗しました。'}), 400
         
@@ -692,6 +692,19 @@ def shop_page():
 
     return render_template("shop_page.html", products=shop_data,trending_products =trending_products)      
 
+@app.route("/shop/fetch_products_by_category/<category_name>")
+def fetch_products_by_category(category_name):
+    try:
+        # カテゴリ名に基づいて商品を取得
+        products = shop_manager.search_categories(query=category_name)
+
+        if not products:
+            abort(404,description = "商品が見つかりません")
+
+        return render_template("shop_categorized_page.html", products=products)
+    except Exception as e:
+        app.logger.error(f"Error in fetch_products_by_category: {e}")
+        abort(500,description = "エラーが発生しました")
 @app.route("/display_product/<product_id>")
 def display_product(product_id):
     product = shop_manager.fetch_multiple_products_images(product_ids=product_id)

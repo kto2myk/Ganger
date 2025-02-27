@@ -13,8 +13,8 @@
 <nav class="main-menu">
     <div class="scrollbar" id="style-1">
         <a href="{{ url_for('home') }}" class="header_logo">
-            <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-shop-site" class="shop_button">
-            <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-sns-site" class="sns_button">
+            <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-shop-site" class="shop_button">
+            <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-sns-site" class="sns_button">
         </a>
         <ul>
             <li>                                   
@@ -32,44 +32,32 @@
             <!-- 他のメニュー項目... -->
             <li>                                   
                 <a href="{{ url_for('complete_checkout', after_checkout=False )}}">
-                    <i class="fa fa-tshirt fa-lg"></i>
-                    <span class="nav-text">トップス</span>
+                    <i class="fa fa-clock fa-lg"></i>
+                    <span class="nav-text">購入履歴</span>
                 </a>
             </li>   
             <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-coat fa-lg"></i>
-                    <span class="nav-text">ジャケット/アウター</span>
+                <a href="{#{{url_for('cloces')}}#}">
+                    <i class="fa fa-t-shirt fa-lg"></i>
+                    <span class="nav-text"> 衣類</span>
                 </a>
-            </li>   
-            <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-trousers fa-lg"></i>
-                    <span class="nav-text">パンツ</span>
-                </a>
-            </li>   
-            <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-skert fa-lg"></i>
-                    <span class="nav-text">スカート</span>
-                </a>
-            </li>   
+            </li>    
             <li>                                   
                 <a href="{#{{url_for('******')}}#}">
                     <i class="fa fa-shoe-prints fa-lg"></i>
-                    <span class="nav-text">シューズ</span>
+                    <span class="nav-text"> シューズ</span>
                 </a>
             </li>   
             <li>                                   
                 <a href="{#{{url_for('******')}}#}">
                     <i class="fa fa-hat-cowboy fa-lg"></i>
-                    <span class="nav-text">帽子</span>
+                    <span class="nav-text"> 帽子</span>
                 </a>
             </li>   
             <li>                                   
                 <a href="{#{{url_for('******')}}#}">
                     <i class="fa fa-gem fa-lg"></i>
-                    <span class="nav-text">アクセサリー</span>
+                    <span class="nav-text"> アクセサリー</span>
                 </a>
             </li>
         </ul>
@@ -78,17 +66,11 @@
 
 <nav class="category-nav">
     <a href="{# {{ url_for(######) }} #}"><button data-category="all">すべてのアイテム</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="accessories">アクセサリー</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="web-items">ウェブアイテム</button></a>
+    <a href="{# {{ url_for(######) }} #}"><button data-category="accessories">衣類</button></a>
+    <a href="{# {{ url_for(######) }} #}"><button data-category="web-items">帽子・靴</button></a>
     <a href="{# {{ url_for(######) }} #}"><button data-category="shoes">シューズ</button></a>
 </nav>
 
-<nav class="link-nav">
-    <a href="#" data-link="all" class="active">すべて</a>
-    <a href="#" data-link="men">メンズ</a>
-    <a href="#" data-link="women">レディース</a>
-    <a href="#" data-link="kids">キッズ</a>
-</nav>
 
 <main id="content">
     <div class="swiper">
@@ -168,14 +150,6 @@
         });
     });
 
-    /*性別*/
-    document.querySelectorAll('.link-nav a').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.querySelectorAll('.link-nav a').forEach(a => a.classList.remove('active'));
-            link.classList.add('active');
-        });
-    });
 
     /*スライドショー*/
     document.addEventListener('DOMContentLoaded', function() {

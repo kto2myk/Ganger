@@ -130,6 +130,92 @@
                 text-align: center;
             }
         }
+
+        .purchase-history {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .purchase-history h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .purchase-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .purchase-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .purchase-header h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .purchase-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .purchase-info p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .items-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .item-card {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .item-image img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .item-details strong {
+            color: #333;
+            display: inline-block;
+            width: 80px;
+        }
+
+        .item-details p {
+            margin: 5px 0;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -160,31 +246,43 @@
         </div>
     {% endif %}
 
-    <h2>購入履歴</h2>
-    {% for sale in history %}
-        <h2>支払い方法: {{ sale['payment_method'] }}</h2>
-        <p>合計金額: ¥{{ sale['total_amount'] }}</p>
-        <p>支払いステータス: {{ sale['payment_status'] }}</p>
-        <p>購入日: {{ sale['created_at'] }}</p>
-
-        <h3>購入アイテム</h3>
-        <ul>
-            {% for item in sale['items'] %}
-                <li>
-                    <strong>商品名:</strong> {{ item['product_name'] }} <br>
-                    <strong>価格:</strong> ¥{{ item['price'] }} <br>
-                    <strong>数量:</strong> {{ item['quantity'] }} <br>
-                    <strong>小計:</strong> ¥{{ item['subtotal'] }} <br>
-
-                    {% if item['image_url'] %}
-                        <img src="{{ item['image_url'] }}" alt="{{ item['product_name'] }}" width="150">
-                    {% else %}
-                        <p>画像がありません</p>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-        <hr>
-    {% endfor %}
+    
+    <div class="purchase-history">
+        <h2>購入履歴</h2>
+        {% for sale in history %}
+            <div class="purchase-card">
+                <div class="purchase-header">
+                    <div class="purchase-info">
+                        <p><strong>支払い方法:</strong> {{ sale['payment_method'] }}</p>
+                        <p><strong>合計金額:</strong> ¥{{ sale['total_amount'] }}</p>
+                        <p><strong>支払いステータス:</strong> {{ sale['payment_status'] }}</p>
+                        <p><strong>購入日:</strong> {{ sale['created_at'] }}</p>
+                    </div>
+                </div>
+    
+                <h3>購入アイテム</h3>
+                <ul class="items-list">
+                    {% for item in sale['items'] %}
+                        <li class="item-card">
+                            <div class="item-image">
+                                {% if item['image_url'] %}
+                                    <img src="{{ item['image_url'] }}" alt="{{ item['product_name'] }}">
+                                {% else %}
+                                    <div class="no-image">画像がありません</div>
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <p><strong>商品名:</strong> {{ item['product_name'] }}</p>
+                                <p><strong>価格:</strong> ¥{{ item['price'] }}</p>
+                                <p><strong>数量:</strong> {{ item['quantity'] }}</p>
+                                <p><strong>小計:</strong> ¥{{ item['subtotal'] }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+    
 </body>
 </html>

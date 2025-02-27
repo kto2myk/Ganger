@@ -193,6 +193,7 @@ class PostManager(DatabaseManager):
 
             liked_posts_subquery = Session.query(Like.post_id).filter(Like.user_id == current_user_id).subquery()
             saved_posts_subquery = Session.query(SavedPost.post_id).filter(SavedPost.user_id == current_user_id).subquery()
+            reposted_posts_subquery = Session.query(Repost.post_id).filter(Repost.user_id == current_user_id).subquery()
             blocked_users_subquery = Session.query(Block.blocked_user).filter(Block.user_id == current_user_id).subquery()
             blocked_by_subquery = Session.query(Block.user_id).filter(Block.blocked_user == current_user_id).subquery()
 
@@ -202,6 +203,7 @@ class PostManager(DatabaseManager):
                 Post.reply_id == None,
                 ~Post.post_id.in_(select(liked_posts_subquery)),
                 ~Post.post_id.in_(select(saved_posts_subquery)),
+                ~Post.post_id.in_(select(reposted_posts_subquery)),
                 ~Post.user_id.in_(select(blocked_users_subquery)),
                 ~Post.user_id.in_(select(blocked_by_subquery))
             ).options(
@@ -554,7 +556,7 @@ class PostManager(DatabaseManager):
                     sender_id=sender_id,
                     recipient_ids=post.user_id,  # 受信者は単一でもリスト形式で処理可能
                     type_name="LIKE",
-                    contents=f"{session['username']}さんがあなたの投稿にいいねしました",
+                    contents=f"{session['username']}さんがあなたの投稿にいいねしました。",
                     related_item_id=post_id,
                     related_item_type="post",
                     Session=Session
@@ -676,30 +678,34 @@ class PostManager(DatabaseManager):
                 "user_id": user_id,
                 "post_id": post_id,
             }
-
-            # 重複チェックを含めて挿入
-            unique_check = {"user_id": user_id, "post_id": post_id}
-            repost = self.insert(model=Repost, data=repost_data, unique_check=unique_check,Session=Session)
-
+            repost = Session.query(Repost).filter(Repost.user_id == user_id,Repost.post_id == post_id).first()
             if repost:
-                # 通知を発行
-                post_author = self.fetch_one(model=Post, filters={"post_id": post_id}, relationships=["author"],Session=Session)
-                self.__notification_manager.create_full_notification(
-                    sender_id=user_id,
-                    recipient_ids=[post_author.author.id],  # 投稿の作成者に通知
-                    type_name="REPOST",
-                    contents=f"{session['username']}さんがあなたの投稿をリポストしました。",
-                    related_item_id=post_id,
-                    related_item_type="post",
-                    Session=Session
-                )
+                self.__notification_manager.delete_notification(related_item_id=post_id,related_item_type="post",sender_id=user_id,Session=Session)
+                Session.delete(repost)
+                status = "removed"
             else:
-                repost = None
-                app.logger.info("リポストはすでに存在します。")
+            # 重複チェックを含めて挿入
+                repost = self.insert(model=Repost, data=repost_data, unique_check=repost_data,Session=Session)
+
+                if repost:
+                    # 通知を発行
+                    post_author = self.fetch_one(model=Post, filters={"post_id": post_id}, relationships=["author"],Session=Session)
+                    self.__notification_manager.create_full_notification(
+                        sender_id=user_id,
+                        recipient_ids=[post_author.author.id],  # 投稿の作成者に通知
+                        type_name="REPOST",
+                        contents=f"{session['username']}さんがあなたの投稿をリポストしました。",
+                        related_item_id=post_id,
+                        related_item_type="post",
+                        Session=Session
+                    )
+                    status = "added"
+                else:
+                    raise Exception("何かのエラーが発生しました。")
 
             self.make_commit_or_flush(Session)
             self.redis.add_score(ranking_key=self.trending[0],item_id=post_id,score=10)
-            return repost
+            return {"success":True,"status": status}
 
 
         except Exception as e:
