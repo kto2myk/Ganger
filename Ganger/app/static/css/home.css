@@ -118,6 +118,10 @@ header {
     color: #777;
 }
 
+.error {
+    background-color: #ffe6e6; /* 🟥 背景を薄い赤に */
+}
+
 .post_container {
     width: 50vh;
     height: 100%;

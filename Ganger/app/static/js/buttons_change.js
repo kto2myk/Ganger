@@ -31,6 +31,12 @@ export function initializePostButtons(postStatuses) {
         const postId = post.dataset.postId || post.closest('.post_buttons')?.dataset.postId;
         if (!postId) return;
 
+        // ✅ コメントモーダルの取得 & バリデーション設定
+        setupCommentValidation(postId);
+
+        // ✅ プロダクトモーダルの取得 & バリデーション設定
+        setupProductValidation(postId);
+
         // postStatuses 配列から対応する投稿データを探す
         const postStatus = postStatuses.find(status => status.postId === postId) || {};
         const liked = postStatus.liked || false;
@@ -164,4 +170,73 @@ export function initializePostButtons(postStatuses) {
         }
 
     });
+}
+
+// **📝 コメントモーダルのバリデーション**
+function setupCommentValidation(postId) {
+    const commentInput = document.getElementById(`comment-input-${postId}`);
+    const submitButton = document.getElementById(`comment-submit-${postId}`);
+
+    if (!commentInput || !submitButton) return;
+
+    function validateComment() {
+        if (commentInput.value.trim() === "") {
+            submitButton.disabled = true; // 🚫 送信不可
+            submitButton.style.opacity = "0.5";
+        } else {
+            submitButton.disabled = false; // ✅ 送信可能
+            submitButton.style.opacity = "1";
+        }
+    }
+
+    // 初回適用
+    validateComment();
+
+    // 入力ごとにバリデーションを適用
+    commentInput.addEventListener("input", validateComment);
+}
+
+// **📝 プロダクトモーダルのバリデーション**
+function setupProductValidation(postId) {
+    const priceInput = document.getElementById(`price-box-${postId}`);
+    const nameInput = document.getElementById(`name-box-${postId}`);
+    const submitButton = document.getElementById(`product-submit-${postId}`);
+
+    if (!priceInput || !nameInput || !submitButton) return;
+
+    function validateProductForm() {
+        let isValid = true;
+
+        // ✅ 価格は半角数字のみ許容（空白も禁止）
+        if (!/^\d+$/.test(priceInput.value.trim())) {
+            isValid = false;
+            priceInput.classList.add("error");
+        } else {
+            priceInput.classList.remove("error");
+        }
+
+        // ✅ 商品名は空白禁止
+        if (nameInput.value.trim() === "") {
+            isValid = false;
+            nameInput.classList.add("error");
+        } else {
+            nameInput.classList.remove("error");
+        }
+
+        // **バリデーション結果でボタンを有効/無効化**
+        if (!isValid) {
+            submitButton.disabled = true; // 🚫 送信不可
+            submitButton.style.opacity = "0.5";
+        } else {
+            submitButton.disabled = false; // ✅ 送信可能
+            submitButton.style.opacity = "1";
+        }
+    }
+
+    // 初回適用
+    validateProductForm();
+
+    // 入力ごとにバリデーションを適用
+    priceInput.addEventListener("input", validateProductForm);
+    nameInput.addEventListener("input", validateProductForm);
 }
