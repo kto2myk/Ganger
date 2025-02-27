@@ -31,7 +31,7 @@
                   </p>
                   <p class='field'>
                     <label for='pass'>E-MAIL</label>
-                    <input type='password' id='pass' name='email' title='メールアドレス' />
+                    <input type='email' id='pass' name='email' title='メールアドレス' />
                     <span id='valida' class='i i-close'></span>
                   </p>
 
@@ -40,6 +40,15 @@
                     <input type='password' id='pass' name='password' title='パスワード' />
                     <span id='valida' class='i i-close'></span>
                   </p>      
+                  <p class='field error'>
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                          {% set category, message = messages[0] %}
+                            {{ message }}
+                      {% endif %}
+                    {% endwith %}
+                  </p>
+  
                   <input type='submit' id='do_login' value='SIGN-UP' title='サインアップ' />
                 </form>
             </div>

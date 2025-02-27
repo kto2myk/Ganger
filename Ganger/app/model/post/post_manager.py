@@ -116,7 +116,7 @@ class PostManager(DatabaseManager):
             for index, file in enumerate(Validator.ensure_list(image_files), start=1):
                 original_filename = secure_filename(file.filename)
                 if not self.is_allowed_extension(original_filename):
-                    raise ValueError(f"File type not allowed: {original_filename}")
+                    raise ValueError(f"ファイル形式が許容されていません: {original_filename}")
 
                 ext = os.path.splitext(original_filename)[1].lower()
                 filename = self.generate_filename(user_id, post_id, index, ext)

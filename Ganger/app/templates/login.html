@@ -25,12 +25,19 @@
                 <p class='field'>
                   <label for='user'>UserID/E-MAIL</label>
                   <input type='text' id='user' name='identifier' title='ユーザーID/メールアドレス' />
-                  <span id='valida' class='i i-warning'></span>
                 </p>
                 <p class='field'>
                   <label for='pass'>PASSWORD</label>
                   <input type='password' id='pass' name='password' title='パスワード' />
                   <span id='valida' class='i i-close'></span>
+                </p>
+                <p class='field error'>
+                  {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% set category, message = messages[0] %}
+                          {{ message }}
+                    {% endif %}
+                  {% endwith %}
                 </p>
       
                 <input type='submit' id='do_login' value='LOGIN' title='ログイン' />
