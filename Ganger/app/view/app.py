@@ -245,6 +245,7 @@ def update_info():
         user = db_manager.fetch_one(model=User,filters={"id":Validator.decrypt(session['id'])})
         return render_template("my_info.html",user=user)
     else:
+        
             result = user_manager.updata_user_info(
                 user_id = request.form.get('user_id',None),
                 username = request.form.get('username',None),
@@ -860,7 +861,6 @@ def logout():
     
 if __name__ == "__main__":
     try:
-        subprocess.run(["pip", "install", "-r", "requirements.txt"], check=True)
         app.run(host="0.0.0.0", port=80, debug=True)
     except KeyboardInterrupt:
         print("\n[INFO] Server 停止")
