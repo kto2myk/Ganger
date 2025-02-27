@@ -1,7 +1,7 @@
 {% extends "extends/extends_base.html" %}
 {% block title %}Search/Ganger{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="../static/css/profile.css">
+<link rel="stylesheet" href="../static/css/search.css">
 <link rel="stylesheet" href="../static/css/home.css">
 <!-- <script src="../static/js/ajax.js"></script> -->
 {% endblock %}
@@ -11,23 +11,27 @@
 
     <div id="search-tabs">
         <div id="search-tabs-container">
-            <a href="javascript:void(0);" data-tab="USER" class="tab-link {% if tab == 'USER' %}active{% endif %}">アカウント</a>
-            <a href="javascript:void(0);" data-tab="TAG" class="tab-link {% if tab == 'TAG' %}active{% endif %}">タグ</a>
-            <a href="javascript:void(0);" data-tab="CATEGORY" class="tab-link {% if tab == 'CATEGORY' %}active{% endif %}">カテゴリー</a>
+            <a href="javascript:void(0);" data-tab="USER" class="tab-link">アカウント</a>
+            <a href="javascript:void(0);" data-tab="TAG" class="tab-link">タグ</a>
+            <a href="javascript:void(0);" data-tab="CATEGORY" class="tab-link">カテゴリー</a>
         </div>
     </div>
 
     <div class="search-view-results">
         {% if query %}
-            <h1>検索結果: "{{ query }}"</h1>
+            <h1>&ensp;検索結果: 「{{ query }}」</h1>
             {% if tab == 'USER' %}
-                <h2>ユーザー</h2>
+                <!-- <h2>ユーザー</h2> -->
                 {% if results.users %}
-                    <ul>
+                    <ul class="results-container">
                         {% for user in results.users %}
-                        <a href="{{ url_for('my_profile',id = user.id) }}">
-                            <li>{{ user.username }} ({{ user.user_id }})</li>
-                        </a>
+                        <ol class="user-info-container">
+                            <a href="{{ url_for('my_profile',id = user.id) }}">
+                                <img src="{{ user.profile_image }}">
+                                <h3>&ensp;{{ user.username }}</h3>
+                                <small>&ensp;({{ user.user_id }})</small>
+                            </a>
+                        </ol>
                         {% endfor %}
                     </ul>
                 {% else %}
@@ -36,21 +40,19 @@
             {% elif tab == 'TAG' %}
                 <!-- <h2>タグ</h2> -->
                 {% if results.tags %}
-                    <ul>
+                    <ul class="results-container">
                         {% for tag in results.tags %}
-                            <li>
-                                <!-- <h3>{{ tag.tag_text }} ({{ tag.post_count }}件)</h3> -->
+                            <ol class="tag-info-container">
+                                <h3>{{ tag.tag_text }}</h3>
+                                <small>({{ tag.post_count }}件)</small>
+                                <ol class="triple-tag-image">
                                 {% for post in tag.posts %}
-                                    <ol>
-                                        <a href="{{ url_for('display_post', post_id=post.post_id) }}">
-                                            <img src="{{ post.image_url }}" alt="投稿画像">
-                                        </a>
-                                    </ol>
-                                    {% if loop.index % 3 == 0 %}
-                                    <div class="clear"></div>
-                                    {% endif %}
+                                    <a href="{{ url_for('display_post', post_id=post.post_id) }}" class="image-box">
+                                        <img src="{{ post.image_url }}" alt="投稿画像">
+                                    </a>
                                 {% endfor %}
-                            </li>
+                                </ol>
+                            </ol>
                         {% endfor %}
                     </ul>
                 {% else %}
@@ -59,33 +61,25 @@
             {% elif tab == 'CATEGORY' %}
                 <h2>カテゴリ</h2>
                 {% if results.categories %}
-                    <ul>
+                    <ul class="results-container">
                         {% for category in results.categories %}
-                            <li>
-                                <h3>{{ category.category_name }}</h3>
-                                <p>投稿数: {{ category.post_count }}</p>
-                                {% if category.posts %}
-                                    <ul>
-                                        {% for post in category.posts %}
-                                            <ol>
-                                                <div style="display: flex; align-items: center; gap: 15px;">
-                                                    <a href=" {{ url_for('display_product', product_id=post.product_id) }}">
-                                                        {% if post.image_url %}
-                                                            <img src="{{ post.image_url }}" alt="投稿画像" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px;">
-                                                        {% else %}
-                                                            <div style="width: 100px; height: 100px; background: #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                                                画像なし
-                                                            </div>
-                                                    </a>
-                                                    {% endif %}
+                        <ol class="category-info-container">
+                            <h3>{{ category.category_name }}</h3>
+                            <small>投稿数: {{ category.post_count }}</small>
+                            <ol class="triple-category-image">
+                            {% for post in category.posts %}
+                                        <a href=" {{ url_for('display_product', product_id=post.product_id) }}"class="image-box">
+                                            {% if post.image_url %}
+                                                <img src="{{ post.image_url }}" alt="投稿画像">
+                                            {% else %}
+                                                <div style="width: 100px; height: 100px; background: #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                                    画像なし
                                                 </div>
-                                            </ol>
-                                        {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    <p>このカテゴリに関連する投稿はありません。</p>
-                                {% endif %}
-                            </li>
+                                            {% endif %}
+                                        </a>
+                            {% endfor %}
+                            </ol>
+                        </ol>
                         {% endfor %}
                     </ul>
                 {% else %}
@@ -94,6 +88,7 @@
             {% else %}
                 <p>適切なタブを選択してください。</p>
             {% endif %}
+        {% endif %}
     </div>
 
 
@@ -103,17 +98,18 @@
 
 
 
-        <!-- トレンドタグ表示 -->
-        {% if trending_tags %}
-            {%for tag in trending_tags %}
-                <a href="{{ url_for('search', query=tag, tab='TAG') }}">
-                    <div class="trend-tag">
-                        <p>{{ tag }}</p>
-                    </div>
-                </a>
-            {% endfor %}
-        {% endif %}
-</div>
+    <!-- トレンドタグ表示 -->
+    {% if trending_tags %}
+        <div class="trend-tags-container">
+            <h2>&ensp;&ensp;人気のタグ</h2>
+        {%for tag in trending_tags %}
+            <a href="{{ url_for('search', query=tag, tab='TAG') }}">
+                &ensp;&ensp;#{{ tag }}
+            </a>
+        {% endfor %}
+        </div>
+    {% endif %}
+    </div>
 <div class="right_bar" style="margin-top: 10dvh;">
     {% include 'components/component_trend.html' %}
 </div>
