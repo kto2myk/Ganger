@@ -246,7 +246,7 @@
         extractTags();
         const cursorPosition = contentInput.selectionStart;
         const text = contentInput.value.slice(0, cursorPosition);
-        const tagMatches = text.match(/(?:^|\s)(#\w+)$/);
+        const tagMatches = text.match(/(?:^|\s)(#([\w\u3040-\u30FF\u4E00-\u9FFF]+))$/);
 
         if (tagMatches) {
             const tagQuery = tagMatches[1].slice(1);
@@ -321,8 +321,8 @@
 
     function extractTags() {
         const content = contentInput.value;
-        const tags = content.match(/(?:^|\s)(#\w+)/g) || [];
-        const cleanTags = tags.map(tag => tag.trim().replace('#', ''));
+        const tags = content.match(/(?:^|\s)(#([\w\u3040-\u30FF\u4E00-\u9FFF]+))/g) || [];
+        const cleanTags = tags.map(tag => tag.trim().replace(/^#/, ''));
         tagListInput.value = cleanTags.join(',');
     }
 
