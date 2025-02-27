@@ -1,0 +1,141 @@
+.contents {
+    margin-left: 19dvw;
+    width: 80dvw;
+    min-height: 80vh;
+    position: relative;
+}
+
+.contents ul {
+    margin: 0;
+    padding-top: 10dvh;
+    padding-bottom: 10dvh;
+}
+
+.user-name-area {
+    width: 100%;
+    height: 10dvh;
+    margin: 0 auto;
+    justify-content: center;
+    border-bottom: solid 1px #ddd;
+    position: fixed;
+    z-index: 9998;
+    background-color: #fff;
+}
+
+.user-name-area h2 {
+    line-height: 10dvh;
+    margin: 0;
+}
+
+.messages {
+    width: 100%;
+    height: auto;
+}
+
+.message {
+    padding: 0;
+    display: flex;
+    height: auto;
+}
+
+.user-info-container {
+    display: flex;
+    width: auto;
+    height: 50px;
+}
+
+.message img {
+    width: auto;
+    margin-right: 20px;
+    border: solid 1px #ddd;
+    border-radius: 50%;
+}
+
+.message p {
+    display: inline-block;
+    border-radius: 5px;
+    width: auto;
+    max-width: 200px;
+    height: 100%;
+    word-wrap: break-word;
+    padding: 5px;
+    background-color: #eee;
+}
+
+.is_me {
+    justify-content: end;
+    margin-right: 2%;
+}
+
+.is_me p {
+    background-color: #f8d3e0;
+}
+
+#status-is-not-me {
+    justify-content: start !important;
+}
+
+.status-container {
+    display: grid;
+    padding-top: 20px;
+    width: 60px;
+    height: auto;
+    justify-content: end;
+    align-items: end;
+}
+
+.status-container small {
+    height: auto;
+    text-align: end;
+    color: #aaa;
+}
+
+
+.input-container {
+    display: flex;
+    align-items: center;
+    width: 80%;
+    height: 8dvh;
+    position: fixed;
+    z-index: 9998;
+    bottom: 0;
+    border-top: solid 1px #ddd;
+    background-color: #fff;
+}
+
+.input-container form {
+    margin: 10dvw;
+    display: flex;
+    width: 80%;
+    height: 50%;
+}
+
+#input-message-text {
+    width: 80%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    padding-left: 5%;
+    border: solid 1px #ddd;
+    border-radius: 20px;
+}
+
+#message-button {
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    margin-left: 5dvh;
+    object-fit: contain;
+    background-color: #a46a9a;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+#message-button:hover {
+    filter: brightness(0.7);
+}
+
+#message-button svg {
+    scale: 1.5;
+    filter: invert(100%);
+}
