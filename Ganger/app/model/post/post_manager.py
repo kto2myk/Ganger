@@ -3,8 +3,8 @@ import uuid
 from PIL import Image as PILImage
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from sqlalchemy.sql import select,exists
-from sqlalchemy.orm  import joinedload
+from sqlalchemy.sql import select,exists,func
+from sqlalchemy.orm  import joinedload,aliased
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager
@@ -715,89 +715,56 @@ class PostManager(DatabaseManager):
             raise
 
 
-    # def make_post_metadata(
-    #     self,
-    #     post_id: Union[int, str],
-    #     body_text: str,
-    #     post_time: Union[str, datetime],
-    #     post_images: Optional[List[Any]],
-    #     count_like: int,
-    #     count_comment: int,
-    #     count_repost: int,
-    #     count_saved: int,
-    #     author_id: Union[int, str],  # 組み込みのidとの衝突回避のため、author_idに変更
-    #     username: str,
-    #     user_id: Union[int, str],
-    #     profile_image: str,
-    # ) -> Dict[str, Any]:
-    #     """
-    #     投稿関連のメタデータを整形して返します。  
-    #     入力値の型・値に不備がある場合は ValueError を発生させます。
-        
-    #     :param post_id: 投稿の一意な識別子
-    #     :param body_text: 投稿本文
-    #     :param post_time: 投稿日時 (datetimeオブジェクトまたはISO形式の文字列)
-    #     :param post_images: 投稿に含まれる画像のリスト。Noneの場合は空リストに変換されます。
-    #     :param count_like: いいねの数
-    #     :param count_comment: コメントの数
-    #     :param count_repost: リポストの数
-    #     :param count_saved: 保存された数
-    #     :param author_id: 投稿者の一意な識別子
-    #     :param username: 投稿者のユーザー名
-    #     :param user_id: 投稿者のユーザーID（表示用など）
-    #     :param profile_image: プロフィール画像のURLまたはパス
-    #     :return: 整形済みの投稿メタデータ辞書
-    #     :raises ValueError: パラメータの型や値に不正があった場合
-    #     """
-    #     try:
-    #         # post_time の型チェックと変換
-    #         if isinstance(post_time, datetime):
-    #             post_time_str = post_time.isoformat()
-    #         elif isinstance(post_time, str):
-    #             post_time_str = post_time
-    #         else:
-    #             raise TypeError("post_time は datetime オブジェクトまたは文字列である必要があります。")
-            
-    #         # post_images が None の場合は空リストに変換、リスト以外の場合はエラー
-    #         if post_images is None:
-    #             post_images = []
-    #         elif not isinstance(post_images, list):
-    #             raise TypeError("post_images はリストまたは None である必要があります。")
-            
-    #         # 各カウント値が整数であることをチェック
-    #         if not isinstance(count_like, int):
-    #             raise TypeError("count_like は整数である必要があります。")
-    #         if not isinstance(count_comment, int):
-    #             raise TypeError("count_comment は整数である必要があります。")
-    #         if not isinstance(count_repost, int):
-    #             raise TypeError("count_repost は整数である必要があります。")
-    #         if not isinstance(count_saved, int):
-    #             raise TypeError("count_saved は整数である必要があります。")
-            
-    #         # ここで他のパラメータ（post_id, author_id, user_id など）の型チェックも必要に応じて追加可能です
-    #         # 例:
-    #         if not isinstance(username, str):
-    #             raise TypeError("username は文字列である必要があります。")
-    #         if not isinstance(profile_image, str):
-    #             raise TypeError("profile_image は文字列である必要があります。")
-            
-    #         metadata = {
-    #             "post_id": post_id,
-    #             "body_text": body_text,
-    #             "post_time": post_time_str,
-    #             "images": post_images,
-    #             "like_count": count_like,
-    #             "comment_count": count_comment,
-    #             "repost_count": count_repost,
-    #             "saved_count": count_saved,
-    #             "author_id": author_id,
-    #             "username": username,
-    #             "user_id": user_id,
-    #             "profile_image": profile_image,
-    #         }
-            
-    #         return metadata
 
-    #     except Exception as e:
-    #         # エラー発生時はエラー内容を含めた例外を発生させる
-    #         raise ValueError(f"投稿メタデータの作成中にエラーが発生しました: {e}")
+    def get_post_comments(self, post_id, Session=None):
+        """
+        指定された投稿IDに紐づくコメント情報（コメント、コメントしたユーザーの情報、コメント数）を取得する
+        :param session: SQLAlchemyのセッション
+        :param post_id: 取得対象の投稿ID
+        :return: コメントリスト、コメント数
+        """
+        try:
+            Session = self.make_session(Session)
+            # Userテーブルのエイリアスを作成（コメント投稿者用）
+            if isinstance(post_id,str):
+                post_id = Validator.decrypt(post_id)
+            commenter = aliased(User)
+
+            # クエリ実行
+            comments_data = (
+                Session.query(
+                    Post.post_id.label("comment_id"),  # コメントのID
+                    Post.body_text.label("comment_text"),  # コメント本文
+                    Post.post_time.label("comment_time"),  # コメント投稿時間
+                    commenter.id.label("id"),
+                    commenter.username.label("username"),  # コメントしたユーザー名
+                    commenter.profile_image.label("profile_image")  # コメントしたユーザーのプロフィール画像
+                )
+                .join(commenter, Post.user_id == commenter.id)  # コメント投稿者の情報を取得
+                .filter(Post.reply_id == post_id)  # 指定の投稿IDに紐づくコメントを取得
+                .order_by(Post.post_time.asc())  # 投稿の古い順に並べる
+                .all()
+            )
+
+            # コメント数を取得
+            comment_count = Session.query(func.count(Post.post_id)).filter(Post.reply_id == post_id).scalar()
+
+            # データを辞書のリストとして返す
+            comments_list = [
+                {
+                    "comment_id": comment.comment_id,
+                    "comment_text": comment.comment_text,
+                    "comment_time": Validator.calculate_time_difference(comment.comment_time),
+                    "id":Validator.encrypt(comment.id),
+                    "username": comment.username,
+                    "profile_image":url_for("static", filename=f"images/profile_images/{comment.profile_image}"),
+                }
+                for comment in comments_data
+            ]
+            self.pop_and_close(Session)
+            return comments_list, comment_count
+        
+        except Exception as e:
+            app.logger.error(str(e))
+            self.session_rollback(Session)
+            return None

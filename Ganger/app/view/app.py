@@ -494,16 +494,16 @@ def search():
         
 @app.route('/display_post/<post_id>', methods=['GET'])
 def display_post(post_id):
-
     try:
         # デバッグ用ログ
         # 投稿データを取得
         post_details = post_manager.get_posts_details(post_id)
+        comments,comment_count = post_manager.get_post_comments(post_id)
         app.logger.info(f"Post details: {post_details}")
         # テンプレートにデータを渡す
         if post_details:
             post_details = post_details[0]
-        return render_template("display_post.html", post=post_details)
+        return render_template("display_post.html", post=post_details, comments = comments,comment_count=comment_count)
     except ValueError as e:
         app.logger.error(f"ValueError: {e}")
         return "指定された投稿が見つかりませんでした。", 404

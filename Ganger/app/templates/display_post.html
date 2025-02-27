@@ -153,7 +153,74 @@
             </form>
         </div>
     </div>
-
+    <!-- コメントがあれば表示 -->
+    {% if comments %}
+        <!-- 各ユーザーのコメントとユーザー情報の表示 -->
+        {% for comment in comments%}
+            <details>
+                <summary>コメントを表示 {{comment_count}}</summary>
+                <div class="detail-contents">
+                    <a href="{{ url_for('my_profile', id=comment.id) }} ">
+                        <img src="{{comment.profile_image}}" alt="{{comment.username}}さんのプロフィールイメージ">
+                        <p>{{comment.username}}</p>
+                    </a>
+                    <p>{{comment.comment_text}}</p>
+                    <small>{{comment.comment_time}}</small>
+                </div>
+            </details>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- detailsとsummary,矢印CSSの例
+    <style>
+        /* `details` 全体のスタイル */
+        details {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s ease;
+        }
+        
+        /* `summary` のスタイル */
+        summary {
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px;
+            background-color: #e3e3e3;
+            border-radius: 5px;
+            list-style: none;
+        }
+        
+        /* `summary` のデフォルトの三角アイコンを非表示 */
+        summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        /* `details` が開いた時のスタイル */
+        details[open] {
+            background-color: #e6f7ff;  /* 開いたら背景色変更 */
+            border-color: #00aaff;
+        }
+        
+        /* `summary` がクリックされたときのスタイル */
+        details[open] summary {
+            background-color: #00aaff;
+            color: white;
+        }
+        
+        /* 中の詳細コンテンツ */
+        .details-content {
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333;
+        }
+        </style> -->
 </div>
 </body>
 </html>
