@@ -233,6 +233,23 @@ header {
     scale: 1.2;
 }
 
+.body_text a {
+    display: inline-block;
+    color:#a46a9a;
+    padding: 5px 10px;
+    font-weight: bold;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background-color 0.1s ease-in-out, border-radius 0.1s ease-in-out;
+    border-radius: 15px;
+}
+
+.body_text a:hover {
+    color: #FFF;
+    background-color: #794e76;
+}
+
+
 .post_time {
     position: absolute;
     bottom: 5;

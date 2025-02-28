@@ -83,6 +83,10 @@ function switchFollowingArea(){
     recommended_container_style.style.display = "none";
 }
 
+export function formatBodyText(bodyText) {
+  return bodyText.replace(/#(\S+)/g, '<a href="/search?query=$1&tab=TAG">#$1</a> ');
+}
+
 // 投稿データ非同期取得処理
 function getPostData() {
     fetch(`/${requestTo}`)
@@ -110,7 +114,7 @@ function getPostData() {
               }                
 
               data[1].posts.forEach(postData => {
-                    let bodyText        = postData.body_text;
+                    let bodyText        = formatBodyText(postData.body_text);
                     let commentCount    = postData.comment_count;
                     let images          = postData.images;
                     let isMe            = postData.is_me;

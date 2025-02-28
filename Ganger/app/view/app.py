@@ -5,8 +5,7 @@ from flask_redis import FlaskRedis
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
-import subprocess
-import requests
+import re
 from Ganger.app.model.model_manager.model import User
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
@@ -67,6 +66,12 @@ def check_session():
             return redirect(url_for("login"))
 def make_session_permanent(): #sessionの一括永続化
     session.permanent = True
+
+# Jinja カスタムフィルターを作成
+def convert_tags(text):
+    return re.sub(r'#(\S+)', r'<a href="/search?query=\1&tab=TAG">#\1</a>', text)
+# Flask にフィルターを登録
+app.jinja_env.filters['convert_tags'] = convert_tags
 
 with app.app_context():
     db_manager = DatabaseManager(app)

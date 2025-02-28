@@ -85,7 +85,7 @@ details[open] {
 }
 
 #account-area:hover {
-    filter: brightness(0.7);
+    filter: brightness(0.95);
 }
 
 #account-area a img {
@@ -114,10 +114,30 @@ details[open] {
     width: 100%;
 }
 
+
 .comment-text p {
     width: 90%;
     height: auto;
 }
+
+#comment-text a {
+    display: inline-block;
+    color: #a46a9a; /* 初期状態は紫 */
+    padding: 5px 10px;
+    font-weight: bold;
+    font-size: 14px;
+    text-decoration: none; /* 初期状態ではアンダーラインなし */
+    border-radius: 15px;
+    line-height: 1.5;
+    text-align: center;
+    transition: color 0.1s ease-in-out, text-decoration 0.1s ease-in-out;
+}
+
+#comment-text a:hover {
+    color: #7a007a; /* 少し暗い紫に変更 */
+    text-decoration: underline; /* ホバー時にアンダーラインを追加 */
+}
+
 
 .custom-summary {
     display: block;

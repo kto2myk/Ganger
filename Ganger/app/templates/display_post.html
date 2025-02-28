@@ -14,7 +14,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             initializeSplide("#post-splide")
         });      
-        
+
         window.onload = function() {
             const spinner = document.getElementById('loading');
             spinner.classList.add('loaded');
@@ -58,7 +58,10 @@
         </div>
     </div>
 
-    <p class="body_text">{{ post.body_text }}</p>
+    <p class="body_text" id="body_text">   
+        <p class="body_text">{{ post.body_text | convert_tags | safe }}</p>
+    </p>
+
     <p class="post_time">投稿時間: {{ post.post_time }}</p>
 
     <div class="post_buttons" data-post-id="{{ post.post_id }}">
@@ -174,8 +177,8 @@
                             </a>
                             
                             <small>{{comment.comment_time}}&ensp;</small>
-                            <div class="comment-text">
-                                <p>{{comment.comment_text}}</p>
+                            <div class="comment-text" id="comment-text">
+                                <p>{{comment.comment_text | convert_tags | safe}}</p>
                             </div>
                         </ol>
                     {% endfor %}
