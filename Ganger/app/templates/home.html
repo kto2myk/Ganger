@@ -2,16 +2,21 @@
 {% block title %}home/Ganger{% endblock %}
 {% block head %}
   <link rel="stylesheet" href="../static/css/splide.min.css">
-  
+  <link rel="stylesheet" href="../static/css/home.css">
+{% endblock %}
+{% include 'components/component_loading.html' %}
+{% block header %}
+  {% include 'components/component_header.html' %}
+{% endblock %}
+{% block content %}
     <!-- メインコンテンツエリア -->
     <div class="main-contents">
-    
-      <div id="following-contents"></div>
-
-      <div id="recommended-contents"></div>
-    
-    </div><!-- main-contents -->
-
+      <div id="following-contents">
+      </div>
+      <div id="recommended-contents">
+        </div>
+    </div>
+  
       <!-- 投稿ボタン -->
       <div id = "post_button" style="position: fixed; bottom: 10%; left: 70%; z-index: 9998;">
         <a href="{{ url_for('create_post') }}">

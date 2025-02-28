@@ -10,6 +10,25 @@ let nowPlace = "following-contents";
 let requestTo = "";
 let dataType ="";
 
+// 「投稿がありません」のメッセージを表示・非表示する関数
+function toggleNoPostMessage(show) {
+  let container = document.getElementById(nowPlace);
+  let noPostMessage = document.getElementById("no-post-message");
+
+  if (!show) {  
+      // **投稿がある場合 → 「投稿がありません。」を削除**
+      if (noPostMessage) {
+          noPostMessage.remove();
+      }
+      return;
+  }
+
+  // **投稿がない場合のみ作成**
+  if (!noPostMessage) {
+      container.insertAdjacentHTML("beforeend", `<h1 id="no-post-message" style="text-align: center; color: gray; margin-top: 20px;">投稿がありません</h1>`);
+  }
+}
+
 export function initializeAjaxSplide(targetSelector) {
   document.querySelectorAll(targetSelector).forEach(splideElement => {
       console.log(`🔍 Splide適用対象:`, splideElement);
@@ -84,11 +103,13 @@ function getPostData() {
 
                 const postStatuses = [];
                 if (data[1].posts.length === 0) {
-                  postListHTML = "<h1>投稿がありません</h1>";
-                  document.getElementById(`${nowPlace}`).innerHTML = postListHTML;
+                  toggleNoPostMessage(true);  // 投稿がないので表示
                   return;
-                };
-                data[1].posts.forEach(postData => {
+              } else {
+                  toggleNoPostMessage(false); // 投稿があるので非表示
+              }                
+
+              data[1].posts.forEach(postData => {
                     let bodyText        = postData.body_text;
                     let commentCount    = postData.comment_count;
                     let images          = postData.images;
