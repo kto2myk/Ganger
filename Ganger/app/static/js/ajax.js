@@ -314,16 +314,7 @@ function getPostData() {
             // ボタンリスナーの初期化
             initializePostButtons(postStatuses);
             initializeAjaxSplide('.splide[data-post-id]');
-
-            // **新しく追加された投稿のみ** に Splide を適用
-            // setTimeout(() => {
-            //   document.querySelectorAll('.splide[data-post-id]:not(.is-initialized)').forEach(splideElement => {
-            //       initializeAjaxSplide(`.splide[data-post-id="${splideElement.getAttribute("data-post-id")}"]`);
-            //   });
-            // }, 100);          
-            setTimeout(() => {
-              initializeAjaxSplide('.splide[data-post-id]');
-          }, 100);
+            initializeAjaxSplide('.splide[data-post-id]');
             console.log("offset:", recommendedOffset, followingOffset);
 
           }})
