@@ -1,4 +1,4 @@
-import { initializePostButtons } from "/static/js/buttons_change.js"; // ✅ ./ を忘れない！
+import { initializePostButtons } from "/static/js/buttons_change.js";
 
 let loading = false;
 let hasMoreData = true;
@@ -9,6 +9,38 @@ let totalPost = 0;
 let nowPlace = "following-contents";
 let requestTo = "";
 let dataType ="";
+
+export function initializeAjaxSplide(targetSelector) {
+  document.querySelectorAll(targetSelector).forEach(splideElement => {
+      console.log(`🔍 Splide適用対象:`, splideElement);
+
+      let slideCount = splideElement.querySelectorAll(".splide__slide").length;
+      let splideOptions = {
+          type: slideCount > 1 ? "loop" : "slide",
+          perPage: 1,
+          pagination: slideCount > 1,
+          arrows: slideCount > 1,
+      };
+
+      try {
+          // **すでに Splide が適用されている場合は破棄して再適用**
+          if (splideElement.splide) {
+              console.warn("⚠️ 既存の Splide を破棄して再適用:", splideElement);
+              splideElement.splide.destroy();
+          }
+
+          let instance = new Splide(splideElement, splideOptions);
+          instance.mount();
+
+          splideElement.splide = instance; // **新しいインスタンスを保存**
+          splideElement.classList.add("is-initialized");
+
+          console.log("✅ Splide 再適用完了:", instance);
+      } catch (error) {
+          console.error("❌ Splide 再適用エラー:", error);
+      }
+  });
+}
 
 // スクロールが一番下に到達したかを判定する関数
 function isBottomReached() {
@@ -53,6 +85,8 @@ function getPostData() {
                 const postStatuses = [];
                 if (data[1].posts.length === 0) {
                   postListHTML = "<h1>投稿がありません</h1>";
+                  document.getElementById(`${nowPlace}`).innerHTML = postListHTML;
+                  return;
                 };
                 data[1].posts.forEach(postData => {
                     let bodyText        = postData.body_text;
@@ -85,7 +119,6 @@ function getPostData() {
                       reposted: reposted,
                       productized: productized
                     });
-                    console.log(`ステータス${JSON.stringify(postStatuses)}`)
                     // リポストされている場合はリポストしたユーザー名を表示
                     if (postData.repost_user) {
                       let repostUserID_unique = postData.repost_user.id;  // ✅ `postData.repost_user` を参照
@@ -155,7 +188,7 @@ function getPostData() {
 
                         <!-- 投稿画像エリア -->
                         <div class="image_area">
-                          <section>
+                          <section data-post-id="${postID}" class="splide">
                             <div class="splide__track">
                               <ul class="splide__list">
                                 ${imageAreaHTML}
@@ -253,15 +286,21 @@ function getPostData() {
             )
             // console.log(postListHTML);
             document.getElementById(`${nowPlace}`).innerHTML += postListHTML;
-            // setTimeout(() => {
-            //   initializePostButtons(postStatuses)
-            //   console.log("遅延処理の実行")
-            // },1000);
+            // ボタンリスナーの初期化
             initializePostButtons(postStatuses);
+            initializeAjaxSplide('.splide[data-post-id]');
+
+            // **新しく追加された投稿のみ** に Splide を適用
+            // setTimeout(() => {
+            //   document.querySelectorAll('.splide[data-post-id]:not(.is-initialized)').forEach(splideElement => {
+            //       initializeAjaxSplide(`.splide[data-post-id="${splideElement.getAttribute("data-post-id")}"]`);
+            //   });
+            // }, 100);          
+            setTimeout(() => {
+              initializeAjaxSplide('.splide[data-post-id]');
+          }, 100);
             console.log("offset:", recommendedOffset, followingOffset);
-            document.querySelectorAll('.splide').forEach(function (carousel) {
-              new Splide(carousel).mount();
-              });
+
           }})
       }
 

@@ -4,21 +4,21 @@
     <link rel="stylesheet" href="../static/css/style.css">
     <link rel="stylesheet" href="../static/css/splide.min.css">
     <link rel="stylesheet" href="../static/css/cssanimation.min.css">
-    <link rel="stylesheet" href="../static/css/modal.css">
     <link rel="stylesheet" href="../static/css/home.css">
     <link rel="stylesheet" href="../static/css/post.css">
     <script type="text/javascript" src="../static/js/main.js"></script>
     <script src="../static/js/node_modules/@splidejs/splide/dist/js/splide.min.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.splide').forEach(function (carousel) {
-        new Splide(carousel).mount();
-    });
-    });      
-    window.onload = function() {
-        const spinner = document.getElementById('loading');
-        spinner.classList.add('loaded');
-    }
+    <script type="module">
+        import { initializeSplide } from "/static/js/splide_manager.js";
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeSplide("#post-splide")
+        });      
+        
+        window.onload = function() {
+            const spinner = document.getElementById('loading');
+            spinner.classList.add('loaded');
+        }
     </script>
     
     <script type="module">
@@ -46,7 +46,7 @@
     </div>
     <div class="post_container">
         <div class="image_area">
-            <section id="image-carousel-{{ post['post_id'] }}" class="splide">
+            <section id="post-splide" class="splide">
                 <div class="splide__track">
                     <ul class="splide__list">
                         {% for image in post.images %}
@@ -124,13 +124,17 @@
     <div id="comment-modal-{{ post.post_id }}" class="modal">
         <div class="modal-content">
             <span class="close" data-modal="comment-modal-{{ post.post_id }}">&times;</span>
-            <p>{{ post.user_info.username }}</p>
-            <a href="/my_profile/{{ post.user_info.id }}">
-            <img src="{{ post.user_info.profile_image }}" alt="プロフィール画像">
+
+            <a id="modal-user" href="/my_profile/{{ post.user_info.id }}">
+                <img src="{{ post.user_info.profile_image }}" alt="プロフィール画像">
+                <p>{{ post.user_info.username }}</p>
             </a>
-            <form action="/submit_comment/{{ post.post_id }}" method="post">
+
+            <form class="comment-input" action="/submit_comment/{{ post.post_id }}" method="post">
             <input type="text" id="comment-input-{{ post.post_id }}" name="comment" placeholder="コメントを入力">
-            <button id="comment-submit-{{ post.post_id }}">送信する</button>
+            <button id="comment-submit-{{ post.post_id }}">
+                <img src="../static/images/templates_images/message-icon.svg"></img>
+            </button>
             </form>
         </div>
     </div>

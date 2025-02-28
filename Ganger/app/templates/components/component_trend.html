@@ -1,63 +1,62 @@
 <div id="products_container"></div>
 
-<script>
-async function getItemData() {
-    let products = await fetch(`/fetch_trending_products`);
-    let productJson = await products.json();
-    console.log(`productJson:`)
-    console.log(productJson)
-    let productData = productJson[1];
-    console.log(`productData`)
-    console.log(productData)
-    let productInfo = productData["products"];
-    console.log(`productInfo`)
-    console.log(productInfo)
-    let errormessage = "";
+<script type="module">
+    import { initializeSplide } from "/static/js/splide_manager.js";
+    async function getItemData() {
+        let products = await fetch(`/fetch_trending_products`);
+        let productJson = await products.json();
+        console.log(`productJson:`)
+        console.log(productJson)
+        let productData = productJson[1];
+        console.log(`productData`)
+        console.log(productData)
+        let productInfo = productData["products"];
+        console.log(`productInfo`)
+        console.log(productInfo)
+        let errormessage = "";
 
 
-    // if (productData.message) {
-    //     console.log(productData.message)
-    //     return
-    // }else{
-    //     errormessage = "商品がありません"
-    // };
+        // if (productData.message) {
+        //     console.log(productData.message)
+        //     return
+        // }else{
+        //     errormessage = "商品がありません"
+        // };
 
-// memo:href="/display_product/${productID}"
+    // memo:href="/display_product/${productID}"
 
-    let productsListHTML = "";
-    let imagePaths = [];
+        let productsListHTML = "";
+        let imagePaths = [];
 
-        productsListHTML += `
+            productsListHTML += `
 
-            <div class="splide">
-                <div class="splide__track">
-                    <ul class="splide__list">
-                    ${productInfo.map((product, index) => `
-                        <li class="splide__slide">
-                                <a class="products-link" href="display_product/${product.product_id}">
-                                    <div class="wrapper">
-                                        <img src="${product.images[0].img_path}" alt="投稿画像">
-                                    </div>
-                                    <div class="product-info">
-                                        <h3>${product.name}</h3>
-                                        <p>${product.price}円</p>
-                                    </div>
-                                </a>
-                        </li>
-                    `).join("")}
-                    </ul>
+                <div id="product-splide" class="splide">
+                    <div class="splide__track">
+                        <ul class="splide__list">
+                        ${productInfo.map((product, index) => `
+                            <li class="splide__slide">
+                                    <a class="products-link" href="display_product/${product.product_id}">
+                                        <div class="wrapper">
+                                            <img src="${product.images[0].img_path}" alt="投稿画像">
+                                        </div>
+                                        <div class="product-info">
+                                            <h3>${product.name}</h3>
+                                            <p>${product.price}円</p>
+                                        </div>
+                                    </a>
+                            </li>
+                        `).join("")}
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
-    document.getElementById("products_container").innerHTML += productsListHTML;
-    document.querySelectorAll('.splide').forEach(function (carousel) {
-        new Splide(carousel).mount();
-    });
+        document.getElementById("products_container").innerHTML += productsListHTML;
+        initializeSplide("#product-splide")
+    }
 
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    getItemData()
-})
+    document.addEventListener('DOMContentLoaded', () => {
+        getItemData()
+    })
 </script>
+
