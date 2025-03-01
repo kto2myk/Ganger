@@ -132,6 +132,19 @@ def signup():
             app.logger.error(f"Signup failed: {error}")
             return redirect(url_for("signup"))
         
+# @app.route("/delete/acount")
+# def delete_user():
+#     try:
+#         result = user_manager.delete_user()
+#         if result['success']:
+#             return jsonify(result),200
+#         else:
+#             return jsonify(result),500
+        
+#     except Exception as e:
+#         app.logger.error(str(e))
+#         return jsonify({"success":False,"message":str(e)})
+
 @app.route("/home")
 def home():
     try:
@@ -333,6 +346,18 @@ def create_post():
 def create_design():
     return render_template("create_design.html")
 
+@app.route('/delete_post/<post_id>')
+def delete_post(post_id):
+    try:
+        result = post_manager.delete_post(post_id)
+        if result['success']:
+            return jsonify(result),200
+        else:
+            return jsonify(result),400
+    except Exception as e:
+        app.logger.error(str(e))
+        return jsonify({"error":str(e)}),500
+    
 @app.route('/submit_comment/<string:post_id>', methods=['POST'])
 def submit_comment(post_id):
 

@@ -768,3 +768,55 @@ class PostManager(DatabaseManager):
             app.logger.error(str(e))
             self.session_rollback(Session)
             return None
+        
+
+    def delete_post(self, post_ids, Session=None):
+        try:
+            app.logger.info("Starting delete_post method...")
+
+            # セッション作成
+            Session = self.make_session(Session)
+            post_ids = Validator.ensure_list(post_ids)
+
+            # post_id の復号処理（内包表記を使用）
+            valid_post_ids = [
+                Validator.decrypt(post_id) if isinstance(post_id, str) else post_id
+                for post_id in post_ids
+            ]
+
+            if not valid_post_ids:
+                raise Exception("Valid post IDs not found")
+
+            # 投稿を取得
+            posts = Session.query(Post).filter(Post.post_id.in_(valid_post_ids)).all()
+            if not posts:
+                raise Exception(f"Posts not found for IDs: {valid_post_ids}")
+
+            app.logger.info(f"Found {len(posts)} posts for deletion.")
+
+            # 画像の削除
+            post_folder = app.config["POST_FOLDER"]
+            for post in posts:
+                images = Session.query(Image).filter_by(post_id=post.post_id).all()
+                for image in images:
+                    image_path = os.path.join(post_folder, image.img_path)
+                    if os.path.exists(image_path):
+                        os.remove(image_path)
+                        app.logger.info(f"Successfully deleted image: {image_path}")
+                    else:
+                        app.logger.warning(f"Image file not found: {image_path}")
+
+            # DBから投稿を削除
+            for post in posts:
+                Session.delete(post)
+
+            # コミット
+            self.make_commit_or_flush(Session)
+            app.logger.info(f"Successfully deleted {len(posts)} posts.")
+
+            return {"success": True, "message": f"Deleted {len(posts)} posts successfully"}
+
+        except Exception as e:
+            app.logger.error(f"Error occurred in delete_post: {str(e)}", exc_info=True)
+            self.session_rollback(Session)
+            return {"success": False, "message": f"Failed to delete posts: {str(e)}"}

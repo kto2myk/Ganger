@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash # パ�
 from werkzeug.utils import secure_filename
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベース操作用
 from Ganger.app.model.notification.notification_manager import NotificationManager
+from Ganger.app.model.post.post_manager import PostManager
 from Ganger.app.model.model_manager.model import User,Post,Follow,Block,Repost,CartItem,Shop,Like,SavedPost,SavedProduct
 from flask import session, url_for  # セッション管理、画像パス生成用
 from Ganger.app.model.validator.validate import Validator # バリデーション用
@@ -248,6 +249,8 @@ class UserManager(DatabaseManager):
             user = Session.query(User).filter_by(id=id).first()
             self.register_session(user)
             self.make_commit_or_flush(Session)
+
+            session.pop('id',None)
             return {"success":True, "message":"ユーザー情報が更新されました"}
         
         except ValueError as ve:
@@ -260,7 +263,49 @@ class UserManager(DatabaseManager):
             self.app.logger.error(e)
             return    {"success":False, "message":"ユーザー情報更新に失敗しました"}
 
-            
+    def delete_user(self, Session=None):
+        try:
+
+            # セッション作成
+            Session = self.make_session(Session)
+            user_id = Validator.decrypt(session.get('id'))
+            # ユーザーの投稿IDを取得
+            post_ids = [post.post_id for post in Session.query(Post).filter_by(user_id=user_id).all()]
+            self.app.logger.info(f"User {user_id} has {len(post_ids)} posts to delete.")
+
+            # 投稿の削除（画像を削除するために `delete_post` を使用）
+            if post_ids:
+                post_manager = PostManager()
+                delete_result = post_manager.delete_post(post_ids, Session=Session)
+                if not delete_result["success"]:
+                    self.pop_and_close(Session)
+                    return delete_result  # 投稿削除でエラーが出た場合はそのまま返す
+
+            # ユーザー削除（カスケード設定あり）
+            user = Session.query(User).filter_by(id=user_id).first()
+            if not user:
+                raise Exception("User not found")
+            else:
+                if user.profile_image != "default-profile.png":
+                    profile_folder = self.app.config['PROFILE_FOLDER']
+                    img_path = os.path.join(profile_folder, user.profile_image)
+                    if os.path.exists(img_path):
+                        os.remove(img_path)
+                        self.app.logger.info("delete profile_image")
+                    else:
+                        self.app.logger.warning("profile path not found")
+
+            Session.delete(user)
+            self.make_commit_or_flush(Session)
+            self.app.logger.info(f"User {user_id} deleted successfully.")
+
+            return {"success": True, "message": f"User {user_id} deleted successfully"}
+
+        except Exception as e:
+            self.app.logger.error(f"Error occurred in delete_user: {str(e)}", exc_info=True)
+            self.session_rollback(Session)
+            return {"success": False, "message": f"Failed to delete user: {str(e)}"}
+
             
     def get_user_profile_with_posts(self, user_id,Session=None):
         """
