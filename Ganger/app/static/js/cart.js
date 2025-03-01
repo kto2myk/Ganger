@@ -93,9 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', async function() {
             if (confirm('この商品をカートから削除しますか？')) {
                 const cartItem = this.closest('.cart-item');
-                const productId = cartItem.dataset.productId
+                const productId = cartItem.dataset.product_id
                 const itemPrice = parseFloat(cartItem.dataset.price);
-
                 try {
                     const response = await fetch('/remove_from_cart', {
                         method: 'POST',
