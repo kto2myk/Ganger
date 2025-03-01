@@ -13,7 +13,7 @@ body {
 
 .container {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 0 auto 75px;
     padding: 20px;
     position: relative;
     z-index: 1;
@@ -23,8 +23,8 @@ body {
     background-color: white;
     padding: 20px 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    width: 100%;
+    margin: 0 0 20px 55px;
+    width: calc(100% - 55px); 
 }
 
 .cart-header h1 {
@@ -171,6 +171,11 @@ background-color: #e0e0e0;
 }
 
 @media (max-width: 768px) {
+    .container {
+        margin-left: 65px;
+        padding: 10px;
+    }
+
     .cart-content {
         flex-direction: column;
     }

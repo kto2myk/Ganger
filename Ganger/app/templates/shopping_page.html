@@ -3,185 +3,131 @@
 {% block title %}ショップページ{% endblock %}
 
 {% block extra_css %}
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background-color: #f4f4f4;
-      padding: 10px 20px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .product-page {
-      display: flex;
-      max-width: 1200px;
-      margin: 76.8px auto 20px; /* headerの高さ(56.8px) + padding(上下10px) = 76.8px */
-      gap: 20px;
-    }
-
-    .product-image-section {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      width: 100%;
-      max-width: 500px;
-      aspect-ratio: 1;
-    }
-
-    .image-slider {
-      display: flex;
-      transition: transform 0.3s ease;
-      width: 100%;
-      height: 100%;
-    }
-
-    .main-image {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      flex: 0 0 100%;
-    }
-
-    .slider-buttons {
-      position: absolute;
-      width: calc(100% - 20px);  
-      top: 50%;
-      left: 10px;
-      transform: translateY(-50%);
-      display: flex;
-      justify-content: space-between;
-      pointer-events: none;
-    }
-
-    .slider-button {
-      background-color: rgba(0, 0, 0, 0.5);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      cursor: pointer;
-      border-radius: 50%;
-      pointer-events: auto;
-      z-index: 10;
-    }
-
-    .product-info-section {
-      flex: 1;
-      padding: 20px;
-    }
-
-    .product-name {
-      font-size: 24px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .product-name .like {
-      font-size: 20px;
-      color: #888;
-      cursor: pointer;
-    }
-
-    .product-name .like.liked {
-      color: #f00;
-    }
-
-    .product-price {
-      font-size: 20px;
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    .quantity {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .quantity button {
-      width: 30px;
-      height: 30px;
-      border: 1px solid #ddd;
-      background-color: #fff;
-      cursor: pointer;
-      font-size: 18px;
-    }
-
-    .quantity span {
-      font-size: 18px;
-    }
-
-    .product-colors, .product-sizes {
-      margin-bottom: 20px;
-    }
-
-    .size-option {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-right: 10px;
-      cursor: pointer;
-      background-color: #fff;
-    }
-
-    .size-option.selected {
-      background-color: #000;
-      color: #fff;
-    }
-
-    .add-to-cart, .add-to-favorites {
-      display: block;
-      width: 100%;
-      padding: 15px;
-      margin-bottom: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      background-color: #333;
-      color: #fff;
-    }
-
-    .add-to-favorites {
-      background-color: #f4f4f4;
-      color: #333;
-    }
-  </style>
+<link rel="stylesheet" href="{{url_for('static', filename='css/shopping_page.css')}}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hamburger_menu.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-  <main class="product-page" data-product-id="{{ product['product_id'] }}">
+<nav class="main-menu">
+  <div class="scrollbar" id="style-1">
+      <a href="{{ url_for('home') }}" class="header_logo">
+          <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-shop-site" class="shop_button">
+          <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-sns-site" class="sns_button">
+      </a>
+      <ul>
+          <li>                                   
+              <a href="{{url_for('home')}}">
+                  <i class="fa fa-home fa-lg"></i>
+                  <span class="nav-text">Home</span>
+              </a>
+          </li>
+          <li>
+              <a href="{{ url_for('notifications')}}">
+                  <i class="fa fa-bell"></i>
+                  <span class="nav-text">お知らせ</span>
+                  <!-- <svg data-icon-name="notification-bell" data-style="line" id="notification-bell" class="icon line" width="24" height="24"> -->
+                  <path d="M19.38,14.38a2.12,2.12,0,0,1,.62,1.5h0A2.12,2.12,0,0,1,17.88,18H6.12A2.12,2.12,0,0,1,4,15.88H4a2.12,2.12,0,0,1,.62-1.5L6,13V9a6,6,0,0,1,6-6h0a6,6,0,0,1,6,6v4ZM15,18H9a3,3,0,0,0,3,3h0A3,3,0,0,0,15,18Z" id="primary"></path>
+                  </svg>
+              </a>
+          </li>
+          <li>                                   
+              <a href="{{url_for('my_profile',id = session['id'])}}">
+                  <i class="fa fa-user fa-lg"></i>
+                  <span class="nav-text">Profile</span>
+              </a>
+          </li>
+          <li>
+              <a href="{{ url_for('display_cart') }}">
+                  <i class="fa fa-shopping-cart"></i>
+                  <span class="nav-text">カート一覧</span>
+              </a>
+          </li>
+          <li>                                   
+              <a href="{{ url_for('complete_checkout', after_checkout=False )}}">
+                  <i class="fa fa-clock fa-lg"></i>
+                  <span class="nav-text">購入履歴</span>
+              </a>
+          </li>   
+          <li>                                   
+              <a href="/shop/fetch_products_by_category/clothes">
+                  <i class="fa fa-t-shirt fa-lg"></i>
+                  <span class="nav-text"> 衣類</span>
+              </a>
+          </li>    
+          <li>                                   
+              <a href="/shop/fetch_products_by_category/shoes">
+                  <i class="fa fa-shoe-prints fa-lg"></i>
+                  <span class="nav-text"> シューズ</span>
+              </a>
+          </li>   
+          <li>                                   
+              <a href="/shop/fetch_products_by_category/cap">
+                  <i class="fa fa-hat-cowboy fa-lg"></i>
+                  <span class="nav-text"> 帽子</span>
+              </a>
+          </li>   
+          <li>                                   
+              <a href="/shop/fetch_products_by_category/accessories">
+                  <i class="fa fa-gem fa-lg"></i>
+                  <span class="nav-text"> アクセサリー</span>
+              </a>
+          </li>
+      </ul>
+  </div>
+</nav>
+
+
+<main class="product-page" data-product-id="{{ product['product_id'] }}">
+  <div class="product-gallery">
+    <div class="thumbnail-list">
+      {% for img_path in product['images'] %}
+        <div class="thumbnail" data-index="{{ loop.index0 }}">
+          <img src="{{ img_path['img_path'] }}" alt="サムネイル画像">
+        </div>
+      {% endfor %}
+    </div>
     <div class="product-image-section">
       <div class="image-slider">
         {% for img_path in product['images'] %}
           <img src="{{ img_path['img_path'] }}" alt="商品画像" class="main-image">
         {% endfor %}
       </div>
-      <div class="slider-buttons">
-        <button class="slider-button prev">&lt;</button>
-        <button class="slider-button next">&gt;</button>
-      </div>
     </div>
-    <div class="product-info-section">
-      <h2 class="product-name">商品名{{product['name']}}</h2>
-      <p class="product-price">値段　￥{{ product['price'] }}</p>
-      <p>作成時間　{{ product['created_at'] }}</p>
-      <div class="quantity">
-        <button class="decrease">-</button>
-        <span class="quantity-value">1</span>
-        <button class="increase">+</button>
-      </div>
-      <div class="product-actions">
-        <button class="add-to-cart">カートに入れる</button>
-      </div>
-      <a href="{{ url_for('shop_page') }}">shop_page</a>
+  </div>
+  <div class="product-info-section">
+    <h1 class="product-name">{{ product['name'] }}</h1>
+    <p class="product-price">¥{{ "{:,}".format(product['price']) }}</p>
+    <div class="product-description">
+      <p>{{ product['description'] }}</p>
     </div>
-  </main>
+    <div class="product-controls">
+      <div class="quantity-selector">
+        <label for="quantity">数量</label>
+        <div class="quantity">
+          <button class="decrease">-</button>
+          <span class="quantity-value">1</span>
+          <button class="increase">+</button>
+        </div>
+      </div>
+      <button class="add-to-cart">カートに追加</button>
+    </div>
+  </div>
+</main>
+
+  <div class="notification" id="cartNotification">
+    <div class="notification-content">
+      カートに商品が追加されました
+    </div>
+    <div class="notification-actions">
+      <button class="notification-button" onclick="location.href='/display_cart'">
+        カートを見る
+      </button>
+      <button class="notification-button" onclick="closeNotification()">
+        買い物を続ける
+      </button>
+    </div>
+  </div>
 {% endblock %}
 
 {% block scripts %}
@@ -200,57 +146,131 @@
   
     // カートに追加ボタンの処理
     document.querySelector('.add-to-cart').addEventListener('click', async function() {
-      const addToCartBtn = document.querySelector('.add-to-cart');
-      addToCartBtn.disabled = true;  // ボタンを無効化して二重送信防止
-  
-      const productId = document.querySelector('.product-page').dataset.productId;
-      const quantity = document.querySelector('.quantity-value').textContent;
-  
-      // POSTデータの作成（JSON形式）
-      const postData = {
-        product_id: productId,
-        quantity: parseInt(quantity)
-      };
-  
-      try {
-        const response = await fetch('/add_cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(postData)
-        });
-  
-        if (response.ok) {
-          window.location.href = '/after_add_cart';  // 成功時にページ遷移
-        } else {
-          alert('カート追加に失敗しました。');
-          addToCartBtn.disabled = false;  // 失敗時にボタンを再有効化
-        }
-      } catch (error) {
-        console.error('エラー:', error);
-        alert('通信エラーが発生しました。');
-        addToCartBtn.disabled = false;
+    const addToCartBtn = document.querySelector('.add-to-cart');
+    addToCartBtn.disabled = true; //二重送信を防ぐための
+
+    const productId = document.querySelector('.product-page').dataset.productId;
+    const quantity = document.querySelector('.quantity-value').textContent;
+
+    try {
+      const response = await fetch('/add_cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          quantity: parseInt(quantity)
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showNotification();
+      } else {
+        alert(result.message || 'カート追加に失敗しました。');
       }
-    });
+    } catch (error) {
+      console.error('エラー:', error);
+      alert('通信エラーが発生しました。');
+    } finally {
+      addToCartBtn.disabled = false;
+    }
+  });
+
+  // 通知の表示・非表示を制御する関数
+  function showNotification() {
+    const notification = document.getElementById('cartNotification');
+    notification.classList.add('show');
+  }
+
+  function closeNotification() {
+    const notification = document.getElementById('cartNotification');
+    notification.style.opacity = '0';
+    
+    // opacity遷移が完了してから非表示にする
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 1000); // CSSのtransitionと同じ1000ms待つ
+}
+
+  // 5秒後に自動で通知を消す
+  let notificationTimeout;
+  function showNotification() {
+    const notification = document.getElementById('cartNotification');
+    notification.classList.add('show');
+    
+    // 既存のタイマーをクリア
+    if (notificationTimeout) {
+      clearTimeout(notificationTimeout);
+    }
+    
+    // 5秒後に通知を消す
+    notificationTimeout = setTimeout(() => {
+      closeNotification();
+    }, 5000);
+  }
   
     // 画像スライダーの実装
-    const imageSlider = document.querySelector('.image-slider');
-    const prevButton = document.querySelector('.slider-button.prev');
-    const nextButton = document.querySelector('.slider-button.next');
-    let currentIndex = 0;
-    const totalImages = document.querySelectorAll('.main-image').length;
+    // const imageSlider = document.querySelector('.image-slider');
+    // const prevButton = document.querySelector('.slider-button.prev');
+    // const nextButton = document.querySelector('.slider-button.next');
+    // let currentIndex = 0;
+    // const totalImages = document.querySelectorAll('.main-image').length;
 
-    function updateSlider() {
-      imageSlider.style.transform = `translateX(-${currentIndex * 100}%)`;
-    }
+    // function updateSlider() {
+    //   imageSlider.style.transform = `translateX(-${currentIndex * 100}%)`;
+    // }
 
-    prevButton.addEventListener('click', () => {
-      currentIndex = (currentIndex - 1 + totalImages) % totalImages;
-      updateSlider();
-    });
+    // prevButton.addEventListener('click', () => {
+    //   currentIndex = (currentIndex - 1 + totalImages) % totalImages;
+    //   updateSlider();
+    // });
 
-    nextButton.addEventListener('click', () => {
-      currentIndex = (currentIndex + 1) % totalImages;
-      updateSlider();
+    // nextButton.addEventListener('click', () => {
+    //   currentIndex = (currentIndex + 1) % totalImages;
+    //   updateSlider();
+    // });
+    // shopping_page.htmlのscript部分を更新
+    document.addEventListener('DOMContentLoaded', function() {
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      const mainImages = document.querySelectorAll('.main-image');
+      let currentIndex = 0;
+      let slideInterval;
+
+      // サムネイルクリックでメイン画像を切り替え
+      thumbnails.forEach((thumbnail, index) => {
+        thumbnail.addEventListener('click', () => {
+          showImage(index);
+        });
+      });
+
+      function showImage(index) {
+        // 現在のアクティブな状態を解除
+        thumbnails[currentIndex].classList.remove('active');
+        mainImages[currentIndex].style.display = 'none';
+
+        // 新しい画像をアクティブに
+        currentIndex = index;
+        thumbnails[currentIndex].classList.add('active');
+        mainImages[currentIndex].style.display = 'block';
+
+        // 自動スライドをリセット
+        resetSlideTimer();
+      }
+
+      function nextImage() {
+        let nextIndex = (currentIndex + 1) % mainImages.length;
+        showImage(nextIndex);
+      }
+
+      function resetSlideTimer() {
+        clearInterval(slideInterval);
+        slideInterval = setInterval(nextImage, 5000); // 5秒ごとに画像を切り替え
+      }
+
+      // 初期設定
+      showImage(0);
+      resetSlideTimer();
     });
   </script>
 {% endblock %}

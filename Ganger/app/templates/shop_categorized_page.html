@@ -1,41 +1,212 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>shop_page</title>
+    <title>Shop Page</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/hamburger_menu.css')}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .cont-head {
+            grid-column: 1 / -1;  /* グリッド全体に広がるように */
+            margin-bottom: 20px;
+        }
+
+        .cont-head h2 {
+            font-size: 24px;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .goods {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .goods img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .user {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .user img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .category-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px; /* ヘッダーの高さ(60px)より大きい値に変更 */
+            border-bottom: 2px solid #ddd;
+            /* background-color: white;  */
+            position: relative; /* z-indexを有効にするため */
+            z-index: 999; /* ヘッダーより下、ハンバーガーメニューより下の値 */
+        }
+
+        .category-nav button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            padding: 10px 20px;
+            cursor: pointer;
+            position: relative;
+            color: #555;
+            transition: color 0.3s;
+        }
+
+        .category-nav button:hover,
+        .category-nav button.active {
+            color: #000;
+        }
+
+        .category-nav button::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #000;
+            transition: width 0.3s;
+        }
+
+        .category-nav button:hover::after,
+        .category-nav button.active::after {
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    
-    <div class="main_content">
+    <nav class="main-menu">
+        <div class="scrollbar" id="style-1">
+            <a href="{{ url_for('home') }}" class="header_logo">
+                <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-shop-site" class="shop_button">
+                <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-sns-site" class="sns_button">
+            </a>
+            <ul>
+                <li>                                   
+                    <a href="{{url_for('home')}}">
+                        <i class="fa fa-home fa-lg"></i>
+                        <span class="nav-text">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('notifications')}}">
+                        <i class="fa fa-bell"></i>
+                        <span class="nav-text">お知らせ</span>
+                        <!-- <svg data-icon-name="notification-bell" data-style="line" id="notification-bell" class="icon line" width="24" height="24"> -->
+                        <path d="M19.38,14.38a2.12,2.12,0,0,1,.62,1.5h0A2.12,2.12,0,0,1,17.88,18H6.12A2.12,2.12,0,0,1,4,15.88H4a2.12,2.12,0,0,1,.62-1.5L6,13V9a6,6,0,0,1,6-6h0a6,6,0,0,1,6,6v4ZM15,18H9a3,3,0,0,0,3,3h0A3,3,0,0,0,15,18Z" id="primary"></path>
+                        </svg>
+                    </a>
+                </li>
+                <li>                                   
+                    <a href="{{url_for('my_profile',id = session['id'])}}">
+                        <i class="fa fa-user fa-lg"></i>
+                        <span class="nav-text">Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('display_cart') }}">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span class="nav-text">カート一覧</span>
+                    </a>
+                </li>
+                <li>                                   
+                    <a href="{{ url_for('complete_checkout', after_checkout=False )}}">
+                        <i class="fa fa-clock fa-lg"></i>
+                        <span class="nav-text">購入履歴</span>
+                    </a>
+                </li>   
+                <li>                                   
+                    <a href="/shop/fetch_products_by_category/clothes">
+                        <i class="fa fa-t-shirt fa-lg"></i>
+                        <span class="nav-text"> 衣類</span>
+                    </a>
+                </li>    
+                <li>                                   
+                    <a href="/shop/fetch_products_by_category/shoes">
+                        <i class="fa fa-shoe-prints fa-lg"></i>
+                        <span class="nav-text"> シューズ</span>
+                    </a>
+                </li>   
+                <li>                                   
+                    <a href="/shop/fetch_products_by_category/cap">
+                        <i class="fa fa-hat-cowboy fa-lg"></i>
+                        <span class="nav-text"> 帽子</span>
+                    </a>
+                </li>   
+                <li>                                   
+                    <a href="/shop/fetch_products_by_category/accessories">
+                        <i class="fa fa-gem fa-lg"></i>
+                        <span class="nav-text"> アクセサリー</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="category-nav">
+        <a href="/shop/fetch_products_by_categories/clothes+cap+shoes+accessories"><button data-category="all">すべてのアイテム</button></a>
+        <a href="/shop/fetch_products_by_category/clothes"><button data-category="accessories">衣類</button></a>
+        <a href="/shop/fetch_products_by_categories/cap+shoes"><button data-category="web-items">帽子・靴</button></a>
+        <a href="/shop/fetch_products_by_category/accessories"><button data-category="shoes">アクセサリー</button></a>
+    </nav>
+
+    <div class="container">
+        <div class="cont-head">
+            <h2>
+                {% if 'clothes+cap+shoes+accessories' in request.path %}
+                    all-items
+                {% elif 'cap+shoes' in request.path %}
+                    cap & hat
+                {% else %}
+                    {{products[0].category_name}}
+                {% endif %}
+            </h2>            
+        </div>
         
-        <div class="populer_item">
-            
-            <div class="shop_select">
-                {% for product in products %}
-                    <p>{{ product.category_name }}</p> <!-- ✅ カテゴリー名を表示 -->
-                    
-                    {% for pd in product.posts %} <!-- ✅ product["posts"] のリストを展開 -->
-                        <div class="goods">
-                            <div>
-                                <a href="{{ url_for('display_product', product_id=pd['product_id']) }}">
-                                    <img src="{{ pd.image_url }}" alt="product.name">
-                                </a>
-                            </div>
-                            <div class="user">
-                                <img src="{{ pd.profile_image }}" alt="{{ pd.username }} さんのアイコン">
-                                <h5>{{ pd.username }}</h5>
-                            </div>
-                            <div>
-                                <p>{{ pd.category_name }}</p>
-                            </div>
-                            <div>
-                                <h4>{{ pd.price }}円</h4>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
-            
+        {% for product in products %}
+            {% for pd in product.posts %}
+                <div class="goods">
+                    <a href="{{ url_for('display_product', product_id=pd['product_id']) }}">
+                        <img src="{{ pd.image_url }}" alt="{{ pd.name }}">
+                    </a>
+                    <div class="user">
+                        <img src="{{ pd.profile_image }}" alt="{{ pd.username }} さんのアイコン">
+                        <span>{{ pd.username }}</span>
+                    </div>
+                    <p class="price">{{ pd.price }}円</p>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
 </body>
 </html>
