@@ -110,7 +110,7 @@ body {
 .category-nav {
     display: flex;
     justify-content: center;
-    margin-top: 80px; /* ヘッダーの高さ(60px)より大きい値に変更 */
+    margin-top: 40px; /* ヘッダーの高さ(60px)より大きい値に変更 */
     border-bottom: 2px solid #ddd;
     /* background-color: white;  */
     position: relative; /* z-indexを有効にするため */
@@ -361,23 +361,48 @@ body {
     }
 }
 
-/* ユーザー情報のスタイリング */
+.goods {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+.goods img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+.items-img img {
+    width: 170px;  /* 幅を固定 */
+    height: 170px; /* 高さを幅と同じに */
+    object-fit: cover; /* 画像を正方形に収めつつ、アスペクト比を保持 */
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.items-img {
+    width: 170px;
+    height: 170px;
+    overflow: hidden; /* はみ出した部分を隠す */
+}
 .user {
-    display: flex;          /* 横並びにする */
-    align-items: center;    /* 垂直方向の中央揃え */
-    padding: 10px 15px;     /* 内側の余白 */
-    gap: 10px;             /* 要素間の隙間 */
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
 }
-
 .user img {
-    width: 40px;           /* アイコンのサイズを調整 */
-    height: 40px;
-    border-radius: 50%;    /* 円形にする */
-    object-fit: cover;     /* 画像のアスペクト比を保持 */
+    width: 30px;
+    height: 30px;
+    border-radius: 50px 50px 50px 50px;
+    margin-right: 10px;
 }
+.category_name{
+    font-size: 17px;
 
-.user h5 {
-    margin: 0;            /* デフォルトのマージンを削除 */
-    font-size: 14px;      /* ユーザー名のフォントサイズ */
-    color: #333;          /* テキストカラー */
+} 
+.price {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
 }

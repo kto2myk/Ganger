@@ -1,41 +1,148 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>shop_page</title>
+    <title>Shop Page</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/hamburger_menu.css')}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .cont-head {
+            grid-column: 1 / -1;  /* グリッド全体に広がるように */
+            margin-bottom: 20px;
+        }
+
+        .cont-head h2 {
+            font-size: 24px;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .goods {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .goods img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .user {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .user img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .category-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px; /* ヘッダーの高さ(60px)より大きい値に変更 */
+            border-bottom: 2px solid #ddd;
+            /* background-color: white;  */
+            position: relative; /* z-indexを有効にするため */
+            z-index: 999; /* ヘッダーより下、ハンバーガーメニューより下の値 */
+        }
+
+        .category-nav button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            padding: 10px 20px;
+            cursor: pointer;
+            position: relative;
+            color: #555;
+            transition: color 0.3s;
+        }
+
+        .category-nav button:hover,
+        .category-nav button.active {
+            color: #000;
+        }
+
+        .category-nav button::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #000;
+            transition: width 0.3s;
+        }
+
+        .category-nav button:hover::after,
+        .category-nav button.active::after {
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    
-    <div class="main_content">
+    {% block content %}
+    {% include 'components/sidebar.html' %}
+
+    <nav class="category-nav">
+        <a href="/shop/fetch_products_by_categories/clothes+cap+shoes+accessories"><button data-category="all">すべてのアイテム</button></a>
+        <a href="/shop/fetch_products_by_category/clothes"><button data-category="accessories">衣類</button></a>
+        <a href="/shop/fetch_products_by_categories/cap+shoes"><button data-category="web-items">帽子・靴</button></a>
+        <a href="/shop/fetch_products_by_category/accessories"><button data-category="shoes">アクセサリー</button></a>
+    </nav>
+
+    <div class="container">
+        <div class="cont-head">
+            <h2>
+                {% if 'clothes+cap+shoes+accessories' in request.path %}
+                    all-items
+                {% elif 'cap+shoes' in request.path %}
+                    cap & hat
+                {% else %}
+                    {{products[0].category_name}}
+                {% endif %}
+            </h2>            
+        </div>
         
-        <div class="populer_item">
-            
-            <div class="shop_select">
-                {% for product in products %}
-                    <p>{{ product.category_name }}</p> <!-- ✅ カテゴリー名を表示 -->
-                    
-                    {% for pd in product.posts %} <!-- ✅ product["posts"] のリストを展開 -->
-                        <div class="goods">
-                            <div>
-                                <a href="{{ url_for('display_product', product_id=pd['product_id']) }}">
-                                    <img src="{{ pd.image_url }}" alt="product.name">
-                                </a>
-                            </div>
-                            <div class="user">
-                                <img src="{{ pd.profile_image }}" alt="{{ pd.username }} さんのアイコン">
-                                <h5>{{ pd.username }}</h5>
-                            </div>
-                            <div>
-                                <p>{{ pd.category_name }}</p>
-                            </div>
-                            <div>
-                                <h4>{{ pd.price }}円</h4>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
-            
+        {% for product in products %}
+            {% for pd in product.posts %}
+                <div class="goods">
+                    <a href="{{ url_for('display_product', product_id=pd['product_id']) }}">
+                        <img src="{{ pd.image_url }}" alt="{{ pd.name }}">
+                    </a>
+                    <div class="user">
+                        <img src="{{ pd.profile_image }}" alt="{{ pd.username }} さんのアイコン">
+                        <span>{{ pd.username }}</span>
+                    </div>
+                    <p class="price">{{ pd.price }}円</p>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% endblock %}
 </body>
 </html>

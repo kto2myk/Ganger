@@ -731,6 +731,35 @@ def fetch_products_by_category(category_name):
     except Exception as e:
         app.logger.error(f"Error in fetch_products_by_category: {e}")
         abort(500,description = "エラーが発生しました")
+@app.route("/shop/fetch_products_by_categories/<categories>")
+def fetch_products_by_categories(categories):
+    try:
+        # カテゴリ名をプラス記号で分割（例：'cap+shoes' -> ['cap', 'shoes']）
+        category_list = categories.split('+')
+        
+        # 複数カテゴリの商品を取得
+        products = []
+        for category in category_list:
+            category_products = shop_manager.search_categories(query=category)
+            if category_products:
+                products.extend(category_products)
+
+        if not products:
+            abort(404, description="商品が見つかりません")
+
+        # 重複を除外して商品をまとめる
+        unique_products = []
+        seen_products = set()
+        for product in products:
+            if product['category_name'] not in seen_products:
+                unique_products.append(product)
+                seen_products.add(product['category_name'])
+
+        return render_template("shop_categorized_page.html", products=unique_products)
+    
+    except Exception as e:
+        app.logger.error(f"Error in fetch_products_by_categories: {e}")
+        abort(500, description="エラーが発生しました")
 @app.route("/display_product/<product_id>")
 def display_product(product_id):
     product = shop_manager.fetch_multiple_products_images(product_ids=product_id)
@@ -743,30 +772,42 @@ def display_product(product_id):
 @app.route('/add_cart', methods=['POST'])
 def add_to_cart():
     try:
-        # リクエストのJSONデータを取得
         data = request.get_json()
         product_id = data.get('product_id')
         quantity = int(data.get('quantity'))
 
-        # バリデーションチェック
         if not product_id or quantity <= 0:
-            return jsonify({"message": "無効な入力です"}), 400
+            return jsonify({
+                "success": False,
+                "message": "無効な入力です"
+            }), 400
 
-        # 商品をカートに追加
-        result = shop_manager.add_cart_item(user_id=session.get('id'),product_id=product_id,quantity=quantity)
+        result = shop_manager.add_cart_item(
+            user_id=session.get('id'),
+            product_id=product_id,
+            quantity=quantity
+        )
+        
         if result:
             app.logger.info(f"商品 が {quantity} 個カートに追加されました。")
-            return jsonify({"message": "カートに追加されました"}), 200
+            return jsonify({
+                "success": True,
+                "message": "カートに追加しました"
+            }), 200
         else:
             app.logger.error("カート追加に失敗しました")
-            return jsonify({"message": "カート追加に失敗しました"}), 400
+            return jsonify({
+                "success": False,
+                "message": "カート追加に失敗しました"
+            }), 400
 
     except Exception as e:
-        return jsonify({"message": "エラーが発生しました", "error": str(e)}), 500
+        return jsonify({
+            "success": False,
+            "message": "エラーが発生しました",
+            "error": str(e)
+        }), 500
     
-@app.route("/after_add_cart")
-def after_add_cart():
-    return render_template("after_add_cart.html")   
 
 @app.route("/display_cart")
 def display_cart():

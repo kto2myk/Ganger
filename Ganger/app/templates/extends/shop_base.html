@@ -10,20 +10,6 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <header class="shop-header">
-        
-        <nav class="shop-nav-links">
-            <!-- <a href="#" class="login">ログイン</a> -->
-            <a href="{{ url_for('notifications')}}"><i class="fas fa-bell"></i>
-                <!-- <svg data-icon-name="notification-bell" data-style="line" id="notification-bell" class="icon line" width="24" height="24"> -->
-                <path d="M19.38,14.38a2.12,2.12,0,0,1,.62,1.5h0A2.12,2.12,0,0,1,17.88,18H6.12A2.12,2.12,0,0,1,4,15.88H4a2.12,2.12,0,0,1,.62-1.5L6,13V9a6,6,0,0,1,6-6h0a6,6,0,0,1,6,6v4ZM15,18H9a3,3,0,0,0,3,3h0A3,3,0,0,0,15,18Z" id="primary"></path>
-                </svg>
-            </a>
-            <a href="#"><i class="fas fa-heart"></i></a>
-            <a href="{{ url_for('display_cart') }}"><i class="fas fa-shopping-cart"></i></a>
-            <!-- <a href="#" class="menu">≡</a> -->
-        </nav>
-    </header>
 
     {% block content %}{% endblock %}
 

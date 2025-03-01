@@ -5,70 +5,18 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/shop_page.css')}}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/hamburger_menu.css') }}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 {% endblock %}
 
 {% block content %}
 <!-- ハンバーガーメニューの追加 -->
-<nav class="main-menu">
-    <div class="scrollbar" id="style-1">
-        <a href="{{ url_for('home') }}" class="header_logo">
-            <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-shop-site" class="shop_button">
-            <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-sns-site" class="sns_button">
-        </a>
-        <ul>
-            <li>                                   
-                <a href="{{url_for('home')}}">
-                    <i class="fa fa-home fa-lg"></i>
-                    <span class="nav-text">Home</span>
-                </a>
-            </li>   
-            <li>                                   
-                <a href="{{url_for('my_profile',id = session['id'])}}">
-                    <i class="fa fa-user fa-lg"></i>
-                    <span class="nav-text">Profile</span>
-                </a>
-            </li>
-            <!-- 他のメニュー項目... -->
-            <li>                                   
-                <a href="{{ url_for('complete_checkout', after_checkout=False )}}">
-                    <i class="fa fa-clock fa-lg"></i>
-                    <span class="nav-text">購入履歴</span>
-                </a>
-            </li>   
-            <li>                                   
-                <a href="{#{{url_for('cloces')}}#}">
-                    <i class="fa fa-t-shirt fa-lg"></i>
-                    <span class="nav-text"> 衣類</span>
-                </a>
-            </li>    
-            <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-shoe-prints fa-lg"></i>
-                    <span class="nav-text"> シューズ</span>
-                </a>
-            </li>   
-            <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-hat-cowboy fa-lg"></i>
-                    <span class="nav-text"> 帽子</span>
-                </a>
-            </li>   
-            <li>                                   
-                <a href="{#{{url_for('******')}}#}">
-                    <i class="fa fa-gem fa-lg"></i>
-                    <span class="nav-text"> アクセサリー</span>
-                </a>
-            </li>
-        </ul>
-    </div>
-</nav>
+{% include 'components/sidebar.html' %}
 
 <nav class="category-nav">
     <a href="{# {{ url_for(######) }} #}"><button data-category="all">すべてのアイテム</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="accessories">衣類</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="web-items">帽子・靴</button></a>
-    <a href="{# {{ url_for(######) }} #}"><button data-category="shoes">シューズ</button></a>
+    <a href="/shop/fetch_products_by_category/clothes"><button data-category="accessories">衣類</button></a>
+    <a href="/shop/fetch_products_by_category/cap"><button data-category="web-items">帽子・靴</button></a>
+    <a href="/shop/fetch_products_by_category/accessories"><button data-category="shoes">アクセサリー</button></a>
 </nav>
 
 
@@ -95,7 +43,7 @@
             <div class="shop_select">
                 {% for product in trending_products %}
                     <div class="goods">
-                        <div>
+                        <div class="items-imgs">
                             <a href="{{ url_for('display_product', product_id=product['product_id']) }}">
                             <img src="{{ product.images[0].img_path }}" alt="product.name">
                             </a>
@@ -104,7 +52,7 @@
                             <img src="{{ product.author.profile_image}}" alt="{{  product.author.username }} さんのアイコン">
                             <h5>{{ product.author.username }}</h5>
                         </div>
-                        <div>
+                        <div class="category_name">
                             <p>{{ product.category.category_name }}</p>
                         </div>
                         <div>

@@ -1,0 +1,242 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    background-color: #f4f4f4;
+    padding: 10px 20px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .product-page {
+    display: flex;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 80px 40px;
+    gap: 60px;
+  }
+
+  .product-gallery {
+    display: flex;
+    flex: 1.5;
+    gap: 20px;
+  }
+  
+  .thumbnail-list {
+    width: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .thumbnail {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+  }
+  
+  .thumbnail.active {
+    opacity: 1;
+  }
+  
+  .thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-image-section {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .image-slider {
+    width: 100%;
+    aspect-ratio: 1;
+    position: relative;
+  }
+
+  .main-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* .slider-buttons {
+    position: absolute;
+    width: calc(100% - 20px);  
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .slider-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 50%;
+    pointer-events: auto;
+    z-index: 10;
+  } */
+
+  .product-info-section {
+    flex: 1;
+    padding: 20px;
+  }
+
+  .product-name {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: #000;
+    font-size: 24px;
+    font-weight: 300;
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+  
+  .product-price {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 30px;
+  }
+  
+  .product-description {
+    margin: 30px 0;
+    line-height: 1.6;
+    color: #666;
+  }
+  
+  .product-controls {
+    margin-top: 40px;
+  }
+
+
+
+  .quantity {
+    color: #000;
+    display: inline-flex;
+    align-items: center;
+    /* border: 1px solid #ddd; */
+  }
+
+  .quantity-selector {
+    margin-bottom: 20px;
+  }
+  
+  .quantity-selector label {
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  .quantity-value {
+    width: 60px;
+    text-align: center;
+    font-size: 16px;
+  }
+
+  .quantity button {
+    width: 40px;
+    height: 40px;
+    /* border: 1px solid #ddd;
+    background-color: #fff; */
+    cursor: pointer;
+    /* font-size: 18px; */
+  }
+
+  .quantity span {
+    font-size: 18px;
+  }
+
+  .product-colors, .product-sizes {
+    margin-bottom: 20px;
+  }
+
+
+  .add-to-cart {
+    width: 100%;
+    padding: 15px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-to-cart:hover {
+    background-color: #333;
+  }
+
+  .add-to-cart, .add-to-favorites {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    background-color: #333;
+    color: #fff;
+  }
+
+  .add-to-favorites {
+    background-color: #000;
+    color: #fff;
+  }
+
+  .notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  padding: 20px;
+  background-color: #000;
+  color: #ffffff;
+  text-align: center;
+  z-index: 1000;
+  display: none;
+  opacity: 0.5;
+  border-radius: 40px;
+  transition: opacity 1s ease;
+}
+
+.notification.show {
+  display: block;
+  opacity: 0.9;
+}
+
+.notification-content {
+  margin-bottom: 10px;
+}
+
+.notification-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.notification-button {
+  padding: 5px 15px;
+  background: none;
+  border: 1px solid #fff;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.notification-button:hover {
+  background: #fff;
+  color: #5f5f5f;
+}
