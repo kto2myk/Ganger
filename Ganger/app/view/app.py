@@ -879,11 +879,12 @@ def complete_checkout(after_checkout):
         result = shop_manager.fetch_sales_history(user_id=user_id)
         if after_checkout == "True" or after_checkout == True:
             after_checkout = True
-
         else:
             after_checkout = False
             if not result:
-                return render_template("complete_checkout.html",history = None,after_checkout=after_checkout)
+                abort(400,description="無効なリクエスト")
+            elif result['success']:
+                return render_template("complete_checkout.html",history = result['result'],after_checkout=after_checkout)
         return render_template("complete_checkout.html",history = result,after_checkout=after_checkout)
 
 

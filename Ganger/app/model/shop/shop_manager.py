@@ -555,8 +555,8 @@ class ShopManager(DatabaseManager):
             )
 
             if not sales:
-                self.session_rollback(Session)
-                return {"status": False, "message": "購入履歴はありません。"}
+                self.pop_and_close(Session)
+                return {"success": True, "result": None}
 
             # 購入履歴を整形
             sales_data = [
@@ -582,7 +582,8 @@ class ShopManager(DatabaseManager):
                 for sale in sales
             ]
             self.pop_and_close(Session)
-            return sales_data
+            return {"success": True, "result": sales_data}
+
 
         except SQLAlchemyError as e:
             self.session_rollback(Session)

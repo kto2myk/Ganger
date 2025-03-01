@@ -241,42 +241,47 @@
         </div>
     {% endif %}
 
-    
-    <div class="purchase-history">
-        <h2>購入履歴</h2>
-        {% for sale in history %}
-            <div class="purchase-card">
-                <div class="purchase-header">
-                    <div class="purchase-info">
-                        <p><strong>支払い方法:</strong> {{ sale['payment_method'] }}</p>
-                        <p><strong>合計金額:</strong> ¥{{ sale['total_amount'] }}</p>
-                        <p><strong>支払いステータス:</strong> {{ sale['payment_status'] }}</p>
-                        <p><strong>購入日:</strong> {{ sale['created_at'] }}</p>
+    <!-- 購入履歴有無判定 -->
+    {% if history %}
+        <div class="purchase-history">
+            <h2>購入履歴</h2>
+            {% for sale in history %}
+                <div class="purchase-card">
+                    <div class="purchase-header">
+                        <div class="purchase-info">
+                            <p><strong>支払い方法:</strong> {{ sale['payment_method'] }}</p>
+                            <p><strong>合計金額:</strong> ¥{{ sale['total_amount'] }}</p>
+                            <p><strong>支払いステータス:</strong> {{ sale['payment_status'] }}</p>
+                            <p><strong>購入日:</strong> {{ sale['created_at'] }}</p>
+                        </div>
                     </div>
+        
+                    <h3>購入アイテム</h3>
+                    <ul class="items-list">
+                        {% for item in sale['items'] %}
+                            <li class="item-card">
+                                <div class="item-image">
+                                    {% if item['image_url'] %}
+                                        <img src="{{ item['image_url'] }}" alt="{{ item['product_name'] }}">
+                                    {% else %}
+                                        <div class="no-image">画像がありません</div>
+                                    {% endif %}
+                                </div>
+                                <div class="item-details">
+                                    <p><strong>商品名:</strong> {{ item['product_name'] }}</p>
+                                    <p><strong>価格:</strong> ¥{{ item['price'] }}</p>
+                                    <p><strong>数量:</strong> {{ item['quantity'] }}</p>
+                                    <p><strong>小計:</strong> ¥{{ item['subtotal'] }}</p>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
-    
-                <h3>購入アイテム</h3>
-                <ul class="items-list">
-                    {% for item in sale['items'] %}
-                        <li class="item-card">
-                            <div class="item-image">
-                                {% if item['image_url'] %}
-                                    <img src="{{ item['image_url'] }}" alt="{{ item['product_name'] }}">
-                                {% else %}
-                                    <div class="no-image">画像がありません</div>
-                                {% endif %}
-                            </div>
-                            <div class="item-details">
-                                <p><strong>商品名:</strong> {{ item['product_name'] }}</p>
-                                <p><strong>価格:</strong> ¥{{ item['price'] }}</p>
-                                <p><strong>数量:</strong> {{ item['quantity'] }}</p>
-                                <p><strong>小計:</strong> ¥{{ item['subtotal'] }}</p>
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        <!-- ない場合 -->
+        {% else %}
+            <h1>購入履歴がありません</h1>
+        {% endif %}
     </div>
     
 </body>
