@@ -9,73 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<nav class="main-menu">
-  <div class="scrollbar" id="style-1">
-      <a href="{{ url_for('home') }}" class="header_logo">
-          <img src="../../static/images/logo_images/ganger_icon_image.png" alt="to-shop-site" class="shop_button">
-          <img src="../../static/images/logo_images/ganger_icon_text.png" alt="to-sns-site" class="sns_button">
-      </a>
-      <ul>
-          <li>                                   
-              <a href="{{url_for('home')}}">
-                  <i class="fa fa-home fa-lg"></i>
-                  <span class="nav-text">Home</span>
-              </a>
-          </li>
-          <li>
-              <a href="{{ url_for('notifications')}}">
-                  <i class="fa fa-bell"></i>
-                  <span class="nav-text">お知らせ</span>
-                  <!-- <svg data-icon-name="notification-bell" data-style="line" id="notification-bell" class="icon line" width="24" height="24"> -->
-                  <path d="M19.38,14.38a2.12,2.12,0,0,1,.62,1.5h0A2.12,2.12,0,0,1,17.88,18H6.12A2.12,2.12,0,0,1,4,15.88H4a2.12,2.12,0,0,1,.62-1.5L6,13V9a6,6,0,0,1,6-6h0a6,6,0,0,1,6,6v4ZM15,18H9a3,3,0,0,0,3,3h0A3,3,0,0,0,15,18Z" id="primary"></path>
-                  </svg>
-              </a>
-          </li>
-          <li>                                   
-              <a href="{{url_for('my_profile',id = session['id'])}}">
-                  <i class="fa fa-user fa-lg"></i>
-                  <span class="nav-text">Profile</span>
-              </a>
-          </li>
-          <li>
-              <a href="{{ url_for('display_cart') }}">
-                  <i class="fa fa-shopping-cart"></i>
-                  <span class="nav-text">カート一覧</span>
-              </a>
-          </li>
-          <li>                                   
-              <a href="{{ url_for('complete_checkout', after_checkout=False )}}">
-                  <i class="fa fa-clock fa-lg"></i>
-                  <span class="nav-text">購入履歴</span>
-              </a>
-          </li>   
-          <li>                                   
-              <a href="/shop/fetch_products_by_category/clothes">
-                  <i class="fa fa-t-shirt fa-lg"></i>
-                  <span class="nav-text"> 衣類</span>
-              </a>
-          </li>    
-          <li>                                   
-              <a href="/shop/fetch_products_by_category/shoes">
-                  <i class="fa fa-shoe-prints fa-lg"></i>
-                  <span class="nav-text"> シューズ</span>
-              </a>
-          </li>   
-          <li>                                   
-              <a href="/shop/fetch_products_by_category/cap">
-                  <i class="fa fa-hat-cowboy fa-lg"></i>
-                  <span class="nav-text"> 帽子</span>
-              </a>
-          </li>   
-          <li>                                   
-              <a href="/shop/fetch_products_by_category/accessories">
-                  <i class="fa fa-gem fa-lg"></i>
-                  <span class="nav-text"> アクセサリー</span>
-              </a>
-          </li>
-      </ul>
-  </div>
-</nav>
+{% include 'components/sidebar.html' %}
 
 
 <main class="product-page" data-product-id="{{ product['product_id'] }}">
