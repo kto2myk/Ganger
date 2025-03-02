@@ -813,6 +813,7 @@ class PostManager(DatabaseManager):
             # コミット
             self.make_commit_or_flush(Session)
             app.logger.info(f"Successfully deleted {len(posts)} posts.")
+            self.redis.remove_score(ranking_key=self.trending[0],item_id=post_ids)
 
             return {"success": True, "message": f"Deleted {len(posts)} posts successfully"}
 
@@ -820,3 +821,43 @@ class PostManager(DatabaseManager):
             app.logger.error(f"Error occurred in delete_post: {str(e)}", exc_info=True)
             self.session_rollback(Session)
             return {"success": False, "message": f"Failed to delete posts: {str(e)}"}
+        
+    def fetch_liked_posts(self, Session=None):
+        """
+        自分がいいねしている投稿の情報を取得し、成形するメソッド（投稿情報 + 最初の画像のみ）
+        :param session: SQLAlchemyのSessionインスタンス
+        :return: いいねした投稿のリスト（辞書形式）
+        """
+        try:
+            Session = self.make_session(Session)
+            user_id = session.get('id')
+            if isinstance(user_id,str):
+                user_id = Validator.decrypt(user_id)
+
+            liked_posts = (
+                Session.query(Post)
+                .join(Like, Post.post_id == Like.post_id)
+                .filter(Like.user_id == user_id)
+                .options(joinedload(Post.images))  # 画像情報を事前にロード
+                .all()
+            )
+            formatted_posts = []
+            if liked_posts:
+                for post in liked_posts:
+                    # 最初の1枚目の画像を取得（img_orderの昇順でソート）
+                    first_image = next((img for img in sorted(post.images, key=lambda x: x.img_order)), None)
+                    image_url = f"/static/images/post_images/{first_image.img_path}" if first_image else None
+
+                    formatted_posts.append({
+                        "post_id": Validator.encrypt(post.post_id),
+                        "body_text": post.body_text,
+                        "image_url": image_url,
+                        "post_time": Validator.calculate_time_difference(post.post_time),
+                    })
+            self.pop_and_close(Session)
+            return {"success":True, "posts":formatted_posts}
+        
+        except Exception as e:
+            self.session_rollback(Session)
+            app.logger.error(str(e))
+            return {"success":False,"message":str(e)}
