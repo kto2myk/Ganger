@@ -924,20 +924,27 @@ def complete_checkout(after_checkout):
     try:
         user_id = session.get("id")
         result = shop_manager.fetch_sales_history(user_id=user_id)
-        if after_checkout == "True" or after_checkout == True:
-            after_checkout = True
+        
+        # after_checkoutのbool値変換
+        after_checkout = after_checkout == "True" or after_checkout == True
+        
+        # 履歴データの取得に失敗した場合
+        if not result:
+            abort(400, description="無効なリクエスト")
+            
+        # 履歴データの取得に成功した場合
+        if result['success']:
+            return render_template(
+                "complete_checkout.html",
+                history=result['result'],  # result['result']には整形済みの履歴データが含まれています
+                after_checkout=after_checkout
+            )
         else:
-            after_checkout = False
-            if not result:
-                abort(400,description="無効なリクエスト")
-            elif result['success']:
-                return render_template("complete_checkout.html",history = result['result'],after_checkout=after_checkout)
-        return render_template("complete_checkout.html",history = result,after_checkout=after_checkout)
-
+            abort(400, description="データの取得に失敗しました")
 
     except Exception as e:
         app.logger.error(f"エラー: {e}")
-        return abort(500,description="サーバーエラーが発生しました")
+        return abort(500, description="サーバーエラーが発生しました")
     
 @app.route("/test")
 def test():
