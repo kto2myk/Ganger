@@ -90,6 +90,9 @@ class ShopManager(DatabaseManager):
     def delete_product(self, product_id, Session=None):
         try:
             Session = self.make_session(Session)
+            if isinstance(product_id,str):
+                product_id = Validator.decrypt(product_id)
+
 
             # 商品を削除
             is_deleted = self.delete(model=Shop, filters={"product_id": product_id}, Session=Session)
@@ -103,13 +106,11 @@ class ShopManager(DatabaseManager):
                     Session=Session
                 )
                 result = {
-                    "status": "deleted",
-                    "product_id": product_id,
-                    "deleted_notifications": deleted_notifications
-                }
+                    "success": True 
+                    }
                 app.logger.info(f"Product {product_id} deleted with {deleted_notifications} notifications.")
             else:
-                result = {"status": "not_found", "product_id": product_id}
+                result = {"success": False}
                 app.logger.info(f"No product found with ID {product_id} to delete.")
 
             self.redis.remove_score(ranking_key=self.trending[2],item_id=product_id)

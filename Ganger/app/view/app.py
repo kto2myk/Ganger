@@ -358,6 +358,15 @@ def delete_post(post_id):
         app.logger.error(str(e))
         return jsonify({"error":str(e)}),500
     
+@app.route("/fetch/liked_post")
+def fetch_liked_post():
+    result = post_manager.fetch_liked_posts()
+    if result['success']:
+        return result['posts']
+    else:
+        return result['message']
+    
+    
 @app.route('/submit_comment/<string:post_id>', methods=['POST'])
 def submit_comment(post_id):
 
@@ -731,6 +740,7 @@ def fetch_products_by_category(category_name):
     except Exception as e:
         app.logger.error(f"Error in fetch_products_by_category: {e}")
         abort(500,description = "エラーが発生しました")
+
 @app.route("/shop/fetch_products_by_categories/<categories>")
 def fetch_products_by_categories(categories):
     try:
@@ -760,6 +770,7 @@ def fetch_products_by_categories(categories):
     except Exception as e:
         app.logger.error(f"Error in fetch_products_by_categories: {e}")
         abort(500, description="エラーが発生しました")
+
 @app.route("/display_product/<product_id>")
 def display_product(product_id):
     product = shop_manager.fetch_multiple_products_images(product_ids=product_id)
@@ -768,6 +779,17 @@ def display_product(product_id):
         abort(404,description="商品が見つかりません")
     
     return render_template("shopping_page.html",product=product[0])
+
+
+@app.route("/delete/product/<product_id>")
+def delete_product(product_id):
+    result = shop_manager.delete_product(product_id=product_id)
+
+    if result['success']:
+        return jsonify(result),200
+    else:
+        return jsonify(result),400
+
 
 @app.route('/add_cart', methods=['POST'])
 def add_to_cart():
