@@ -257,17 +257,23 @@ html body {
     justify-content: center;
 }
 
+.image-box:hover {
+    filter: brightness(0.7);
+}
+
 .image-box {
-    width: 32%;
+    display: block;
+    width: 32%;;
     margin:0.5%;
     aspect-ratio: 1 / 1;
-    border: solid 1px #ddd;
+    object-fit: cover;
+    transition: all 0.2s;
 }
 
 .image-box img {
-    width: 100%;
+    width: auto;
     height: 100%;
-    object-fit: cover;
+    border: solid 1px #ddd;
 }
 
 /* end タグ検索 */
