@@ -63,7 +63,7 @@ export function initializeAjaxSplide(targetSelector) {
 
 // スクロールが一番下に到達したかを判定する関数
 function isBottomReached() {
-    return window.innerHeight + window.scrollY >= document.body.offsetHeight;
+    return Math.abs(window.innerHeight + window.scrollY >= document.body.offsetHeight) <=5;
 }
 
 // フォロー中とおすすすめ投稿の切り替え処理
