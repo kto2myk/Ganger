@@ -605,6 +605,7 @@ class ShopManager(DatabaseManager):
 
             if not categories:
                 app.logger.info(f"No categories found for query: {query}")
+                self.pop_and_close(Session)
                 return []
 
             # カテゴリー名のみの結果リスト

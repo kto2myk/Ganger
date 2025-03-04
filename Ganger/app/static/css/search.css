@@ -254,7 +254,6 @@ html body {
     width: calc(100% - 10vh);
     height: auto;
     flex-wrap: wrap;
-    justify-content: center;
 }
 
 .image-box {

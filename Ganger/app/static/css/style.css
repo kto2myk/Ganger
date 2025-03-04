@@ -20,6 +20,8 @@ html, body {
     align-items: left;
     height: 100dvh;
     width: 19vw;
+    top: 0;
+    left: 0;
     margin: 0 auto;
     z-index: 9999;
     border-right: solid 1px #ddd;
