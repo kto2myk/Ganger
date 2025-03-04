@@ -114,7 +114,8 @@ class PostManager(DatabaseManager):
             # 画像処理
             
             for index, file in enumerate(Validator.ensure_list(image_files), start=1):
-                original_filename = secure_filename(file.filename)
+                # original_filename = secure_filename(file.filename)
+                original_filename = file.filename
                 if not self.is_allowed_extension(original_filename):
                     raise ValueError(f"ファイル形式が許容されていません: {original_filename}")
 
