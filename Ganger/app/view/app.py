@@ -402,6 +402,10 @@ def save_design():
         import base64
         # 一意なファイル名を生成
         unique_name = f"{uuid.uuid4()}.png"  # 一意なファイル名
+        temp_folder = app.config['TEMP_FOLDER']
+        if not os.path.exists(temp_folder):
+            os.makedirs(temp_folder)
+            
         image_path = os.path.join(app.config['TEMP_FOLDER'], unique_name)
 
         # Base64データをデコードして保存

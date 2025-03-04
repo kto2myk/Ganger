@@ -22,7 +22,7 @@
                     {% elif detail.related_item_type == "user" %}
                         <a class="profile" href="{{ url_for('my_profile', id = detail.sender.id) }}">
                             <img src="{{ detail.sender.profile_image}}" alt="">
-                            <p>{{ detail.sender.username }}</p>
+                            <p>&ensp;{{ detail.sender.username }}</p>
                         </a>
                         <a class="post-noti" href="{{url_for('my_profile', id = detail.related_item_id) }}">
                             <p>{{ notification.contents }}</p>
@@ -31,7 +31,7 @@
                     {% elif detail.related_item_type == "shop" %}
                         <a class="profile" href="{{ url_for('my_profile', id = detail.sender.id) }}">
                             <img src="{{ detail.sender.profile_image}}" alt="">
-                            <p>{{ detail.sender.username }}</p>
+                            <p>&ensp;{{ detail.sender.username }}</p>
                         </a>
                         <a class="product-noti" href="{{url_for('display_product', product_id = detail.related_item_id) }}">
                             <p>{{ notification.contents }}</p>
