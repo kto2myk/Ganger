@@ -1,10 +1,17 @@
 .contents {
-    margin-left: 19dvw;
-    width: 80dvw;
+    position: fixed;
+    left: 19vw;
+    width: 81vw;
     min-height: 80vh;
     position: relative;
 }
-
+@media screen and (max-width: 1000px) {
+    .contents {
+        width: calc(100vw - 10vh);
+        left: 10vh;
+    }
+    
+}
 .contents ul {
     margin: 0;
     padding-top: 10dvh;

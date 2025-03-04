@@ -1,25 +1,34 @@
 .main-contents {
     width: 81vw;
+    position: fixed;
+    left:19vw;
     height: 100dvh;
-    margin-left: 19vw;
     position: relative;
 }
 
+@media screen and (max-width: 1000px) {
+    .main-contents {
+        width: calc(100vw - 10vh);
+        left: 10vh;
+    }
+    
+}
 .main-contents p {
-    width: 100%;
+    font-size: clamp(0.8rem, 2vw, 1.3rem);
     text-align: center;
 }
 
 .to-message-room {
     position: absolute;
-    width: 20dvw;
+    width: 30%;
+    min-width: 200px;
     min-height: 100dvh;
     overflow-x: hidden;
     overflow-y: scroll;
 }
 
 .to-message-room h2 {
-    font-size: small;
+    font-size: clamp(1.5rem, 3vw, 2rem);
     margin-top: 2dvh;
     margin-left: 5%;
 }
@@ -56,22 +65,30 @@
 .message-room-info h3 {
     margin : 0;
     font-weight: 400;
+    font-size: clamp(1.0rem, 2vw, 1.5rem);
 }
 
 .message-room-info small, sub {
     color: #aaa;
-    margin: auto;
+    margin: 0.5vh;
+    font-size: clamp(0.6rem, 2vw, 0.7rem);
 }
 
 .find-message-user {
     position: absolute;
     display: flex;
     align-items: center;
-    width: 60vw;
+    width: 70%;
     height: 100%;
     top: 0;
     right: 0;
 }
+@media screen and (max-width: 1000px) {
+    .find-message-user {
+        left:calc(200px + 10vh);
+    }
+}
+
 
 .message-button-wrapper {
     width: 20dvw;

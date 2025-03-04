@@ -134,7 +134,6 @@ class UserManager(DatabaseManager):
                 )
             ).limit(10).all()
 
-            self.pop_and_close(Session)
             result = []  # 🔹 結果を格納するリストを作成
             for user in users:
                 self.redis.add_score(ranking_key=self.trending[4],item_id=user.id,score=3)
@@ -145,7 +144,7 @@ class UserManager(DatabaseManager):
                     "profile_image":url_for("static", filename=f"images/profile_images/{user.profile_image}")
                 }
                 result.append(user_data) 
-
+            self.pop_and_close(Session)
             return result
         
         except SQLAlchemyError as e:

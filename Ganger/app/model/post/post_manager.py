@@ -354,12 +354,13 @@ class PostManager(DatabaseManager):
                 )
                 .all()
             )
-
+            app.logger.info(f"posts: {posts}")
             if not posts:
                 app.logger.warning(f"Posts with post_ids {post_ids} not found or blocked.")
                 raise ValueError("投稿が見つかりません。")
 
             formatted_posts = []
+        
             for post, liked, saved, reposted, productized in posts:
                 # 各カウントを取得（リレーションの `.or []` で NoneType エラー回避）
                 like_count = len(post.likes or [])
@@ -605,7 +606,7 @@ class PostManager(DatabaseManager):
                 recipient_ids=parent_post.author.id,
                 type_name="COMMENT",
                 contents=f"{session['username']}さんがあなたの投稿にコメントしました。: {comment_text[:50]}...",
-                related_item_id=new_comment["post_id"],
+                related_item_id=parent_post_id,
                 related_item_type="post",
                 Session=Session
             )
