@@ -8,30 +8,38 @@ html body {
     width: 60dvw;
     /* border: solid 1px #999; */
 }
+@media (max-width: 1000px) {
+    .contents {
+        width: calc(100% - 10vw);
+        padding-left: 10vh;
+    }
+}
 
 #search-tabs {
     width: auto;
-    height: 5dvh;
+    height: 10dvh;
     display: flex;
-    justify-content: left;
+    justify-content: flex-start;
 }
 
 #search-tabs-container {
-    width: auto;
+    width: 80vw;
+    flex-wrap: nowrap;
     padding-left: 2%;
     display: flex;
     align-items: center;
 }
 
 .tab-link {
+    font-size: clamp(0.8rem, 1.5vw, 1.0rem); 
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 2%;
-    padding: 2%;
+    padding: 1%;
     border: solid 1px #ddd;
     border-radius: 2dvh;
-    min-width: 5dvw;
+    min-width: 20%;
     text-decoration: none;
     color: black;
     transition: all, 0.2s;
@@ -72,7 +80,7 @@ html body {
 
 #search-results-container {
     position: absolute;
-    width: 90%;
+    width: 90% !important;
     margin-left: 5%;
     margin-right: 5%;
     z-index: 9999;
@@ -124,6 +132,17 @@ html body {
     background-color: #ccc;
 }
 
+.history-item {
+    width: 100%;
+    height: 5dvh;
+    padding-left: 5%;
+    padding-right: 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: solid 1px #ddd;
+}
+
 .delete-item-btn {
     display: block;
     position: absolute;
@@ -156,13 +175,15 @@ html body {
 /* 共通箇所 */
 
 .search-view-results {
-    width: 80dvh;
+    width: calc(100%);
     height: auto;
     z-index: 9000;
 }
-
+.search-view-results h1{
+    font-size: clamp(2.0rem, 5vw, 3.0rem);
+}
 .results-container {
-    width: 100%;
+    width: calc(100% - 10vh);
     height: auto;
 }
 
@@ -172,8 +193,11 @@ html body {
 /* ユーザー検索 */
 
 .user-info-container {
-    width: 90%;
-    height: 15dvh;
+    width: calc(80% - 10vw);
+    aspect-ratio: 5/1;
+    min-width: 300px;
+    max-height: 80px;
+    min-height: 60px;
     padding: 0;
     border: solid 1px #ddd;
 }
@@ -187,6 +211,13 @@ html body {
     text-decoration: none;
     color: #000;
 }
+.user-info-container h3{
+    font-size: clamp(0.8rem, 1.5vw, 2rem); 
+}
+.user-info-container small{
+    font-size: clamp(0.6rem, 1vw, 1rem);
+}
+
 
 .user-info-container a:hover {
     background-color: #eee;
@@ -194,7 +225,7 @@ html body {
 
 .user-info-container a img {
     width: auto;
-    height: 80%;
+    height: 10vh;
     margin-left: 5%;
     border: solid 1px #ddd;
     border-radius: 50%;
@@ -205,22 +236,25 @@ html body {
 /* タグ検索 */
 
 .tag-info-container, .category-info-container {
-    width: 100%;
+    width: 85%;
+    min-width: 500px;
     height: auto;
     margin-bottom: 3dvh;    
     margin-top: 10dvh;
 }
 
 .tag-info-container h3, small, .category-info-container h3, small {
+    font-size: clamp(1.0rem, 1.5vw, 1.5rem);
     width: 30%;
     display: inline;
 }
 
 .triple-tag-image, .triple-category-image {
     display: flex;
-    width: 100%;
+    width: calc(100% - 10vh);
     height: auto;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .image-box {
@@ -248,12 +282,13 @@ html body {
 }
 
 .trend-tags-container a {
+    font-size: clamp(0.8rem, 1.5vw, 1.0rem);
     display: flex;
     align-items: center;
     justify-content: first baseline;
-    width: 100%;
+    width: calc(100% - 10vh);
     height: 10dvh;
-    margin-left: 5dvh;
+    margin-left: 1dvh;
     border: solid 1px #ddd;
     text-decoration: none;
     color:#000;

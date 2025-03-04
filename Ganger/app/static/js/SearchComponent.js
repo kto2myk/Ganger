@@ -115,6 +115,18 @@ class SearchComponent {
             this.searchBox.value = "";
             this.searchResults.style.display = "none";
         });
+
+         // 画面外クリックで検索履歴・候補ボックスを閉じる
+        document.addEventListener("click", (event) => {
+            if (!this.searchBox.contains(event.target) &&
+                !this.searchResults.contains(event.target) &&
+                !this.searchCandidates.contains(event.target) &&
+                !this.searchHistoryContainer.contains(event.target)) {
+                this.searchResults.style.display = "none";
+                this.searchCandidates.style.display = "none";
+                this.searchHistoryContainer.style.display = "none";
+            }
+        });
     }
 
     async fetchCandidates(query) {
@@ -130,6 +142,9 @@ class SearchComponent {
 
             const data = await response.json();
             this.displayCandidates(data);
+
+            this.searchResults.style.display = "block";
+            this.searchCandidates.style.display = "block"; 
         } catch (error) {
             console.error("Error fetching search candidates:", error);
             this.searchCandidates.innerHTML = `<li style="color: red;">候補の取得に失敗しました。</li>`;

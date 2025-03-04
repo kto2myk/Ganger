@@ -1,20 +1,23 @@
 .contents {
-    padding-left: 19vw;
+    margin-left:19vw;
     height: auto;
-    width: 60dvw;
+    width: calc(100% - 19vw);
     background-color: #fff;
 }
-
+@media screen and (max-width: 1000px) {
+    .contents {
+        margin-left:10vh;
+        width: calc(100% - 10vh);
+    }
+    
+}
 .contents h1 {
-    font-weight: 400;
+    font-size: clamp(1rem, 2vw, 2rem);
 }
 
 .contents h2 {
-    margin-left: 5dvw;
-    
+    font-size: clamp(0.8rem, 1.5vw, 1.5rem);
 }
-
-
 .notification-container {
     width: 100%;
     height: 12dvh;
@@ -23,22 +26,36 @@
     border: solid 1px #ddd;
 }
 
+.notification-container {
+    width: 100%;
+    min-height: 12dvh; /* 高さを固定じゃなくて可変にする */
+    display: flex;
+    align-items: center;
+    border: solid 1px #ddd;
+    padding: 10px; /* 余白を調整 */
+}
+
 .profile {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 30%;
-    height: 80%;
+    justify-content: flex-start; /* 画像とテキストを左寄せ */
+    width: 30%; /* 固定で 30% */
+    height: auto;
     text-decoration: none;
     color: #000;
 }
 
+.profile p {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    margin-left: 10px; /* テキストの余白 */
+}
+
 .profile img {
-    width: auto;
-    height: 100%;
-    margin-left: 5%;
+    width: 50px; /* 固定サイズにするとバランス取りやすい */
+    height: 50px;
     border: solid 1px #ddd;
     border-radius: 50%;
+    object-fit: cover; /* 画像を綺麗に収める */
 }
 
 .profile img:hover {
@@ -47,15 +64,25 @@
 
 .post-noti, 
 .product-noti {
-    display: block;
-    width: 100%;
-    height: 100%;
+    flex-grow: 1; /* これで残りのスペースを全部使う！ */
+    height: auto;
     padding-left: 5%;
     text-decoration: none;
     color: #000;
 }
+/* 投稿メッセージのpタグ */
+.post-noti p,
+.product-noti p {
+    font-size: clamp(0.5rem, 2vw, 1rem);
+    margin: 0; /* デフォルトのマージンを削除（はみ出し防止） */
+    white-space: normal; /* 改行を許可（テキスト折り返し） */
+    word-wrap: break-word; /* 長すぎる単語を折り返す */
+}
 
-.post-noti:hover,
-.product-noti:hover {
-    background-color: #eee;
+/* 日付のスタイル */
+.post-noti small,
+.product-noti small {
+    display: block; /* 日付を独立したブロック要素にする */
+    margin-top: 5px; /* 上のpタグとの間に余白を作る */
+    font-size: 0.8rem; /* 小さく調整 */
 }

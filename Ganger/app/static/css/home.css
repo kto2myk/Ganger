@@ -275,13 +275,6 @@ header {
     fill: #a46a9a;
 }
 
-@media (max-width: 1200px) {
-    .contents {
-        width: 80dvw;
-        padding-left: 10vh;
-    }
-}
-
   /* 保存済みボタンのスタイル */
 .saved svg{
   /* background-color: #007bff; */
