@@ -47,7 +47,7 @@
                     <div class="purchase-header">
                         <div class="purchase-info">
                             <p><strong>支払い方法:</strong> {{ sale['payment_method'] }}</p>
-                            <p><strong>合計金額:</strong> ¥{{ sale['total_amount'] }}</p>
+                            <p><strong>合計金額:</strong> ¥{{ sale['total_amount']|int }}</p>
                             <p><strong>支払いステータス:</strong> {{ sale['payment_status'] }}</p>
                             <p><strong>購入日:</strong> {{ sale['created_at'] }}</p>
                         </div>
@@ -66,9 +66,9 @@
                                 </div>
                                 <div class="item-details">
                                     <p><strong>商品名:</strong> {{ item['product_name'] }}</p>
-                                    <p><strong>価格:</strong> ¥{{ item['price'] }}</p>
+                                    <p><strong>価格:</strong> ¥{{ item['price']|int }}</p>
                                     <p><strong>数量:</strong> {{ item['quantity'] }}</p>
-                                    <p><strong>小計:</strong> ¥{{ item['subtotal'] }}</p>
+                                    <p><strong>小計:</strong> ¥{{ item['subtotal']|int }}</p>
                                 </div>
                             </li>
                         {% endfor %}

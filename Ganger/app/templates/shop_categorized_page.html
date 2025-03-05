@@ -138,7 +138,7 @@
                         <img src="{{ pd.profile_image }}" alt="{{ pd.username }} さんのアイコン">
                         <span>{{ pd.username }}</span>
                     </div>
-                    <p class="price">{{ pd.price }}円</p>
+                    <p class="price">{{ pd.price|int }}円</p>
                 </div>
             {% endfor %}
         {% endfor %}
