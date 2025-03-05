@@ -60,7 +60,7 @@
         </div>
 
         <p class="body_text" id="body_text">   
-            <p class="body_text">{{ post.body_text | convert_tags | safe }}</p>
+            {{ post.body_text | convert_tags | safe }}
         </p>
 
         <p class="post_time">投稿時間: {{ post.post_time }}</p>

@@ -19,12 +19,13 @@
 }
 
 .to-message-room {
-    position: absolute;
+    position: fixed;
     width: 30%;
+    height: 100vh;
     min-width: 200px;
-    min-height: 100dvh;
+    max-height: 100vh;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .to-message-room h2 {
@@ -57,7 +58,7 @@
 
 .message-room-info {
     width: 70%;
-    height: 100%;
+    height: auto;
     margin-left: 10%;
     color: #000;
 }
@@ -70,10 +71,19 @@
 
 .message-room-info small, sub {
     color: #aaa;
-    margin: 0.5vh;
+    margin: 0.5%;
     font-size: clamp(0.6rem, 2vw, 0.7rem);
 }
-
+.message-room-info small {
+    display: inline-block; /* 必要に応じて block にする */
+    white-space: nowrap; /* 改行を防ぐ */
+    overflow: hidden; /* はみ出した部分を隠す */
+    text-overflow: ellipsis; /* 省略記号「...」を表示 */
+    max-width: 150px; /* 適切な幅を指定 */    
+}
+.message-room-info sub {
+    display: inline-block;
+}
 .find-message-user {
     position: absolute;
     display: flex;
