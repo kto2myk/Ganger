@@ -39,7 +39,8 @@
 
 
 
-<script>
+<script type="module">
+    import { initializeSplide } from "/static/js/splide_manager.js"; // Splideの管理スクリプトをインポート
     const contentInput = document.getElementById('content');
     const suggestionsList = document.getElementById('tag-suggestions');
     const tagListInput = document.getElementById('tag-list');
@@ -70,21 +71,42 @@
     }
 
     function displayImages(files) {
-        previewContainer.innerHTML = "";
-        Array.from(files).forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const listItem = document.createElement('li');
-                listItem.innerHTML = `<img src="${e.target.result}" alt="画像${index + 1}">`;
-                previewContainer.appendChild(listItem);
-            };
-            reader.readAsDataURL(file);
-        });
-        let textArea = document.getElementById('text-content-area')
-        let postButton = document.getElementById('post-button')
-        textArea.style.display = "block"
-        postButton.style.display = "block"
-    }
+    previewContainer.innerHTML = "";
+
+    // Splideの構造を作成
+    const splideWrapper = document.createElement("div");
+    splideWrapper.className = "splide";
+    splideWrapper.id = "imageSplide";
+
+    const splideTrack = document.createElement("div");
+    splideTrack.className = "splide__track";
+
+    const splideList = document.createElement("ul");
+    splideList.className = "splide__list";
+
+    Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const listItem = document.createElement("li");
+            listItem.className = "splide__slide";
+            listItem.innerHTML = `<img src="${e.target.result}" alt="画像${index + 1}">`;
+            splideList.appendChild(listItem);
+
+            if (index === files.length - 1) {
+                setTimeout(() => initializeSplide("#imageSplide"), 100);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    splideTrack.appendChild(splideList);
+    splideWrapper.appendChild(splideTrack);
+    previewContainer.appendChild(splideWrapper);
+
+    // テキストエリアと投稿ボタンを表示
+    document.getElementById('text-content-area').style.display = "block";
+    document.getElementById('post-button').style.display = "block";
+}
 
     // 初期画像がある場合はセット
     if (initialImagePath) {
