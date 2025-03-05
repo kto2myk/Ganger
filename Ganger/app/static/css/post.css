@@ -307,3 +307,61 @@ details[open] {
 #custom-summary:hover {
     background-color: #eee;
 }
+
+#modal-user {
+    display: flex;
+    align-items: center;
+    width: 30%;
+    text-decoration: none;
+}
+
+#modal-user img {
+    display: inline;
+    width: 50px;
+    height: 50px;
+    margin: 0;
+    margin-left: 30%;
+    border: solid 1px #ddd;
+    border-radius: 50%;
+}
+
+#modal-user p {
+    color: #000;
+}
+
+.comment-input {
+    margin-top: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.comment-input input {
+    display: inline-block;
+    border: solid 1px #ddd;
+    border-radius: 15px;
+    width: 70%;
+    height: 40px;
+    word-wrap: break-word;
+    padding: 5px;
+    background-color: #eee;
+}
+
+.comment-input button {
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    background-color: #a46a9a;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.comment-input button:hover {
+    filter: brightness(0.7);
+}
+
+.comment-input button img {
+    filter: invert(100%);
+}
