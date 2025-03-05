@@ -61,16 +61,49 @@
     height: 100%;
 }
 
-#image-preview {
+.splide {
+    width: 100%;
+    height: 55vh; 
+    max-width: 500px; /* 適宜調整 */
+    margin: auto;
+}
+
+.splide__track {
+    width: 100%;
+    height: 100%;
+}
+
+.splide__list {
     display: flex;
+    padding: 0;
+    margin: 0;
+}
+
+.splide__slide {
+    display: flex;
+    justify-content: center;
     align-items: center;
     width: 100%;
     height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-x: auto;
 }
 
+.splide__slide img {
+    width: 100%;
+    height: 100%;
+    max-height: 55vh; /* 高さ制限 */
+    object-fit: cover; /* 画像をスライダー枠にフィット */
+    border-radius: 10px;
+}
+
+/* 競合している要素の調整 */
+#image-preview {
+    display: block; /* Flexから変更 */
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* スクロールを無効化 */
+}
 .temp-area {
     width: 60%;
     margin: 0 auto;
