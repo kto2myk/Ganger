@@ -228,6 +228,51 @@ body {
     max-height: 365px;
 } */
 
+/* Swiperのナビゲーション要素のカスタマイズ */
+.swiper-button-next,
+.swiper-button-prev {
+    background-color: rgba(255, 255, 255, 0.9);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 18px;
+    color: #333;
+    font-weight: bold;
+}
+
+/* ホバー時のエフェクト */
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ページネーションのカスタマイズ */
+.swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    background: #999;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+.swiper-pagination-bullet-active {
+    background: #333;
+    opacity: 1;
+    width: 24px;
+    border-radius: 4px;
+}
+
+/* ページネーションの位置調整 */
+.swiper-pagination {
+    bottom: 10px !important;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .swiper {
