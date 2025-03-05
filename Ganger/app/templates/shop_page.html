@@ -13,9 +13,9 @@
 {% include 'components/sidebar.html' %}
 
 <nav class="category-nav">
-    <a href="{# {{ url_for(######) }} #}"><button data-category="all">すべてのアイテム</button></a>
+    <a href="/shop/fetch_products_by_categories/clothes+cap+shoes+accessories"><button data-category="all">すべてのアイテム</button></a>
     <a href="/shop/fetch_products_by_category/clothes"><button data-category="accessories">衣類</button></a>
-    <a href="/shop/fetch_products_by_category/cap"><button data-category="web-items">帽子・靴</button></a>
+    <a href="/shop/fetch_products_by_categories/cap+shoes"><button data-category="web-items">帽子・靴</button></a>
     <a href="/shop/fetch_products_by_category/accessories"><button data-category="shoes">アクセサリー</button></a>
 </nav>
 
@@ -56,7 +56,7 @@
                             <p>{{ product.category.category_name }}</p>
                         </div>
                         <div>
-                            <h4>{{ product.price }}円</h4>
+                            <h4>{{ product.price|int }}円</h4>
                         </div>
                     </div>
                 {% endfor %}
