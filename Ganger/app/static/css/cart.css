@@ -221,19 +221,33 @@ background-color: #e0e0e0;
     border-radius: 8px;
 }
 
+.empty-cart p {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 18px;
+    margin: 15px 0;
+    color: #333;
+    letter-spacing: 1px;
+}
+
 .continue-shopping {
     display: inline-block;
     margin-top: 20px;
     padding: 15px 30px;
-    background-color: #e60012;
+    background-color: #2c2c2c;
     color: white;
     text-decoration: none;
     border-radius: 4px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500;
+    letter-spacing: 1px;
+    border: 1px solid transparent;
 }
 
 .continue-shopping:hover {
-    background-color: #cc0000;
+    background-color: #ffffff;
+    color: #2c2c2c;
+    border: 1px solid #2c2c2c;
 }
 
 .item-unit-price {
