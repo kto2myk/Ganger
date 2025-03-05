@@ -74,29 +74,29 @@
 <script src="{{ url_for('static', filename='js/hamburger_menu.js') }}"></script>
 <script>
     /*カテゴリー別ページ*/
-    document.querySelectorAll('.category-nav button').forEach(button => {
-        button.addEventListener('click', () => {
-            const category = button.getAttribute('data-category');
-            const content = document.getElementById('content');
+    // document.querySelectorAll('.category-nav button').forEach(button => {
+    //     button.addEventListener('click', () => {
+    //         const category = button.getAttribute('data-category');
+    //         const content = document.getElementById('content');
             
-            switch(category) {
-                case 'all':
-                    content.innerHTML = '<p>すべてのアイテムが表示されます。</p>';
-                    break;
-                case 'accessories':
-                    content.innerHTML = '<p>アクセサリーが表示されます。</p>';
-                    break;
-                case 'web-items':
-                    content.innerHTML = '<p>ウェブアイテムが表示されます。</p>';
-                    break;
-                case 'shoes':
-                    content.innerHTML = '<p>シューズが表示されます。</p>';
-                    break;
-                default:
-                    content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
-            }
-        });
-    });
+    //         switch(category) {
+    //             case 'all':
+    //                 content.innerHTML = '<p>すべてのアイテムが表示されます。</p>';
+    //                 break;
+    //             case 'accessories':
+    //                 content.innerHTML = '<p>アクセサリーが表示されます。</p>';
+    //                 break;
+    //             case 'web-items':
+    //                 content.innerHTML = '<p>ウェブアイテムが表示されます。</p>';
+    //                 break;
+    //             case 'shoes':
+    //                 content.innerHTML = '<p>シューズが表示されます。</p>';
+    //                 break;
+    //             default:
+    //                 content.innerHTML = '<p>該当するカテゴリが見つかりません。</p>';
+    //         }
+    //     });
+    // });
 
 
     /*スライドショー*/
