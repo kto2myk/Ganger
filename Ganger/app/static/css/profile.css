@@ -97,6 +97,16 @@
 
 .follows {
     display: flex;
+    gap: 5vw;
+}
+
+.follows button{
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
 }
 
 .follow_count {
@@ -130,7 +140,17 @@
     height: auto;
 }
 
-.post_container ol {
+.post_container ul h3{
+    width: 100%;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding-bottom: 5vh;
+}
+
+.post_container ol{
     padding: 0;
     width: calc(33.33% - 10px); /* 3等分して余白を考慮 */
     box-sizing: border-box;
@@ -158,4 +178,171 @@
 .clear {
     flex-basis: 100%; /* 改行を作成 */
     height: 0;
+}
+
+
+.navigation-menu {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    background-color: #fff;
+    padding: 10px 0;
+    border-top: 1px solid #ddd;
+    gap: 5vw;
+}
+
+.nav-item {
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.nav-icon {
+    width: 32px;
+    height: 32px;
+    color: gray;
+    transition: color 0.3s ease-in-out;
+}
+
+.nav-item:hover .nav-icon {
+    color: black;
+}
+
+.nav-item.active .nav-icon {
+    color: black;
+    transform: scale(1.1);
+}
+
+/* モーダル全体 */
+#follow_modal {
+    position: fixed;
+    top: 15dvh;  /* 上の余白を少し増やす */
+    right: -350px; /* 初期状態で隠す */
+    width: 320px;
+    max-width: 90%;
+    height: auto;
+    max-height: 60dvh;
+    background: rgba(255, 255, 255, 0.95); /* 透明感のある白 */
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+    /* padding: 15px; */
+    border-radius: 15px; /* 角を丸く */
+    transition: right 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    display: none;
+    z-index: 1000;
+    overflow: hidden; /* スクロール可能に */
+}
+
+/* モーダルがアクティブな時（表示） */
+#follow_modal.active {
+    right: 5vw; /* 画面の端から少し開く */
+    display: block;
+    opacity: 1;
+}
+
+/* モーダルの中身 */
+.modal_content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 閉じるボタン */
+.close {
+    align-self: flex-end;
+    cursor: pointer;
+    font-size: 22px;
+    font-weight: bold;
+    background: none;
+    border: none;
+    color: #777;
+    transition: color 0.2s ease-in-out;
+}
+
+.close:hover {
+    color: #d22;
+}
+
+/* フォローリスト */
+#follow_list {
+    padding: 0;
+    margin: 0;
+    min-height: 20dvh; /* 短すぎるリストでも安定するように */
+    max-height: 40dvh; /* リストが多い場合スクロール可能に */
+    overflow-y: auto; /* 縦スクロールを有効化 */
+    overflow-x: hidden; /* 横スクロールを完全無効化 */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column; /* リストのレイアウトが崩れないように */
+}
+
+/* スクロールバーのカスタマイズ（Chrome, Edge, Safari） */
+#follow_list::-webkit-scrollbar {
+    width: 8px;
+}
+
+#follow_list::-webkit-scrollbar-thumb {
+    background-color: #bbb;
+    border-radius: 4px;
+}
+
+#follow_list::-webkit-scrollbar-track {
+    background: #eee;
+}
+/* フォローリスト（UL / OLの共通設定） */
+#follow_list ul,
+#follow_list ol {
+    padding: 0;
+    margin: 0;
+    list-style: none; /* リストのデフォルトスタイル削除 */
+}
+
+/* 各ユーザーリスト（LI） */
+.follow-user-list li {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* 左寄せに */
+    width: 100%;
+    height: 12dvh;
+    border: solid 1px #ddd;
+    border-radius: 10px; /* 丸みを帯びたデザイン */
+    padding: 10px;
+    transition: background-color 0.2s ease-in-out;
+    margin: 0; /* 左の余白をなくす */
+}
+
+.follow-user-list li:hover {
+    background-color: #f7f7f7;
+}
+
+/* ユーザーリンク（クリック範囲） */
+.follow-user {
+    display: flex;
+    align-items: center;
+    width: 100%; /* リンク全体を広げすぎない */
+    text-decoration: none;
+    color: black;
+    gap: 10px; /* 画像と名前の間隔を適切に */
+}
+
+/* ユーザー画像 */
+.follow-user img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: solid 1px #ddd;
+    transition: transform 0.2s ease-in-out;
+    margin-left: 0; /* 左の余白を削除 */
+}
+
+.follow-user img:hover {
+    transform: scale(1.1);
+}
+
+/* ユーザー名 */
+.follow-user h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
 }

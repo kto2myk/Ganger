@@ -2,6 +2,7 @@ from flask import Flask, request, session, render_template, redirect, url_for,fl
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect  # CSRF保護用
 from flask_redis import FlaskRedis
+from sqlalchemy.exc import SQLAlchemyError  # SQLAlchemyのエラー
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
@@ -244,7 +245,6 @@ def toggle_follow(follow_user_id):
     
 @app.route("/my_profile/<id>", methods=["GET"])
 def my_profile(id):
-
     try:
         # プロフィール情報を取得
         profile_data = user_manager.get_user_profile_with_posts(id)
@@ -257,7 +257,54 @@ def my_profile(id):
         app.logger.error(f"Unexpected error: {e}")
         return ("ユーザーデータの取得に失敗しました。")
     
+@app.route("/api/get_liked_posts", methods=["GET"])
+def get_liked_posts():
+    try:
+        posts = user_manager.get_liked_posts()
+        return jsonify(posts)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/get_saved_posts", methods=["GET"])
+def get_saved_posts():
+    try:
+        posts = user_manager.get_saved_posts()
+        return jsonify(posts)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/get_user_posts", methods=["GET"])
+def get_user_posts():
+    try:
+        posts = user_manager.get_user_posts()
+        return jsonify(posts)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@app.route("/get_following/<user_id>", methods=["GET"])
+def get_following(user_id):
+    """
+    指定ユーザーがフォローしているユーザーを取得
+    """
+    try:
+        users_data = user_manager.get_following_users(user_id)
+        return jsonify(users_data), 200  # 正常な場合 200 OK
+
+    except (ValueError, SQLAlchemyError) as e:
+        return jsonify({"error": str(e)}), 500  # 例外発生時は 500 Internal Server Error
+
+
+@app.route("/get_followers/<user_id>", methods=["GET"])
+def get_followers(user_id):
+    """
+    指定ユーザーをフォローしているユーザーを取得
+    """
+    try:
+        users_data = user_manager.get_followers_users(user_id)
+        return jsonify(users_data), 200  # 正常な場合 200 OK
+
+    except (ValueError, SQLAlchemyError) as e:
+        return jsonify({"error": str(e)}), 500  # 例外発生時は 500 Internal Server Error
 @app.route("/my_profile/update_info",methods = ["GET","POST"])
 def update_info():
     if request.method == "GET":

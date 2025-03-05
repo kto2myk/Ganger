@@ -2,7 +2,7 @@
 {% block title %}profile/Ganger{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="../static/css/profile.css">
-<script src="../static/js/ajax.js"></script>
+<!-- <script src="../static/js/ajax.js"></script> -->
 {% endblock %}
 {% block content %}
     <div class="contents">
@@ -77,16 +77,49 @@
             </div>
 
             <div class="profile_info">
-                <div class="follows">
-                    <div class="follow_count"><p>follow: </p><p class="int">{{ profile.following_count }}</p></div>
-                    <div class="follower_count"><p>follower: </p><p class="int">{{ profile.follower_count }}</p></div>
+                <div class="follows" data-user-id="{{ profile.id }}">
+                    <button id="show_following">
+                        <div class="follow_count">
+                            <p>follow: </p><p class="int">{{ profile.following_count }}</p>
+                        </div>
+                    </button>
+                    <button id="show_followers">
+                        <div class="follower_count">
+                            <p>follower: </p><p class="int">{{ profile.follower_count }}</p>
+                        </div>
+                    </button>
                 </div>
-
+                <!-- モーダル -->
+                <div id="follow_modal" class="modal">
+                    <div class="modal_content">
+                        <span class="close">&times;</span>
+                        <h2 id="modal_title"></h2>
+                        <ul id="follow_list"></ul>
+                    </div>
+                </div>
                 <div class="BIO">
                     <p>{% if profile.bio %} {{ profile.bio }} {% endif %}</p>
                 </div>
             </div>
-
+            {% if profile.is_me %}
+                <nav class="navigation-menu">
+                    <div class="nav-item" id="my-post">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="nav-icon">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </div>
+                    <div class="nav-item" id="favorite">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="nav-icon">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="nav-item" id="save">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="nav-icon">
+                            <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </nav>
+            {% endif %}
             <div class="post_container">
 
                 <ul>
@@ -106,7 +139,7 @@
                             {% endif %}
                         {% endfor %}
                     {% else %}
-                        <p>まだ投稿がありません。</p>
+                        <h3>まだ投稿がありません。</h3>
                     {% endif %} 
                 </ul>
             </div>
@@ -169,4 +202,157 @@
 });
 
     </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const navItems = document.querySelectorAll(".nav-item");
+        const postContainer = document.querySelector(".post_container ul");
+    
+        console.log("DOMContentLoaded: スクリプト読み込み完了");
+    
+        const fetchAndRenderPosts = async (endpoint, clickedItem) => {
+            console.log(`APIリクエスト送信: ${endpoint}`);
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) {
+                    throw new Error("データの取得に失敗しました");
+                }
+                const posts = await response.json();
+                console.log("取得したデータ:", posts);
+    
+                updatePostContainer(posts);
+    
+                navItems.forEach(item => item.classList.remove("active"));
+                clickedItem.classList.add("active");
+            } catch (error) {
+                console.error(error);
+                postContainer.innerHTML = "<h3>投稿の取得に失敗しました。</h3>";
+            }
+        };
+    
+        const updatePostContainer = (posts) => {
+            postContainer.innerHTML = "";
+            if (posts.length === 0) {
+                postContainer.innerHTML = "<h3>まだ投稿がありません。</h3>";
+                return;
+            }
+    
+            posts.forEach((post, index) => {
+                const ol = document.createElement("ol");
+                const imageArea = document.createElement("div");
+                imageArea.classList.add("image_area");
+    
+                if (post.first_image) {
+                    const link = document.createElement("a");
+                    link.href = `/display_post/${post.post_id}`;
+    
+                    const img = document.createElement("img");
+                    img.src = post.first_image;
+                    img.alt = "投稿画像";
+    
+                    link.appendChild(img);
+                    imageArea.appendChild(link);
+                }
+    
+                ol.appendChild(imageArea);
+                postContainer.appendChild(ol);
+    
+                if ((index + 1) % 3 === 0) {
+                    const clearDiv = document.createElement("div");
+                    clearDiv.classList.add("clear");
+                    postContainer.appendChild(clearDiv);
+                }
+            });
+        };
+    
+        const profileButton = document.getElementById("my-post");
+        const favoriteButton = document.getElementById("favorite");
+        const saveButton = document.getElementById("save");
+    
+        if (profileButton) {
+            profileButton.addEventListener("click", (e) => fetchAndRenderPosts("/api/get_user_posts", e.currentTarget));
+        }
+    
+        if (favoriteButton) {
+            favoriteButton.addEventListener("click", (e) => fetchAndRenderPosts("/api/get_liked_posts", e.currentTarget));
+        }
+    
+        if (saveButton) {
+            saveButton.addEventListener("click", (e) => fetchAndRenderPosts("/api/get_saved_posts", e.currentTarget));
+        }
+    
+        if (profileButton) {
+            console.log(profileButton)
+            fetchAndRenderPosts("/api/get_user_posts", profileButton);
+        }
+    });
+</script>
+<script>     
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("follow_modal");
+    const followList = document.getElementById("follow_list");
+    const modalTitle = document.getElementById("modal_title");
+    const closeModal = document.querySelector(".close");
+    const userId = document.querySelector(".follows").dataset.userId;
+
+    function fetchFollowData(type) {
+        const url = type === "following" ? `/get_following/${userId}` : `/get_followers/${userId}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                followList.innerHTML = ""; // 一旦クリア
+                modalTitle.textContent = type === "following" ? "フォロー中" : "フォロワー";
+
+                if (data.length === 0) {
+                    const noFollowMsg = document.createElement("p");
+                    noFollowMsg.textContent = "まだユーザーがいません。";
+                    noFollowMsg.style.textAlign = "center";
+                    noFollowMsg.style.color = "#666";
+                    followList.appendChild(noFollowMsg);
+                } else {
+                    const userList = document.createElement("ul");
+                    userList.classList.add("follow-user-list");
+
+                    data.forEach(user => {
+                        const listItem = document.createElement("li");
+
+                        const link = document.createElement("a");
+                        link.href = `/my_profile/${user.id}`;
+                        link.classList.add("follow-user");
+
+                        const img = document.createElement("img");
+                        img.src = user.profile_image;
+                        img.alt = user.username;
+
+                        const name = document.createElement("h3");
+                        name.textContent = user.username;
+
+                        link.appendChild(img);
+                        link.appendChild(name);
+                        listItem.appendChild(link);
+                        userList.appendChild(listItem);
+                    });
+
+                    followList.appendChild(userList);
+                }
+
+                modal.classList.add("active");
+            })
+            .catch(error => console.error("Error:", error));
+    }
+
+    document.getElementById("show_following").addEventListener("click", () => fetchFollowData("following"));
+    document.getElementById("show_followers").addEventListener("click", () => fetchFollowData("followers"));
+
+    closeModal.addEventListener("click", () => modal.classList.remove("active"));
+
+    // **モーダル外クリックで閉じる**
+    window.addEventListener("click", (event) => {
+        if (modal.classList.contains("active") && !modal.querySelector(".modal_content").contains(event.target)) {
+            modal.classList.remove("active");
+        }
+    });
+});
+</script>
 {% endblock %}

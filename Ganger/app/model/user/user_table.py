@@ -185,7 +185,9 @@ class UserManager(DatabaseManager):
 
             # **データを辞書リストに変換**
             users_data = [
-                {"id": Validator.encrypt(user.id), "username": user.username, "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")}
+                {"id": Validator.encrypt(user.id), 
+                "username": user.username,
+                "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")}
                 for user in followed_users
             ]
 
@@ -196,6 +198,78 @@ class UserManager(DatabaseManager):
             self.session_rollback(Session)
             return {"success": False, "result": str(e)}
             
+
+    def get_following_users(self, user_id, Session=None):
+        """
+        指定したユーザーがフォローしているユーザーを取得する。
+        フォローしているユーザーがいない場合、空リストを返す。
+        """
+        Session = self.make_session(Session)
+        try:
+            user_id = Validator.decrypt(user_id)
+
+            # **フォローしているユーザーを取得**
+            following_users = (
+                Session.query(User.id, User.username, User.profile_image)
+                .join(Follow, Follow.follow_user_id == User.id)
+                .filter(Follow.user_id == user_id)
+                .order_by(User.username)
+                .all()
+            )
+
+            # **データを辞書リストに変換**
+            users_data = [
+                {
+                    "id": Validator.encrypt(user.id),
+                    "username": user.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")
+                }
+                for user in following_users
+            ]
+
+            self.pop_and_close(Session)
+            return users_data
+
+        except Exception as e:
+            self.session_rollback(Session)
+            raise e  # エンドポイント側でキャッチさせる
+
+    def get_followers_users(self, user_id, Session=None):
+        """
+        指定したユーザーをフォローしているユーザーを取得する。
+        フォローされているユーザーがいない場合、空リストを返す。
+        """
+        Session = self.make_session(Session)
+        try:
+            user_id = Validator.decrypt(user_id)
+
+            # **フォローされているユーザーを取得**
+            follower_users = (
+                Session.query(User.id, User.username, User.profile_image)
+                .join(Follow, Follow.user_id == User.id)
+                .filter(Follow.follow_user_id == user_id)
+                .order_by(User.username)
+                .all()
+            )
+
+            # **データを辞書リストに変換**
+            users_data = [
+                {
+                    "id": Validator.encrypt(user.id),
+                    "username": user.username,
+                    "profile_image": url_for("static", filename=f"images/profile_images/{user.profile_image}")
+                }
+                for user in follower_users
+            ]
+
+            self.pop_and_close(Session)
+            return users_data
+
+        except Exception as e:
+            self.session_rollback(Session)
+            raise e  # エンドポイント側でキャッチさせる
+
+
     def updata_user_info(self,user_id=None,username=None,real_name=None,address=None,bio=None,profile_image=None,Session=None):
         """
         ユーザーの情報の更新を一括で請け負うメソッド。更新されるデータがある場合、自動でNONEが解除され更新される。
@@ -406,6 +480,136 @@ class UserManager(DatabaseManager):
             self.session_rollback(Session)
             self.app.logger.error(f"Unexpected error: {e}")
             raise
+
+
+    def get_liked_posts(self, Session=None):
+        """
+        現在のユーザーが「いいね」した投稿を取得する。
+
+        Returns:
+            list: いいねした投稿のリスト
+        """
+        try:
+            user_id = Validator.decrypt(session.get('id'))
+            Session = self.make_session(Session)
+
+            liked_posts = (
+                Session.query(Post)
+                .join(Like, Like.post_id == Post.post_id)
+                .filter(Like.user_id == user_id)
+                .options(joinedload(Post.images))
+                .order_by(Like.created_at.desc())
+                .all()
+            )
+
+            formatted_posts = [
+                {
+                    "post_id": Validator.encrypt(post.post_id),
+                    "first_image": (
+                        url_for("static", filename=f"images/post_images/{post.images[0].img_path}")
+                        if post.images else None
+                    ),
+                }
+                for post in liked_posts
+            ]
+
+            self.pop_and_close(Session)
+            return formatted_posts
+
+        except SQLAlchemyError as db_error:
+            self.session_rollback(Session)
+            self.app.logger.error(f"Database error: {db_error}")
+            raise
+        except Exception as e:
+            self.session_rollback(Session)
+            self.app.logger.error(f"Unexpected error: {e}")
+        raise
+    
+    def get_saved_posts(self, Session=None):
+        """
+        現在のユーザーが「保存」した投稿を取得する。
+
+        Returns:
+            list: 保存した投稿のリスト
+        """
+        try:
+            user_id = Validator.decrypt(session.get('id'))
+            Session = self.make_session(Session)
+
+            saved_posts = (
+                Session.query(Post)
+                .join(SavedPost, SavedPost.post_id == Post.post_id)
+                .filter(SavedPost.user_id == user_id)
+                .options(joinedload(Post.images))
+                .order_by(SavedPost.created_at.desc())
+                .all()
+            )
+
+            formatted_posts = [
+                {
+                    "post_id": Validator.encrypt(post.post_id),
+                    "first_image": (
+                        url_for("static", filename=f"images/post_images/{post.images[0].img_path}")
+                        if post.images else None
+                    ),
+                }
+                for post in saved_posts
+            ]
+
+            self.pop_and_close(Session)
+            return formatted_posts
+
+        except SQLAlchemyError as db_error:
+            self.session_rollback(Session)
+            self.app.logger.error(f"Database error: {db_error}")
+            raise
+        except Exception as e:
+            self.session_rollback(Session)
+            self.app.logger.error(f"Unexpected error: {e}")
+            raise
+
+    def get_user_posts(self, Session=None):
+        """
+        現在のユーザー自身の投稿を取得する（JINJAの初期レンダリングを避ける）。
+
+        Returns:
+            list: 自身の投稿のリスト
+        """
+        try:
+            user_id = Validator.decrypt(session.get('id'))
+            Session = self.make_session(Session)
+
+            user_posts = (
+                Session.query(Post)
+                .filter(Post.user_id == user_id, Post.reply_id == None)
+                .options(joinedload(Post.images))
+                .order_by(Post.post_time.desc())
+                .all()
+            )
+
+            formatted_posts = [
+                {
+                    "post_id": Validator.encrypt(post.post_id),
+                    "first_image": (
+                        url_for("static", filename=f"images/post_images/{post.images[0].img_path}")
+                        if post.images else None
+                    ),
+                }
+                for post in user_posts
+            ]
+
+            self.pop_and_close(Session)
+            return formatted_posts
+
+        except SQLAlchemyError as db_error:
+            self.session_rollback(Session)
+            self.app.logger.error(f"Database error: {db_error}")
+            raise
+        except Exception as e:
+            self.session_rollback(Session)
+            self.app.logger.error(f"Unexpected error: {e}")
+            raise
+
 
     def toggle_follow(self, followed_user_id,Session=None):
         """
