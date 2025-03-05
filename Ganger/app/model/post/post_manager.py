@@ -271,7 +271,7 @@ class PostManager(DatabaseManager):
                     "like_count": len(post.likes or []),
                     "repost_count": len(post.reposts or []),
                     "saved_count": len(post.saved_by_users or []),
-                    "comment_count": len(post.replies or []),  # 返信の数
+                    "comment_count": Session.query(func.count(Post.post_id)).filter(Post.reply_id == post.post_id).scalar(),  # 返信の数
                     "repost_user": (
                         {
                             "id": Validator.encrypt(repost.user.id),
@@ -350,8 +350,7 @@ class PostManager(DatabaseManager):
                     joinedload(Post.author),
                     joinedload(Post.likes),
                     joinedload(Post.reposts),
-                    joinedload(Post.saved_by_users),
-                    joinedload(Post.replies)
+                    joinedload(Post.saved_by_users)
                 )
                 .all()
             )
@@ -367,8 +366,7 @@ class PostManager(DatabaseManager):
                 like_count = len(post.likes or [])
                 repost_count = len(post.reposts or [])
                 saved_count = len(post.saved_by_users or [])
-                comment_count = len(post.replies or [])
-
+                comment_count =  Session.query(func.count(Post.post_id)).filter(Post.reply_id == post.post_id).scalar()
                 # データをフォーマット
                 formatted_post = {
                     "post_id": Validator.encrypt(post.post_id),

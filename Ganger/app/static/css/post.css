@@ -132,9 +132,10 @@
 
 
 .post_time {
-    position: absolute;
-    bottom: 5;
-    right: 5;
+    /* position: absolute; */
+    /* bottom: 5;
+    right: 5; */
+    float: right;
     color: #aaa;
 }
 
