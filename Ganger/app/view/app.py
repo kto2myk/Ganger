@@ -6,6 +6,7 @@ from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
 import os  # ファイルパス操作用
 import re
+import random
 from Ganger.app.model.model_manager.model import User
 from Ganger.app.model.validator.validate import Validator  # バリデーション用
 from Ganger.app.model.database_manager.database_manager import DatabaseManager # データベースマネージャー
@@ -767,8 +768,10 @@ def fetch_products_by_categories(categories):
         for product in products:
             if product['category_name'] not in seen_products:
                 unique_products.append(product)
+                
                 seen_products.add(product['category_name'])
-
+        else:
+            random.shuffle(unique_products)
         return render_template("shop_categorized_page.html", products=unique_products)
     
     except Exception as e:
