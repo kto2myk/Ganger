@@ -281,16 +281,14 @@ class UserManager(DatabaseManager):
             user_info = [data.strip() if isinstance(data, str) else data for data in [user_id, username, real_name, address, bio] if data is not None]
 
             id = Validator.decrypt(session["id"])
-
             user = Session.query(User).filter_by(id=id).first()
-            self.app.logger.info(user)
 
             if not user:
                 self.session_rollback(Session)
                 raise ValueError("存在しないユーザーです")
             
             if user_info[0]: #! 重複なしを確認
-                Validate_user_id = Session.query(User).filter_by(user_id=user_id).first()
+                Validate_user_id = Session.query(User.user_id).filter_by(user_id=user_id).first()
                 if not Validate_user_id:
                     user.user_id = user_info[0]
                 else:

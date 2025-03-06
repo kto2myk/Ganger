@@ -312,7 +312,7 @@ def update_info():
         return render_template("my_info.html",user=user)
     else:
         
-            result = user_manager.updata_user_info(
+            user_manager.updata_user_info(
                 user_id = request.form.get('user_id',None),
                 username = request.form.get('username',None),
                 real_name=request.form.get('real_name',None),
@@ -320,7 +320,7 @@ def update_info():
                 bio=request.form.get('bio',None),
                 profile_image=request.files.get('profile_image',None)
             )
-            return jsonify(result)
+            return redirect(url_for("home"))
 
 @app.route("/toggle_block/<string:user_id>")
 def toggle_block(user_id):

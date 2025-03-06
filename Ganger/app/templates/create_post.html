@@ -221,7 +221,13 @@
     // 投稿フォーム送信処理
     document.getElementById('post-form').addEventListener('submit', function(event) {
         event.preventDefault();
+        
         const formData = new FormData(this);
+        const submitButton = document.querySelector('#post-form button[type="submit"]'); // 投稿ボタン取得
+
+        // 投稿ボタンを無効化
+        submitButton.disabled = true;
+        submitButton.textContent = "送信中...";  // ユーザーに送信中であることを知らせる
 
         fetch('/create_post', {
             method: 'POST',
@@ -234,12 +240,16 @@
                 window.location.href = '/home';  // 成功時にHOMEページへリダイレクト
             } else {
                 alert('投稿に失敗しました: ' + data.error);
+                submitButton.disabled = false;  // 失敗時にボタンを再度有効化
+                submitButton.textContent = "投稿"; 
             }
         })
         .catch(error => {
             console.error('投稿エラー:', error);
             alert('サーバーエラーが発生しました。');
+            submitButton.disabled = false;  // エラー時もボタンを再度有効化
+            submitButton.textContent = "投稿"; 
         });
-    });    
+    });
 </script>
 {% endblock %}
