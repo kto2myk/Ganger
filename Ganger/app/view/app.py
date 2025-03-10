@@ -21,10 +21,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__,
     template_folder=os.path.join(BASE_DIR, "..", "templates"),  # templates フォルダへの絶対パス
     static_folder=os.path.join(BASE_DIR, "..", "static"),  # static フォルダへの絶対パス
-)#docker start redis-server
+)
+TEMPLATE_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "templates"))
+print(f"⚠️ [DEBUG] Flask template folder path: {TEMPLATE_PATH}")  # ログ出力
+
+print(f"ここがBASE{BASE_DIR}")
 
 # 🔹 Flaskの基本設定
-app.secret_key = "your_secret_key"
+app.secret_key = os.getenv("SECRET_KEY")
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300)
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -39,7 +43,7 @@ app.config["TEMP_FOLDER"] = TEMP_IMAGE_FOLDER
 app.config["PROFILE_FOLDER"] = PROFILE_IMAGE_FOLDER
 
 # 🔹 Redisの設定（キャッシュ用）
-app.config["REDIS_URL"] = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+app.config["REDIS_URL"] = os.getenv("REDIS_URL")
 
 # 🔹 Flask-Redisの設定
 redis_url = app.config["REDIS_URL"]
