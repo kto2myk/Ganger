@@ -1,22 +1,19 @@
 import redis
-import json
+from redis.exceptions import ConnectionError
 from flask import current_app, jsonify
+
 
 class RedisCache:
     def __init__(self, app=None, default_ttl=604800):
-        """
-        Flaskの `app.config["REDIS_URL"]` を利用してRedisの設定を取得
-        - app: Flaskアプリのインスタンス
-        - default_ttl: デフォルトのキャッシュ有効期間（秒） ※デフォルト1週間（604800秒）
-        """
         self.app = app or current_app
+        self.default_ttl = default_ttl
+        redis_url = self.app.config.get("REDIS_URL", "redis://localhost:6379/0")
         try:
-            self.redis_client = self.app.redis_client  # Flask-Redis のインスタンスを利用
-            self.redis_client.ping()  # ✅ Redisサーバーへの接続確認
-        except redis.exceptions.ConnectionError:
+            self.redis_client = redis.StrictRedis.from_url(redis_url, decode_responses=True)  # ✅ 修正
+            self.redis_client.ping()
+        except ConnectionError:
             print("⚠️ Redisサーバーに接続できません！（処理は継続）")
             self.redis_client = None  # 代替処理のために None をセット
-        self.default_ttl = default_ttl
 
     def add_score(self, ranking_key, item_id, score):
         """
