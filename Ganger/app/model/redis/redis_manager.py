@@ -54,7 +54,10 @@ class RedisCache:
             pass
 
 
-    def get_ranking_ids(self, ranking_key,offset=0, top_n=10):
+import redis
+import random
+
+    def get_ranking_ids(self, ranking_key, offset=0, top_n=10):
         """
         `top_n` 位までの ID 群を取得（スコア順）
         - ranking_key: 取得するランキングのキー
@@ -62,15 +65,17 @@ class RedisCache:
         - 返り値: `["123", "456", "789"]` のような `post_id` のリスト
         """
         if not self.redis_client:
-            return []
+            return random.sample(range(1, 31), top_n)  # キャッシュなしなら 1〜30 のランダムサンプルを返す
+        
         try:
-            # 🔹 `top_n` 件の ID を取得（スコア順・降順）
+            # `top_n` 件の ID を取得（スコア順・降順）
             ranking = self.redis_client.zrevrange(ranking_key, offset, offset + top_n - 1)
 
-            # 🔹 `bytes` → `str` に変換し、クエリで使える `list` を返す
-            return [item_id.decode() for item_id in ranking] if ranking else []
+            # `bytes` → `str` に変換
+            return [item_id.decode() if isinstance(item_id, bytes) else item_id for item_id in ranking] if ranking else random.sample(range(1, 31), top_n)
+
         except redis.RedisError:
-            return []
+            return random.sample(range(1, 31), top_n)  # Redis エラー時もランダムサンプルを返す
 
     def remove_data(self, key):
         """キャッシュデータを削除（エラー発生時はスキップ）"""
