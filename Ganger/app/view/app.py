@@ -19,13 +19,11 @@ from Ganger.app.model.dm.message_manager import MessageManager
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__,
-    template_folder=os.path.join(BASE_DIR, "..", "templates"),  # templates フォルダへの絶対パス
-    static_folder=os.path.join(BASE_DIR, "..", "static"),  # static フォルダへの絶対パス
+    template_folder=os.path.abspath(os.path.join(BASE_DIR, "..", "templates")),
+    # templates フォルダへの絶対パス
+    static_folder=os.path.abspath(os.path.join(BASE_DIR, "..", "static"))
+    # static フォルダへの絶対パス
 )
-TEMPLATE_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "templates"))
-print(f"⚠️ [DEBUG] Flask template folder path: {TEMPLATE_PATH}")  # ログ出力
-
-print(f"ここがBASE{BASE_DIR}")
 
 # 🔹 Flaskの基本設定
 app.secret_key = os.getenv("SECRET_KEY")
