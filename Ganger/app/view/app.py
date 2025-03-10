@@ -655,14 +655,12 @@ def fetch_trending_products():
             trending_products = shop_manager.fetch_multiple_products_images(product_ids=trending_ids)
             if trending_products:
                 return jsonify("trending_products",{"message":"トレンド商品取得","products":trending_products}),200
-            else:
-                return  jsonify("trending_products",{"message":"トレンド商品なし","products":[]}),200
         else:
-            raise Exception("トレンドなし")
+            return  jsonify("trending_products",{"message":"トレンド商品なし","products":[]}),200
         
     except Exception as e:
             app.logger.error(f"⚠️ Error in fetch_trending_products: {e}")
-            return jsonify("error", {"message": "トレンド商品の取得に失敗しました。"}),500
+            return jsonify("error", {"message": "トレンド商品の取得に失敗しました。"}),200
 
                 
 
