@@ -45,7 +45,7 @@ app.config["REDIS_URL"] = os.getenv("REDIS_URL")
 
 # 🔹 Flask-Redisの設定
 redis_url = app.config["REDIS_URL"]
-redis_client = redis.StrictRedis.from_url(redis_url, decode_responses=True)
+redis_client = redis.StrictRedis.from_url(redis_url, decode_responses=False)
 app.redis_client = redis_client# 🔹 Flask-Sessionの設定（Redisを使用）
 
 app.config["SESSION_TYPE"] = "redis"
