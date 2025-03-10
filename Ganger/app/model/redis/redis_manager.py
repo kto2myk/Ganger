@@ -1,4 +1,5 @@
 import redis
+import random
 from redis.exceptions import ConnectionError
 from flask import current_app, jsonify
 
@@ -54,8 +55,6 @@ class RedisCache:
             pass
 
 
-import redis
-import random
 
     def get_ranking_ids(self, ranking_key, offset=0, top_n=10):
         """
