@@ -1000,9 +1000,6 @@ def complete_checkout(after_checkout):
         app.logger.error(f"エラー: {e}")
         return abort(500, description="サーバーエラーが発生しました")
     
-@app.route("/test")
-def test():
-    return render_template("test.html")
 
 @app.route("/logout")
 def logout():
