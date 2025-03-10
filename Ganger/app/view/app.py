@@ -1,10 +1,10 @@
 from flask import Flask, request, session, render_template, redirect, url_for,flash,jsonify,abort # Flaskの各種機能をインポート
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect  # CSRF保護用
-from flask_redis import FlaskRedis
 from sqlalchemy.exc import SQLAlchemyError  # SQLAlchemyのエラー
 from datetime import timedelta  # セッションの有効期限設定用
 from werkzeug.security import generate_password_hash, check_password_hash   # パスワードハッシュ化用
+import redis
 import os  # ファイルパス操作用
 import re
 import random
@@ -17,11 +17,11 @@ from Ganger.app.model.shop.shop_manager import ShopManager
 from Ganger.app.model.notification.notification_manager import NotificationManager
 from Ganger.app.model.dm.message_manager import MessageManager
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__,
-    template_folder=os.path.abspath("Ganger/app/templates"),
-    static_folder=os.path.abspath("Ganger/app/static"),
-)
-#docker start redis-server
+    template_folder=os.path.join(BASE_DIR, "..", "templates"),  # templates フォルダへの絶対パス
+    static_folder=os.path.join(BASE_DIR, "..", "static"),  # static フォルダへの絶対パス
+)#docker start redis-server
 
 # 🔹 Flaskの基本設定
 app.secret_key = "your_secret_key"
@@ -29,24 +29,23 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=300)
 app.config["DEBUG"] = True
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-# 🔹 画像保存先の設定
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
-POST_IMAGE_FOLDER = os.path.join("Ganger","app", "static", "images", "post_images")
-TEMP_IMAGE_FOLDER = os.path.join(BASE_DIR, "static", "images", "temp_images")
-PROFILE_IMAGE_FOLDER = os.path.join("Ganger","app", "static", "images", "profile_images")
+
+POST_IMAGE_FOLDER = os.path.abspath(os.path.join(BASE_DIR, "..", "static", "images", "post_images"))
+TEMP_IMAGE_FOLDER = os.path.abspath(os.path.join(BASE_DIR, "..", "static", "images", "temp_images"))
+PROFILE_IMAGE_FOLDER = os.path.abspath(os.path.join(BASE_DIR, "..", "static", "images", "profile_images"))
 
 app.config["POST_FOLDER"] = POST_IMAGE_FOLDER
 app.config["TEMP_FOLDER"] = TEMP_IMAGE_FOLDER
 app.config["PROFILE_FOLDER"] = PROFILE_IMAGE_FOLDER
 
 # 🔹 Redisの設定（キャッシュ用）
-app.config["REDIS_URL"] = "redis://localhost:6379/0"
+app.config["REDIS_URL"] = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 # 🔹 Flask-Redisの設定
-redis_client = FlaskRedis()  # `StrictRedis` ではなく `FlaskRedis` を使用
-redis_client.init_app(app)
-app.redis_client = redis_client
-# 🔹 Flask-Sessionの設定（Redisを使用）
+redis_url = app.config["REDIS_URL"]
+redis_client = redis.StrictRedis.from_url(redis_url, decode_responses=True)
+app.redis_client = redis_client# 🔹 Flask-Sessionの設定（Redisを使用）
+
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
