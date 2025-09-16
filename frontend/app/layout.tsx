@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import React from 'react';
+import { SessionProvider } from 'next-auth/react';
 
 export const metadata: Metadata = {
   title: 'Ganger',
@@ -11,10 +12,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body>
-        <header style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #eee' }}>
-          <strong>Ganger</strong>
-        </header>
-        <main style={{ padding: '1rem', minHeight: '80vh' }}>{children}</main>
+        <SessionProvider>
+          <header style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #eee' }}>
+            <strong>Ganger</strong>
+          </header>
+          <main style={{ padding: '1rem', minHeight: '80vh' }}>{children}</main>
+        </SessionProvider>
         <footer style={{ padding: '1rem', borderTop: '1px solid #eee', fontSize: 12 }}>
           Skeleton – replace with real layout.
         </footer>
