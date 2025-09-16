@@ -1,4 +1,5 @@
 import React from 'react';
+import { headers } from 'next/headers';
 import { PostList } from '../../components/post/PostList';
 import { SearchBox } from '../../components/search/SearchBox';
 import { TrendingTags } from '../../components/trending/TrendingTags';
@@ -10,12 +11,16 @@ export default async function HomePage() {
   // Fetch initial posts (server component) with fallback strategy
   let data: any = { posts: [], nextCursor: null };
   try {
-    let res = await fetch(`/api/posts`, { cache: 'no-store' });
-    if (!res.ok) {
-      const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      res = await fetch(`${base}/api/posts`, { cache: 'no-store' });
+    const h = headers();
+    const proto = h.get('x-forwarded-proto') || 'http';
+    const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000';
+    const base = process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`;
+    const res = await fetch(`${base}/api/posts`, { cache: 'no-store' });
+    if (res.ok) {
+      data = await res.json().catch(() => data);
+    } else {
+      console.warn('posts fetch non-ok status', res.status);
     }
-    data = await res.json().catch(() => data);
   } catch (e) {
     console.error('Home fetch error', e);
   }
