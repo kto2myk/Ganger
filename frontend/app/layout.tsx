@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import React from 'react';
 import { SessionProvider } from 'next-auth/react';
+import { Sidebar } from '../components/layout/Sidebar';
 
 export const metadata: Metadata = {
   title: 'Ganger',
@@ -13,10 +14,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ja">
       <body>
         <SessionProvider>
-          <header style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #eee' }}>
-            <strong>Ganger</strong>
-          </header>
-          <main style={{ padding: '1rem', minHeight: '80vh' }}>{children}</main>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex-1 flex flex-col">
+              <header className="h-14 border-b flex items-center px-4 bg-white/60 backdrop-blur-sm sticky top-0 z-10"> 
+                <strong className="text-neutral-700">Ganger</strong>
+              </header>
+              <main className="flex-1 p-4">{children}</main>
+            </div>
+          </div>
         </SessionProvider>
         <footer style={{ padding: '1rem', borderTop: '1px solid #eee', fontSize: 12 }}>
           Skeleton – replace with real layout.
