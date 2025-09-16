@@ -54,6 +54,9 @@ export const {
           console.error('[auth] authorize: DATABASE_URL missing');
           return null; // surface as generic login failure
         }
+        if (process.env.DATABASE_URL && process.env.NODE_ENV !== 'production') {
+          console.log('[auth] authorize sees DATABASE_URL:', process.env.DATABASE_URL.slice(0,40));
+        }
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         const { email, password } = parsed.data;

@@ -1,12 +1,14 @@
 import { PrismaClient } from '@prisma/client';
+import path from 'path';
 
 // Prevent multiple instances in dev (Next.js hot reload)
 const globalForPrisma = global as unknown as { prisma?: PrismaClient; __prismaEnvLogged?: boolean };
 
 // Fallback: ensure DATABASE_URL exists (development resilience)
 if (!process.env.DATABASE_URL) {
-	process.env.DATABASE_URL = 'file:./prisma/dev.db';
-	console.warn('[prisma] DATABASE_URL missing. Applied development fallback file:./prisma/dev.db');
+	const abs = path.join(process.cwd(), 'prisma', 'dev.db').replace(/\\/g, '/');
+	process.env.DATABASE_URL = 'file:' + abs;
+	console.warn('[prisma] DATABASE_URL missing. Applied absolute fallback', process.env.DATABASE_URL);
 }
 
 if (!globalForPrisma.__prismaEnvLogged) {
