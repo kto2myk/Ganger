@@ -10,7 +10,33 @@ export default async function HomePage() {
   // Fetch initial posts (server component)
   const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/posts`, { cache: 'no-store' });
   const data = await res.json().catch(() => ({ posts: [], nextCursor: null }));
-  const posts = Array.isArray(data.posts) ? data.posts : [];
+  let posts = Array.isArray(data.posts) ? data.posts : [];
+  if (posts.length === 0) {
+    // 仮表示用ダミーポスト
+    const now = Date.now();
+    posts = [
+      {
+        id: 'demo1',
+        content: 'ようこそ Ganger (Next.js 移行版) へ！これはダミー投稿です。\n本番データがまだ無い場合に一時的に表示されます。',
+        createdAt: now - 1000 * 60 * 5,
+        author: { id: 'u_demo', username: 'demo_user' },
+        images: [],
+        tags: [],
+        likes: []
+      },
+      {
+        id: 'demo2',
+        content: '2件目の仮投稿。APIやDB接続 (Prisma + SQLite) が整ったらこのプレースホルダは消えます。',
+        createdAt: now - 1000 * 60 * 10,
+        author: { id: 'u_system', username: 'system' },
+        images: [
+          { id: 'img1', url: 'https://picsum.photos/seed/ganger-demo/600/400' }
+        ],
+        tags: [{ id: 'ptag1', tag: 'demo' }],
+        likes: [{ id: 'like1' }]
+      }
+    ];
+  }
   const nextCursor = data.nextCursor ?? null;
 
   return (
