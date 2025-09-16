@@ -1,0 +1,168 @@
+// Prisma schema (initial draft) mapping core domain: User, Post, Product, Message, Notification, Cart
+// Adjust fields & indexing after data analysis of legacy DB.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // change to mysql/sqlite if needed
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String
+  realName      String? 
+  address       String? 
+  bio           String? 
+  profileImage  String? 
+  posts         Post[]
+  likes         Like[]
+  comments      Comment[]
+  reposts       Repost[]
+  followers     Follow[] @relation("followers")
+  following     Follow[] @relation("following")
+  messagesSent  Message[] @relation("messages_sent")
+  messagesRecv  Message[] @relation("messages_recv")
+  notifications Notification[]
+  cartItems     CartItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Post {
+  id           String    @id @default(cuid())
+  author       User      @relation(fields: [authorId], references: [id])
+  authorId     String
+  content      String
+  images       PostImage[]
+  tags         PostTag[]
+  likes        Like[]
+  comments     Comment[]
+  reposts      Repost[]
+  product      Product?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model PostImage {
+  id      String @id @default(cuid())
+  post    Post   @relation(fields: [postId], references: [id])
+  postId  String
+  url     String
+  order   Int    @default(0)
+}
+
+model PostTag {
+  id     String @id @default(cuid())
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+  tag    String
+  @@index([tag])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+  @@unique([userId, postId])
+}
+
+model Follow {
+  id         String @id @default(cuid())
+  follower   User   @relation("following", fields: [followerId], references: [id])
+  followerId String
+  followed   User   @relation("followers", fields: [followedId], references: [id])
+  followedId String
+  createdAt  DateTime @default(now())
+  @@unique([followerId, followedId])
+}
+
+model Repost {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+  @@unique([userId, postId])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  post        Post      @relation(fields: [postId], references: [id])
+  postId      String    @unique
+  name        String
+  price       Int
+  category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cartItems   CartItem[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([userId, productId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  type      String
+  payload   Json
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([userId, read])
+}
+
+model MessageRoom {
+  id        String    @id @default(cuid())
+  messages  Message[]
+  createdAt DateTime   @default(now())
+}
+
+model Message {
+  id          String     @id @default(cuid())
+  room        MessageRoom @relation(fields: [roomId], references: [id])
+  roomId      String
+  sender      User       @relation("messages_sent", fields: [senderId], references: [id])
+  senderId    String
+  recipient   User       @relation("messages_recv", fields: [recipientId], references: [id])
+  recipientId String
+  content     String
+  read        Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  @@index([roomId])
+  @@index([recipientId, read])
+}
