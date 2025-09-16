@@ -1,25 +1,37 @@
-// NextAuth v5 の auth() をそのまま middleware としてエクスポートする形に変更
-// これにより Cookie 名の変化や JWT/DB セッション方式の差異を気にせず保護できる
+// シンプルなCookieベース認証チェック（Edge runtime対応）
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 
-export const configRuntime = 'nodejs'; // hint: ensure build not edge-optimized (documentation marker)
-
-// Edge 環境対応。auth() ではなく getToken を使って JWT を復号しセッション判定
 export async function middleware(req: NextRequest) {
   const protectedMatchers = ['/post/create'];
   const { pathname } = req.nextUrl;
-  if (!protectedMatchers.some(p => pathname.startsWith(p))) return NextResponse.next();
+  if (!protectedMatchers.some(p => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
 
-  // secret を明示指定 (v5 beta で MissingSecret 回避 & 署名一貫性確保)
-  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'dev-fallback-static-secret';
-  const token = await (getToken as any)({ req, secret });
-  if (!token) {
+  // NextAuth v5 のセッションCookieを直接確認
+  // 可能性のあるCookie名をすべてチェック
+  const sessionCookies = [
+    'authjs.session-token',
+    '__Secure-authjs.session-token',
+    'next-auth.session-token',
+    '__Secure-next-auth.session-token'
+  ];
+  
+  const hasValidSession = sessionCookies.some(cookieName => {
+    const cookie = req.cookies.get(cookieName);
+    return cookie && cookie.value && cookie.value.length > 10;
+  });
+
+  if (!hasValidSession) {
+    console.log('[middleware] No valid session cookie found, redirecting to login');
+    console.log('[middleware] Available cookies:', req.cookies.getAll().map(c => c.name));
     const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('next', pathname);
     return NextResponse.redirect(loginUrl);
   }
+
+  console.log('[middleware] Valid session found, allowing access to', pathname);
   return NextResponse.next();
 }
 

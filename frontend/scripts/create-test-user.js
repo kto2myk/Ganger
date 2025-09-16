@@ -8,31 +8,39 @@ async function createTestUser() {
   const prisma = new PrismaClient();
   
   try {
-    // Check if test user already exists
-    const existing = await prisma.user.findUnique({
-      where: { email: 'test@example.com' }
-    });
+    // Create multiple test users
+    const testUsers = [
+      { email: 'test@example.com', username: 'testuser', password: 'password123' },
+      { email: 'example@example.com', username: 'exampleuser', password: 'aaaaaa' },
+    ];
     
-    if (existing) {
-      console.log('Test user already exists:', existing.email);
-      return;
-    }
-    
-    // Create test user
-    const passwordHash = await bcrypt.hash('password123', 12);
-    
-    const user = await prisma.user.create({
-      data: {
-        email: 'test@example.com',
-        username: 'testuser',
-        passwordHash: passwordHash
+    for (const userData of testUsers) {
+      const existing = await prisma.user.findUnique({
+        where: { email: userData.email }
+      });
+      
+      if (existing) {
+        console.log('User already exists:', existing.email);
+        continue;
       }
-    });
-    
-    console.log('Test user created successfully:');
-    console.log('Email:', user.email);
-    console.log('Username:', user.username);
-    console.log('ID:', user.id);
+      
+      const passwordHash = await bcrypt.hash(userData.password, 12);
+      
+      const user = await prisma.user.create({
+        data: {
+          email: userData.email,
+          username: userData.username,
+          passwordHash: passwordHash
+        }
+      });
+      
+      console.log('Test user created successfully:');
+      console.log('Email:', user.email);
+      console.log('Username:', user.username);
+      console.log('Password:', userData.password);
+      console.log('ID:', user.id);
+      console.log('---');
+    }
     
   } catch (error) {
     console.error('Error creating test user:', error);
