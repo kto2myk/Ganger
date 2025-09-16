@@ -10,8 +10,9 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (!protectedMatchers.some(p => pathname.startsWith(p))) return NextResponse.next();
 
-  // next-auth v5 beta: getToken は secret 自動解決。salt も未指定でOK。
-  const token = await getToken({ req } as any);
+  // secret を明示指定 (v5 beta で MissingSecret 回避 & 署名一貫性確保)
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'dev-fallback-static-secret';
+  const token = await (getToken as any)({ req, secret });
   if (!token) {
     const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('next', pathname);
