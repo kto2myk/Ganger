@@ -4,13 +4,21 @@ import { prisma } from '../../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
+// v5 beta 仕様: NextAuth() はハンドラオブジェクトを返す
+// 旧 v4 のように関数をそのまま export しない
+
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6)
 });
 
-export const authOptions = {
-  session: { strategy: 'jwt' as const },
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut
+} = NextAuth({
+  session: { strategy: 'jwt' },
   providers: [
     Credentials({
       name: 'Credentials',
@@ -26,25 +34,18 @@ export const authOptions = {
         if (!user) return null;
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
-        return { id: user.id, email: user.email, name: user.username };
+        return { id: user.id, email: user.email, name: user.username } as any;
       }
     })
   ],
   callbacks: {
     async jwt({ token, user }: any) {
-      if (user) {
-        token.id = user.id;
-      }
+      if (user) token.id = user.id;
       return token;
     },
     async session({ session, token }: any) {
-      if (token && session.user) {
-        (session.user as any).id = token.id;
-      }
+      if (token && session.user) (session.user as any).id = token.id;
       return session;
     }
   }
-};
-
-const handler = NextAuth(authOptions as any);
-export { handler as GET, handler as POST };
+});
