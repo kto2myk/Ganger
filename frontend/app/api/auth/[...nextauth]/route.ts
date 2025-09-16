@@ -3,7 +3,6 @@ import Credentials from 'next-auth/providers/credentials';
 import { prisma } from '../../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 // v5 beta 仕様: NextAuth() はハンドラオブジェクトを返す
 // 旧 v4 のように関数をそのまま export しない
@@ -21,11 +20,10 @@ let resolvedSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
 if (!resolvedSecret) {
   if (process.env.NODE_ENV === 'production') {
     console.error('[auth] FATAL: AUTH_SECRET / NEXTAUTH_SECRET が設定されていません');
-    // ここで undefined を渡すと MissingSecret で落ちるので、敢えて固定文字列にするが
-    // 本番で気付けるよう強い警告を残す
     resolvedSecret = 'PLEASE_SET_AUTH_SECRET_BEFORE_DEPLOY';
   } else {
-    resolvedSecret = 'dev-fallback-' + crypto.randomUUID();
+    const rand = (globalThis as any)?.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
+    resolvedSecret = 'dev-fallback-' + rand;
     console.warn('[auth] 開発用フォールバック secret を生成しました (再起動毎に変わります)');
   }
 }
