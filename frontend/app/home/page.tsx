@@ -7,9 +7,18 @@ import { FloatingPostButton } from '../../components/post/FloatingPostButton';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // Fetch initial posts (server component)
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/posts`, { cache: 'no-store' });
-  const data = await res.json().catch(() => ({ posts: [], nextCursor: null }));
+  // Fetch initial posts (server component) with fallback strategy
+  let data: any = { posts: [], nextCursor: null };
+  try {
+    let res = await fetch(`/api/posts`, { cache: 'no-store' });
+    if (!res.ok) {
+      const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      res = await fetch(`${base}/api/posts`, { cache: 'no-store' });
+    }
+    data = await res.json().catch(() => data);
+  } catch (e) {
+    console.error('Home fetch error', e);
+  }
   let posts = Array.isArray(data.posts) ? data.posts : [];
   if (posts.length === 0) {
     // 仮表示用ダミーポスト
