@@ -3,14 +3,32 @@ import Credentials from 'next-auth/providers/credentials';
 import { prisma } from '../../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 // v5 beta 仕様: NextAuth() はハンドラオブジェクトを返す
 // 旧 v4 のように関数をそのまま export しない
+
+export const runtime = 'nodejs';
 
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6)
 });
+
+// Secret 解決: 環境変数が無い (開発時の良くあるミス) でもクラッシュしないようフォールバック
+// ※ dev 環境のみ自動生成。prod で未設定なら警告を出す (本番は必須)
+let resolvedSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+if (!resolvedSecret) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[auth] FATAL: AUTH_SECRET / NEXTAUTH_SECRET が設定されていません');
+    // ここで undefined を渡すと MissingSecret で落ちるので、敢えて固定文字列にするが
+    // 本番で気付けるよう強い警告を残す
+    resolvedSecret = 'PLEASE_SET_AUTH_SECRET_BEFORE_DEPLOY';
+  } else {
+    resolvedSecret = 'dev-fallback-' + crypto.randomUUID();
+    console.warn('[auth] 開発用フォールバック secret を生成しました (再起動毎に変わります)');
+  }
+}
 
 export const {
   handlers: { GET, POST },
@@ -18,6 +36,8 @@ export const {
   signIn,
   signOut
 } = NextAuth({
+  secret: resolvedSecret,
+  trustHost: true,
   session: { strategy: 'jwt' },
   providers: [
     Credentials({
