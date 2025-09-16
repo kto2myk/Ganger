@@ -50,21 +50,40 @@ export const {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(raw) {
+        console.log('[auth] authorize called with:', raw);
         if (!process.env.DATABASE_URL) {
           console.error('[auth] authorize: DATABASE_URL missing');
-          return null; // surface as generic login failure
+          return null;
         }
         if (process.env.DATABASE_URL && process.env.NODE_ENV !== 'production') {
           console.log('[auth] authorize sees DATABASE_URL:', process.env.DATABASE_URL.slice(0,40));
         }
         const parsed = credentialsSchema.safeParse(raw);
-        if (!parsed.success) return null;
+        if (!parsed.success) {
+          console.log('[auth] validation failed:', parsed.error.issues);
+          return null;
+        }
         const { email, password } = parsed.data;
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
-        const ok = await bcrypt.compare(password, user.passwordHash);
-        if (!ok) return null;
-        return { id: user.id, email: user.email, name: user.username } as any;
+        console.log('[auth] looking for user with email:', email);
+        
+        try {
+          const user = await prisma.user.findUnique({ where: { email } });
+          if (!user) {
+            console.log('[auth] user not found for email:', email);
+            return null;
+          }
+          console.log('[auth] user found, checking password');
+          const ok = await bcrypt.compare(password, user.passwordHash);
+          if (!ok) {
+            console.log('[auth] password check failed');
+            return null;
+          }
+          console.log('[auth] authentication successful for user:', user.username);
+          return { id: user.id, email: user.email, name: user.username } as any;
+        } catch (error) {
+          console.error('[auth] database error:', error);
+          return null;
+        }
       }
     })
   ],

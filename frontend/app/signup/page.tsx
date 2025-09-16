@@ -20,7 +20,12 @@ export default function SignupPage() {
     setLoading(false);
     if (!res.ok) {
       const j = await res.json().catch(()=>({error:'unknown'}));
-      setError(j.error || 'エラー');
+      if (j.error === 'validation_error' && Array.isArray(j.issues)) {
+        const msgs = j.issues.map((i:any)=>`${i.path.join('.')}: ${i.message}`).join('\n');
+        setError(msgs);
+      } else {
+        setError(j.error || 'エラー');
+      }
       return;
     }
     setOk(true);
@@ -32,7 +37,7 @@ export default function SignupPage() {
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Email</label>
-          <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required placeholder="example@example.com" className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">ユーザー名</label>

@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { prisma } from '../../../lib/prisma';
 import { auth } from '../auth/[...nextauth]/route';
 
+export const runtime = 'nodejs';
+
 const createPostSchema = z.object({
   content: z.string().min(1).max(5000),
   tags: z.array(z.string()).optional(),

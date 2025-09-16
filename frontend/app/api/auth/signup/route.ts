@@ -12,13 +12,20 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    const parsed = schema.parse(data);
+    const parsedResult = schema.safeParse(data);
+    if (!parsedResult.success) {
+      return NextResponse.json({
+        error: 'validation_error',
+        issues: parsedResult.error.issues
+      }, { status: 400 });
+    }
+    const parsed = parsedResult.data;
     const exists = await prisma.user.findFirst({ where: { OR: [ { email: parsed.email }, { username: parsed.username } ] }});
     if (exists) return NextResponse.json({ error: 'User already exists' }, { status: 409 });
     const hash = await bcrypt.hash(parsed.password, 10);
-    const user = await prisma.user.create({ data: { email: parsed.email, username: parsed.username, passwordHash: hash } });
+  const user = await prisma.user.create({ data: { email: parsed.email, username: parsed.username, passwordHash: hash } });
     return NextResponse.json({ id: user.id, email: user.email, username: user.username }, { status: 201 });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 });
+  return NextResponse.json({ error: 'unknown', message: e.message }, { status: 400 });
   }
 }

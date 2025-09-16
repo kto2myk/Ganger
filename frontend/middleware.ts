@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+export const configRuntime = 'nodejs'; // hint: ensure build not edge-optimized (documentation marker)
+
 // Edge 環境対応。auth() ではなく getToken を使って JWT を復号しセッション判定
 export async function middleware(req: NextRequest) {
   const protectedMatchers = ['/post/create'];
