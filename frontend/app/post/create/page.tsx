@@ -37,8 +37,12 @@ async function createPost(formData: FormData) {
     data: {
       content: parsed.data.content,
       authorId: session.user.id as string,
-      tags: tagArray.map(t => ({ tag: t })),
-      images: imageArray.map((u, i) => ({ url: u, order: i }))
+      tags: {
+        create: tagArray.map(t => ({ tag: t }))
+      },
+      images: {
+        create: imageArray.map((u, i) => ({ url: u, order: i }))
+      }
     }
   });
   redirect('/home');

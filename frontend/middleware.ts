@@ -1,38 +1,58 @@
-// シンプルなCookieベース認証チェック（Edge runtime対応）
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export async function middleware(req: NextRequest) {
-  const protectedMatchers = ['/post/create'];
-  const { pathname } = req.nextUrl;
-  if (!protectedMatchers.some(p => pathname.startsWith(p))) {
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  console.log(`[middleware] Request to: ${pathname}`);
+  
+  // 認証が必要なパスを定義
+  const protectedPaths = ['/home', '/post/create', '/me', '/profile', '/messages'];
+  
+  const isProtectedPath = protectedPaths.some(path => 
+    pathname.startsWith(path)
+  );
+  
+  if (!isProtectedPath) {
+    console.log(`[middleware] Public path, allowing access: ${pathname}`);
     return NextResponse.next();
   }
-
-  // NextAuth v5 のセッションCookieを直接確認
-  // 可能性のあるCookie名をすべてチェック
-  const sessionCookies = [
-    'authjs.session-token',
-    '__Secure-authjs.session-token',
-    'next-auth.session-token',
-    '__Secure-next-auth.session-token'
-  ];
   
-  const hasValidSession = sessionCookies.some(cookieName => {
-    const cookie = req.cookies.get(cookieName);
-    return cookie && cookie.value && cookie.value.length > 10;
-  });
-
-  if (!hasValidSession) {
-    console.log('[middleware] No valid session cookie found, redirecting to login');
-    console.log('[middleware] Available cookies:', req.cookies.getAll().map(c => c.name));
-    const loginUrl = new URL('/login', req.url);
+  console.log(`[middleware] Checking authentication for protected path: ${pathname}`);
+  
+  try {
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'my-super-secret-key-32-characters-long-stable-secret-2024',
+      salt: 'authjs.session-token'
+    });
+    
+    if (token) {
+      console.log(`[middleware] Valid session found for user: ${token.email}`);
+      return NextResponse.next();
+    }
+    
+    // セッションが無効な場合
+    console.log(`[middleware] No valid session found, redirecting to login`);
+    const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname);
+    loginUrl.searchParams.set('expired', 'true');
+    
+    return NextResponse.redirect(loginUrl);
+    
+  } catch (error) {
+    console.error(`[middleware] Error checking session:`, error);
+    
+    // トークン取得エラーの場合もログインページにリダイレクト
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('next', pathname);
+    loginUrl.searchParams.set('error', 'session_check_failed');
+    
     return NextResponse.redirect(loginUrl);
   }
-
-  console.log('[middleware] Valid session found, allowing access to', pathname);
-  return NextResponse.next();
 }
 
-export const config = { matcher: ['/post/create'] };
+export const config = {
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|uploads).*)',
+  ],
+};

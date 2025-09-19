@@ -1,13 +1,10 @@
 import React from 'react';
 import { headers } from 'next/headers';
-import { PostList } from '../../components/post/PostList';
-import { SearchBox } from '../../components/search/SearchBox';
-import { TrendingTags } from '../../components/trending/TrendingTags';
-import { FloatingPostButton } from '../../components/post/FloatingPostButton';
+import HomePage from './HomePage';
 
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
+export default async function HomePageWrapper() {
   // Fetch initial posts (server component) with fallback strategy
   let data: any = { posts: [], nextCursor: null };
   try {
@@ -53,16 +50,5 @@ export default async function HomePage() {
   }
   const nextCursor = data.nextCursor ?? null;
 
-  return (
-    <div className="flex w-full gap-6">
-      <div className="flex-1 max-w-2xl">
-  <PostList initialPosts={posts} initialNextCursor={nextCursor} />
-      </div>
-      <aside className="hidden lg:flex flex-col w-80 shrink-0 gap-6">
-        <SearchBox />
-        <TrendingTags />
-      </aside>
-      <FloatingPostButton />
-    </div>
-  );
+  return <HomePage initialPosts={posts} initialNextCursor={nextCursor} />;
 }

@@ -40,8 +40,12 @@ export async function POST(req: NextRequest) {
       data: {
         content: parsed.content,
         authorId: userId,
-        tags: parsed.tags?.map(tag => ({ tag })) || [],
-        images: parsed.images?.map((url, i) => ({ url, order: i })) || []
+        tags: {
+          create: parsed.tags?.map(tag => ({ tag })) || []
+        },
+        images: {
+          create: parsed.images?.map((url, i) => ({ url, order: i })) || []
+        }
       }
     });
   return NextResponse.json({ post }, { status: 201 });

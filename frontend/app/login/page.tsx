@@ -1,7 +1,8 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useRedirectIfAuth } from '@/lib/useAuthRedirect';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -9,14 +10,63 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // 認証済みの場合はホームにリダイレクト
+  const { isLoading } = useRedirectIfAuth();
+
+  useEffect(() => {
+    // URL パラメータから状態を取得
+    const expired = searchParams.get('expired');
+    const errorParam = searchParams.get('error');
+    
+    if (expired === 'true') {
+      setError('セッションが期限切れになりました。再度ログインしてください。');
+    } else if (errorParam === 'session_check_failed') {
+      setError('セッションの確認に失敗しました。再度ログインしてください。');
+    }
+
+    // ローカルストレージからセッション切れフラグを確認
+    if (typeof window !== 'undefined') {
+      const sessionExpired = localStorage.getItem('sessionExpired');
+      if (sessionExpired === 'true') {
+        setError('セッションが期限切れになりました。再度ログインしてください。');
+        localStorage.removeItem('sessionExpired'); // フラグをクリア
+      }
+    }
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError(null);
-    const res = await signIn('credentials', { email, password, redirect: false });
+    setLoading(true); 
+    setError(null);
+    
+    const res = await signIn('credentials', { 
+      email, 
+      password, 
+      redirect: false,
+      callbackUrl: searchParams.get('next') || '/home'
+    });
+    
     setLoading(false);
-    if (res?.error) { setError('ログイン失敗: ' + res.error); return; }
-    router.push('/home');
+    
+    if (res?.error) { 
+      setError('ログイン失敗: ' + res.error); 
+      return; 
+    }
+    
+    // ログイン成功時のリダイレクト
+    const redirectTo = searchParams.get('next') || '/home';
+    router.push(redirectTo);
+  }
+
+  // 認証チェック中はローディング表示
+  if (isLoading) {
+    return (
+      <div className="max-w-sm mx-auto mt-10 bg-white/70 backdrop-blur-sm p-6 rounded-xl border text-center">
+        <div className="text-sm text-neutral-500">読み込み中...</div>
+      </div>
+    );
   }
 
   return (

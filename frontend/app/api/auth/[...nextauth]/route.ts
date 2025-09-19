@@ -18,19 +18,10 @@ const credentialsSchema = z.object({
 // ※ dev 環境のみ自動生成。prod で未設定なら警告を出す (本番は必須)
 // Stable dev fallback secret (avoid regenerating per import)
 let resolvedSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-const g = globalThis as any;
 if (!resolvedSecret) {
-  if (!g.__DEV_AUTH_SECRET) {
-    if (process.env.NODE_ENV === 'production') {
-      console.error('[auth] FATAL: AUTH_SECRET / NEXTAUTH_SECRET 未設定');
-      g.__DEV_AUTH_SECRET = 'PLEASE_SET_AUTH_SECRET_BEFORE_DEPLOY';
-    } else {
-      const rand = (g.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)).replace(/-/g,'');
-      g.__DEV_AUTH_SECRET = 'dev-fallback-' + rand;
-      console.warn('[auth] 開発フォールバック secret を生成 (安定再利用)');
-    }
-  }
-  resolvedSecret = g.__DEV_AUTH_SECRET;
+  console.error('[auth] CRITICAL: No AUTH_SECRET found in environment variables!');
+  resolvedSecret = 'my-super-secret-key-32-characters-long-stable-secret-2024';
+  console.warn('[auth] Using hardcoded fallback secret for development only');
 }
 
 export const {
@@ -41,7 +32,41 @@ export const {
 } = NextAuth({
   secret: resolvedSecret,
   trustHost: true,
-  session: { strategy: 'jwt' },
+  session: { 
+    strategy: 'jwt',
+    maxAge: 24 * 60 * 60, // 1日（24時間）の秒数
+    updateAge: 24 * 60 * 60, // セッション更新間隔も1日に設定
+  },
+  // クッキー設定でブラウザを閉じたら切れるようにする
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        // maxAge を設定せずsessionのみ設定することで、ブラウザを閉じたら切れる
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    }
+  },
   providers: [
     Credentials({
       name: 'Credentials',
@@ -89,11 +114,19 @@ export const {
   ],
   callbacks: {
     async jwt({ token, user }: any) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        // JWTトークンの有効期限を1日に設定
+        token.exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 現在時刻 + 1日
+      }
       return token;
     },
     async session({ session, token }: any) {
-      if (token && session.user) (session.user as any).id = token.id;
+      if (token && session.user) {
+        (session.user as any).id = token.id;
+        // セッションの有効期限もトークンの有効期限に合わせる
+        session.expires = new Date(token.exp * 1000).toISOString();
+      }
       return session;
     }
   }

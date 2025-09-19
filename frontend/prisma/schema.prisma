@@ -1,170 +1,187 @@
-// Prisma schema (initial draft) mapping core domain: User, Post, Product, Message, Notification, Cart
-// Adjust fields & indexing after data analysis of legacy DB.
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL") // e.g. file:./dev.db
+  url      = env("DATABASE_URL")
 }
 
+// ユーザー情報を管理するメインモデル
 model User {
-  id            String   @id @default(cuid())
-  username      String   @unique
-  email         String   @unique
-  passwordHash  String
-  emailVerified DateTime?
-  image         String?   // next-auth default field name
-  realName      String? 
-  address       String? 
-  bio           String? 
-  profileImage  String? 
-  posts         Post[]
-  likes         Like[]
-  comments      Comment[]
-  reposts       Repost[]
-  followers     Follow[] @relation("followers")
-  following     Follow[] @relation("following")
-  messagesSent  Message[] @relation("messages_sent")
-  messagesRecv  Message[] @relation("messages_recv")
-  notifications Notification[]
+  id            String         @id @default(cuid())     // 一意識別子
+  username      String         @unique                   // ユーザー名（一意）
+  email         String         @unique                   // メールアドレス（一意）
+  passwordHash  String                                   // ハッシュ化されたパスワード
+  emailVerified DateTime?                               // メール認証日時（オプション）
+  image         String?                                 // プロフィール画像のパス
+  realName      String?                                 // 実名（オプション）
+  address       String?                                 // 住所（オプション）
+  bio           String?                                 // 自己紹介文
+  profileImage  String?                                 // プロフィール画像（代替）
+  createdAt     DateTime       @default(now())         // アカウント作成日時
+  updatedAt     DateTime       @updatedAt              // 最終更新日時
   cartItems     CartItem[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  comments      Comment[]
+  followers     Follow[]       @relation("followers")
+  following     Follow[]       @relation("following")
+  likes         Like[]
+  messagesRecv  Message[]      @relation("messages_recv")
+  messagesSent  Message[]      @relation("messages_sent")
+  notifications Notification[]
+  posts         Post[]
+  reposts       Repost[]
 }
 
+// 投稿情報を管理するモデル
 model Post {
-  id           String    @id @default(cuid())
-  author       User      @relation(fields: [authorId], references: [id])
-  authorId     String
-  content      String
-  images       PostImage[]
-  tags         PostTag[]
-  likes        Like[]
-  comments     Comment[]
-  reposts      Repost[]
-  product      Product?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id        String      @id @default(cuid())  // 投稿の一意識別子
+  authorId  String                            // 投稿作者のUser ID
+  content   String                            // 投稿内容テキスト
+  createdAt DateTime    @default(now())       // 投稿日時
+  updatedAt DateTime    @updatedAt            // 最終更新日時
+  
+  // リレーションシップ
+  comments  Comment[]   // この投稿に対するコメント一覧
+  likes     Like[]      // この投稿に対するいいね一覧
+  author    User        @relation(fields: [authorId], references: [id])  // 投稿作者情報
+  images    PostImage[] // 投稿に添付された画像一覧
+  tags      PostTag[]   // 投稿に付けられたタグ一覧
+  product   Product?    // 商品情報（オプション）
+  reposts   Repost[]    // この投稿のリポスト一覧
 }
 
 model PostImage {
-  id      String @id @default(cuid())
-  post    Post   @relation(fields: [postId], references: [id])
-  postId  String
-  url     String
-  order   Int    @default(0)
+  id     String @id @default(cuid())
+  postId String
+  url    String
+  order  Int    @default(0)
+  post   Post   @relation(fields: [postId], references: [id])
 }
 
 model PostTag {
   id     String @id @default(cuid())
-  post   Post   @relation(fields: [postId], references: [id])
   postId String
   tag    String
+  post   Post   @relation(fields: [postId], references: [id])
+
   @@index([tag])
 }
 
+// 投稿に対するコメントを管理するモデル
 model Comment {
-  id        String   @id @default(cuid())
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    String
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
-  content   String
-  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())  // コメントの一意識別子
+  postId    String                         // コメント先の投稿ID
+  authorId  String                         // コメント作者のUser ID
+  content   String                         // コメント内容
+  createdAt DateTime @default(now())       // コメント日時
+  
+  // リレーションシップ
+  author    User     @relation(fields: [authorId], references: [id])  // コメント作者情報
+  post      Post     @relation(fields: [postId], references: [id])    // コメント先の投稿情報
 }
 
+// 投稿に対するいいねを管理するモデル
 model Like {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    String
-  createdAt DateTime @default(now())
-  @@unique([userId, postId])
+  id        String   @id @default(cuid())  // いいねの一意識別子
+  userId    String                         // いいねしたユーザーID
+  postId    String                         // いいねされた投稿ID
+  createdAt DateTime @default(now())       // いいね日時
+  
+  // リレーションシップ
+  post      Post     @relation(fields: [postId], references: [id])  // いいねされた投稿
+  user      User     @relation(fields: [userId], references: [id])  // いいねしたユーザー
+
+  @@unique([userId, postId])  // 同じユーザーが同じ投稿に複数回いいねできない制約
 }
 
 model Follow {
-  id         String @id @default(cuid())
-  follower   User   @relation("following", fields: [followerId], references: [id])
+  id         String   @id @default(cuid())
   followerId String
-  followed   User   @relation("followers", fields: [followedId], references: [id])
   followedId String
   createdAt  DateTime @default(now())
+  followed   User     @relation("followers", fields: [followedId], references: [id])
+  follower   User     @relation("following", fields: [followerId], references: [id])
+
   @@unique([followerId, followedId])
 }
 
+// 投稿のリポスト（再投稿）を管理するモデル
 model Repost {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    String
-  createdAt DateTime @default(now())
-  @@unique([userId, postId])
+  id        String   @id @default(cuid())  // リポストの一意識別子
+  userId    String                         // リポストしたユーザーID
+  postId    String                         // リポストされた投稿ID
+  createdAt DateTime @default(now())       // リポスト日時
+  
+  // リレーションシップ
+  post      Post     @relation(fields: [postId], references: [id])  // リポストされた投稿
+  user      User     @relation(fields: [userId], references: [id])  // リポストしたユーザー
+
+  @@unique([userId, postId])  // 同じユーザーが同じ投稿を複数回リポストできない制約
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  post        Post      @relation(fields: [postId], references: [id])
-  postId      String    @unique
-  name        String
-  price       Int
-  category    Category? @relation(fields: [categoryId], references: [id])
-  categoryId  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  cartItems   CartItem[]
+  id         String     @id @default(cuid())
+  postId     String     @unique
+  name       String
+  price      Int
+  categoryId String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  cartItems  CartItem[]
+  category   Category?  @relation(fields: [categoryId], references: [id])
+  post       Post       @relation(fields: [postId], references: [id])
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  products  Product[]
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
 }
 
 model CartItem {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  product   Product  @relation(fields: [productId], references: [id])
   productId String
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
   @@unique([userId, productId])
 }
 
 model Notification {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
   type      String
-  payload   String   // stored as JSON string
+  payload   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
   @@index([userId, read])
 }
 
 model MessageRoom {
   id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
   messages  Message[]
-  createdAt DateTime   @default(now())
 }
 
 model Message {
-  id          String     @id @default(cuid())
-  room        MessageRoom @relation(fields: [roomId], references: [id])
+  id          String      @id @default(cuid())
   roomId      String
-  sender      User       @relation("messages_sent", fields: [senderId], references: [id])
   senderId    String
-  recipient   User       @relation("messages_recv", fields: [recipientId], references: [id])
   recipientId String
   content     String
-  read        Boolean    @default(false)
-  createdAt   DateTime   @default(now())
+  read        Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  recipient   User        @relation("messages_recv", fields: [recipientId], references: [id])
+  sender      User        @relation("messages_sent", fields: [senderId], references: [id])
+  room        MessageRoom @relation(fields: [roomId], references: [id])
+
   @@index([roomId])
   @@index([recipientId, read])
 }
